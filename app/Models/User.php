@@ -6,6 +6,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Attendance;
+use App\Models\Logbook;
 
 class User extends Authenticatable
 {
@@ -45,4 +47,15 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    // Tambahkan ini di dalam class User
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function logbooks()
+    {
+        return $this->hasMany(Logbook::class);
+    }
+
 }
