@@ -14,16 +14,24 @@ class AdminController extends Controller
     {
         // 1. Cek keamanan Role
         if (Auth::user()->role !== 'admin') {
-            return redirect('/dashboard')->with('error', 'Anda tidak memiliki akses admin.');
+            return redirect()->dashboard();
         }
 
-        // 2. Logika Pencarian
+        // 2. Logika Pencarian Logbook
         $search = $request->input('search');
 
-        // Ambil semua mahasiswa untuk statistik
-        $users = User::where('role', 'mahasiswa')->get();
+        // 3. --- LOGIKA STATISTIK BARU ---
+        // Hitung total mahasiswa aktif
+        $activeStudents = User::where('role', 'mahasiswa')
+                            ->where('status', 'aktif')
+                            ->count();
 
-        // Logbook yang butuh validasi (dengan Fitur Search)
+        // Hitung total mahasiswa selesai/nonaktif
+        $finishedStudents = User::where('role', 'mahasiswa')
+                            ->where('status', 'nonaktif')
+                            ->count();
+
+        // Ambil logbook pending (tetap sama)
         $pendingLogbooks = Logbook::with('user')
             ->where('is_validated', false)
             ->when($search, function ($query, $search) {
@@ -34,10 +42,10 @@ class AdminController extends Controller
             ->orderBy('tanggal', 'desc')
             ->get();
 
-        // 3. Cukup gunakan SATU return view di akhir fungsi
-        return view('admin.dashboard', compact('users', 'pendingLogbooks', 'search'));
+        return view('admin.dashboard', compact('activeStudents', 'finishedStudents', 'pendingLogbooks', 'search'));
     }
 
+    
     public function validateLogbook($id)
     {
         $logbook = Logbook::findOrFail($id);

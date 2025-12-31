@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\LogbookController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminStudentController;
+use App\Http\Controllers\AdminAttendanceController;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -13,26 +15,23 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
+    // Gunakan Auth::user() agar lebih aman dan dikenali sistem
+    if (Auth::user()->role === 'admin') {
+        return redirect()->route('admin.dashboard');
+    }
+
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    // Kehadiran
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.checkin');
-
-    // Logbook
+    Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkout');
     Route::get('/logbook', [LogbookController::class, 'index'])->name('logbook.index');
     Route::post('/logbook', [LogbookController::class, 'store'])->name('logbook.store');
-
-    // Admin Dashboard & Validasi
-    // Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
-    // Route::post('/admin/logbook/{id}/validate', [AdminController::class, 'validateLogbook'])->name('admin.logbook.validate');
 
     // Export Presensi (PERBAIKAN: Hanya milik user yang login)
     Route::get('/export-presensi', function () {
@@ -92,8 +91,35 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
+    // 1. Dashboard Admin
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+
+    // 2. Validasi Logbook
     Route::post('/admin/logbook/{id}/validate', [AdminController::class, 'validateLogbook'])->name('admin.logbook.validate');
+
+    // 3. CRUD Manajemen Mahasiswa
+    Route::resource('admin/students', AdminStudentController::class)->names([
+        'index' => 'admin.students.index',
+        'create' => 'admin.students.create',
+        'store' => 'admin.students.store',
+        'show' => 'admin.students.show',
+        'destroy' => 'admin.students.destroy',
+    ]);
+
+    // 4. Update Status Mahasiswa (Aktif/Selesai)
+    Route::patch('/admin/students/{id}/status', [AdminStudentController::class, 'updateStatus'])
+        ->name('admin.students.updateStatus');
+
+    // 5. Absensi Manual oleh Admin (Sakit/Izin/Alpha)
+    Route::post('/admin/attendance/store', [AdminAttendanceController::class, 'store'])
+        ->name('admin.attendance.store');
+
+    // 6. Hapus Absensi oleh Admin
+    Route::delete('/admin/attendance/{id}', [AdminAttendanceController::class, 'destroy'])
+        ->name('admin.attendance.destroy');
+
+    Route::get('/admin/attendance/{id}/edit', [AdminAttendanceController::class, 'edit'])->name('admin.attendance.edit'); // <--- BARU
+    Route::put('/admin/attendance/{id}', [AdminAttendanceController::class, 'update'])->name('admin.attendance.update'); // <--- BARU
 });
 
 require __DIR__.'/auth.php';

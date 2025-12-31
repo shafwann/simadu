@@ -1,0 +1,187 @@
+<x-app-layout>
+    <div class="py-12 bg-white min-h-screen">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 space-y-8">
+
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-gray-100">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <h1 class="text-3xl font-black text-gray-900">{{ $student->name }}</h1>
+                        @if($student->status === 'aktif')
+                            <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full uppercase">Aktif Magang</span>
+                        @else
+                            <span class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full uppercase">Selesai / Nonaktif</span>
+                        @endif
+                    </div>
+                    <p class="text-gray-500 mt-1">{{ $student->email }}</p>
+                </div>
+
+                <div class="flex gap-3">
+                    <form action="{{ route('admin.students.updateStatus', $student->id) }}" method="POST">
+                        @csrf @method('PATCH')
+                        <button type="submit" class="px-5 py-2.5 rounded-xl font-bold text-sm transition shadow-lg flex items-center gap-2 {{ $student->status === 'aktif' ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-100' : 'bg-green-50 text-green-600 hover:bg-green-100 border border-green-100' }}">
+                            @if($student->status === 'aktif')
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                                Tandai Selesai Magang
+                            @else
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                Aktifkan Kembali
+                            @endif
+                        </button>
+                    </form>
+
+                    <a href="{{ route('admin.students.index') }}" class="px-5 py-2.5 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-200 transition">
+                        Kembali
+                    </a>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="bg-white border border-blue-100 rounded-[2rem] p-6 shadow-xl shadow-blue-50/50">
+                        <h3 class="text-lg font-black text-gray-800 mb-4 flex items-center gap-2">
+                            <span class="w-2 h-6 bg-blue-600 rounded-full"></span>
+                            Input Absensi Manual
+                        </h3>
+                        <p class="text-xs text-gray-400 mb-6">Gunakan ini jika mahasiswa lupa absen, sakit, atau izin.</p>
+
+                        <form action="{{ route('admin.attendance.store') }}" method="POST" class="space-y-4">
+                            @csrf
+                            <input type="hidden" name="user_id" value="{{ $student->id }}">
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tanggal</label>
+                                <input type="date" name="tanggal" value="{{ date('Y-m-d') }}" class="w-full rounded-xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Jam</label>
+                                <input type="time" name="jam" value="08:00" class="w-full rounded-xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipe Absensi (Otomatis)</label>
+                                <select name="tipe_absensi" class="w-full rounded-xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800">
+                                    <option value="check_in">⬇️ Check IN (Set ke 07:30)</option>
+                                    <option value="check_out">⬆️ Check OUT (Set ke 15:00)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status Kehadiran</label>
+                                <select name="status" class="w-full rounded-xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800">
+                                    <option value="Hadir">✅ Hadir (WFO/WFH)</option>
+                                    <option value="Sakit">💊 Sakit</option>
+                                    <option value="Izin">✉️ Izin</option>
+                                    <option value="Alpha">❌ Alpha (Tanpa Ket.)</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-lg shadow-blue-200">
+                                Simpan Data Absen
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 space-y-6">
+
+                    <div class="bg-white border border-gray-100 rounded-[2rem] shadow-sm overflow-hidden">
+                        <div class="p-6 border-b border-gray-50 bg-gray-50/30">
+                            <h3 class="font-bold text-lg text-gray-800">Riwayat Presensi</h3>
+                        </div>
+                        <div class="overflow-y-auto max-h-[400px]">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-gray-50 sticky top-0">
+                                    <tr>
+                                        <th class="p-4 font-bold text-gray-500">Tanggal</th>
+                                        <th class="p-4 font-bold text-gray-500">Jam</th>
+                                        <th class="p-4 font-bold text-gray-500">Status</th>
+                                        <th class="p-4 font-bold text-gray-500">Lokasi</th>
+                                        <th class="p-4 font-bold text-center text-gray-500">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-50">
+                                    @forelse($student->attendances()->orderBy('tanggal', 'desc')->get() as $a)
+                                    <tr class="hover:bg-blue-50/50 transition">
+                                        <td class="p-4 font-medium">{{ \Carbon\Carbon::parse($a->tanggal)->format('d M Y') }}</td>
+                                        <td class="p-4 font-mono text-gray-600">{{ $a->check_in }}</td>
+                                        <td class="p-4">
+                                            @if($a->status == 'Hadir') <span class="px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-bold">Hadir</span>
+                                            @elseif($a->status == 'Sakit') <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md text-xs font-bold">Sakit</span>
+                                            @elseif($a->status == 'Izin') <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-bold">Izin</span>
+                                            @else <span class="px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs font-bold">Alpha</span>
+                                            @endif
+                                        </td>
+                                        <td class="p-4 text-xs">
+                                            @if($a->location)
+                                                <a href="https://www.google.com/maps/search/?api=1&query={{ $a->location }}" target="_blank" class="text-blue-500 underline">Lihat Peta</a>
+                                            @else
+                                                <span class="text-gray-400 italic">Manual Admin</span>
+                                            @endif
+                                        </td>
+                                        <td class="p-4 text-center flex items-center justify-center gap-2">
+                                            <a href="{{ route('admin.attendance.edit', $a->id) }}" class="text-blue-400 hover:text-blue-600 transition" title="Edit Absensi">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                            </a>
+                                            <form action="{{ route('admin.attendance.destroy', $a->id) }}" method="POST" onsubmit="return confirm('Hapus data absen tanggal {{ $a->tanggal }}?');">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="text-red-400 hover:text-red-600 transition" title="Hapus Permanen">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                </button>
+                                            </form>
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            <form action="{{ route('admin.attendance.destroy', $a->id) }}" method="POST" onsubmit="return confirm('Hapus data absen tanggal {{ $a->tanggal }}?');">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="text-red-400 hover:text-red-600 transition">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr><td colspan="5" class="p-6 text-center italic text-gray-400">Belum ada data presensi.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-gray-100 rounded-[2rem] shadow-sm overflow-hidden">
+                        <div class="p-6 border-b border-gray-50 bg-gray-50/30">
+                            <h3 class="font-bold text-lg text-gray-800">Riwayat Logbook</h3>
+                        </div>
+                        <div class="overflow-y-auto max-h-[300px]">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50 sticky top-0">
+                                    <tr>
+                                        <th class="p-4 font-bold text-gray-500">Tanggal</th>
+                                        <th class="p-4 font-bold text-gray-500">Kegiatan</th>
+                                        <th class="p-4 font-bold text-gray-500">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-50">
+                                    @forelse($student->logbooks as $l)
+                                    <tr>
+                                        <td class="p-4">{{ \Carbon\Carbon::parse($l->tanggal)->format('d M Y') }}</td>
+                                        <td class="p-4">{{ $l->kegiatan }}</td>
+                                        <td class="p-4">
+                                            @if($l->is_validated) <span class="text-green-600 font-bold text-xs">Valid</span>
+                                            @else <span class="text-amber-500 font-bold text-xs">Pending</span> @endif
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr><td colspan="3" class="p-6 text-center italic text-gray-400">Belum ada data logbook.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</x-app-layout>
