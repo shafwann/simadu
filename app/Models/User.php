@@ -20,6 +20,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role', // <--- WAJIB DITAMBAHKAN DI SINI
+        'status',//untuk selesai magang
     ];
 
     protected $hidden = [
