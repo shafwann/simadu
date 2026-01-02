@@ -107,10 +107,16 @@
                                         <td class="p-4 font-medium">{{ \Carbon\Carbon::parse($a->tanggal)->format('d M Y') }}</td>
                                         <td class="p-4 font-mono text-gray-600">{{ $a->check_in }}</td>
                                         <td class="p-4">
-                                            @if($a->status == 'Hadir') <span class="px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-bold">Hadir</span>
-                                            @elseif($a->status == 'Sakit') <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md text-xs font-bold">Sakit</span>
-                                            @elseif($a->status == 'Izin') <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-bold">Izin</span>
-                                            @else <span class="px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs font-bold">Alpha</span>
+                                            @if($a->status == 'Hadir') 
+                                                <span class="px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-bold">Hadir</span>
+                                            @elseif($a->status == 'Telat') 
+                                                <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md text-xs font-bold">Telat</span>
+                                            @elseif($a->status == 'Sakit') 
+                                                <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md text-xs font-bold">Sakit</span>
+                                            @elseif($a->status == 'Izin') 
+                                                <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-bold">Izin</span>
+                                            @else 
+                                                <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">Alpha</span>
                                             @endif
                                         </td>
                                         <td class="p-4 text-xs">

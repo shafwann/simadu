@@ -13,6 +13,7 @@ class AttendanceController extends Controller
     {
         $attendance = Attendance::where('user_id', Auth::id())
             ->whereDate('tanggal', Carbon::today())
+            ->orderByDesc('id') // ambil data TERBARU
             ->first();
 
         return view('attendance.index', compact('attendance'));
@@ -94,6 +95,10 @@ class AttendanceController extends Controller
         $attendance = Attendance::where('user_id', Auth::id())
             ->whereDate('tanggal', Carbon::today())
             ->first();
+
+        if (!$attendance) {
+            return back()->with('error', 'Anda belum melakukan check-in hari ini.');
+        }
 
         $attendance->update(['check_out' => now()->toTimeString()]);
 
