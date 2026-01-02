@@ -42,7 +42,14 @@ class AdminController extends Controller
             ->orderBy('tanggal', 'desc')
             ->get();
 
-        return view('admin.dashboard', compact('activeStudents', 'finishedStudents', 'pendingLogbooks', 'search'));
+        // Ambil semua mahasiswa dengan laporan
+        $students = User::with('laporans')
+            ->where('role', 'mahasiswa')
+            ->where('status', '!=', 'aktif') // <-- filter hanya nonaktif
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.dashboard', compact('activeStudents', 'finishedStudents', 'pendingLogbooks', 'search', 'students'));
     }
 
     

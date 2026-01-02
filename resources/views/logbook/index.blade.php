@@ -1,48 +1,56 @@
 <x-app-layout>
-    {{-- <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Logbook Kegiatan') }}
-        </h2>
-    </x-slot> --}}
-
     <div class="py-12 bg-gray-50 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100">
-                <div class="p-8">
-                    <div class="flex items-center mb-6">
-                        <div class="p-3 bg-indigo-100 rounded-lg mr-4">
-                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-800">Isi Kegiatan Hari Ini</h3>
-                    </div>
-
-                    <form action="{{ route('logbook.store') }}" method="POST">
-                        @csrf
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            <div class="md:col-span-1">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal</label>
-                                <input type="date" name="tanggal" value="{{ date('Y-m-d') }}"
-                                    class="w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition">
-                            </div>
-                            <div class="md:col-span-3">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Deskripsi Kegiatan</label>
-                                <textarea name="kegiatan" rows="2" placeholder="Jelaskan apa yang kamu kerjakan..."
-                                    class="w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition"></textarea>
-                            </div>
-                        </div>
-                    <div class="mt-6 flex justify-end">
-                        <button type="submit"
-                            class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition transform hover:scale-105">
-                            Simpan Kegiatan
-                        </button>
-                    </div>
-                    </form>
+            {{-- Alert jika user nonaktif --}}
+            @if(Auth::user()->status !== 'aktif')
+                <div class="mb-6 p-4 bg-red-50 text-red-700 rounded-xl border border-red-100 text-center flex items-center justify-center gap-2">
+                    <svg class="w-6 h-6 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-12.728 12.728M5.636 5.636l12.728 12.728"></path>
+                    </svg>
+                    <span class="font-semibold">Akun Anda sudah nonaktif!</span> Anda tidak dapat mengisi logbook.
                 </div>
-            </div>
+            @endif
 
+            {{-- Form logbook --}}
+            @if(Auth::user()->status === 'aktif')
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100">
+                    <div class="p-8">
+                        <div class="flex items-center mb-6">
+                            <div class="p-3 bg-indigo-100 rounded-lg mr-4">
+                                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800">Isi Kegiatan Hari Ini</h3>
+                        </div>
+
+                        <form action="{{ route('logbook.store') }}" method="POST">
+                            @csrf
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                <div class="md:col-span-1">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal</label>
+                                    <input type="date" name="tanggal" value="{{ date('Y-m-d') }}"
+                                        class="w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition">
+                                </div>
+                                <div class="md:col-span-3">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Deskripsi Kegiatan</label>
+                                    <textarea name="kegiatan" rows="2" placeholder="Jelaskan apa yang kamu kerjakan..."
+                                        class="w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition"></textarea>
+                                </div>
+                            </div>
+                            <div class="mt-6 flex justify-end">
+                                <button type="submit"
+                                    class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition transform hover:scale-105">
+                                    Simpan Kegiatan
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            @endif
+
+            {{-- Riwayat logbook --}}
             <div class="bg-white shadow-sm sm:rounded-2xl border border-gray-100 overflow-hidden">
                 <div class="p-8 border-b border-gray-50 flex justify-between items-center">
                     <h3 class="text-xl font-bold text-gray-800">Riwayat Logbook</h3>

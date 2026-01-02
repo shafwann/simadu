@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\Attendance;
 use App\Models\Logbook;
+use App\Models\Laporan;
 
 class User extends Authenticatable
 {
@@ -45,4 +46,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Logbook::class);
     }
+
+    public function laporans()
+    {
+        return $this->hasMany(Laporan::class);
+    }
+
 }
