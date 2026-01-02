@@ -58,3 +58,23 @@
         </div>
     </div>
 </x-app-layout>
+
+<script>
+function toggleJam() {
+    const status = document.querySelector('select[name="status"]').value;
+    const disabled = ['Alpha','Sakit','Izin'].includes(status);
+
+    const checkIn = document.querySelector('input[name="check_in"]');
+    const checkOut = document.querySelector('input[name="check_out"]');
+
+    checkIn.disabled = disabled;
+    checkOut.disabled = disabled;
+    checkIn.required = !disabled;
+}
+
+document.addEventListener('DOMContentLoaded', toggleJam);
+document.querySelector('select[name="status"]').addEventListener('change', toggleJam);
+</script>
+
+
+
