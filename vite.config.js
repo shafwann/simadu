@@ -8,4 +8,9 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    server: {
+        host: true,   // ⬅️ PENTING
+        port: 5173,
+        strictPort: true,
+    },
 });

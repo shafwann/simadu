@@ -1,4 +1,4 @@
-<x-guest-layout>
+{{-- <x-guest-layout>
     <div class="mb-6 text-center">
         <h2 class="text-2xl font-black text-gray-900">Buat Akun Baru</h2>
         <p class="text-sm text-gray-400">Silakan isi data diri untuk mendaftar.</p>
@@ -46,4 +46,4 @@
             </x-primary-button>
         </div>
     </form>
-</x-guest-layout>
+</x-guest-layout> --}}

@@ -173,6 +173,6 @@ class LaporanController extends Controller
     }
 
 
-    
+
 
 }

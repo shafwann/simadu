@@ -1,8 +1,9 @@
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-100 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-20"> <div class="flex">
+        <div class="flex justify-between h-20">
+            <div class="flex">
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group">
+                    <a href="{{ Auth::user()->role === 'admin' ? route('admin.dashboard') : route('dashboard') }}" class="flex items-center gap-3 group">
                         <img src="{{ asset('img/logobaperlitbang.png') }}" alt="Logo" class="h-12 w-auto transition-transform group-hover:scale-105">
                         <div class="hidden md:block leading-tight">
                             <span class="block text-sm font-black text-gray-800 uppercase tracking-wider">Baperlitbang</span>
@@ -10,8 +11,10 @@
                         </div>
                     </a>
                 </div>
+
                 <div class="hidden space-x-6 sm:-my-px sm:ms-10 sm:flex">
 
+                    {{-- MENU MAHASISWA --}}
                     @if(Auth::user()->role === 'mahasiswa')
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="font-bold text-gray-600">
                             {{ __('Dashboard') }}
@@ -30,6 +33,7 @@
                         </x-nav-link>
                     @endif
 
+                    {{-- MENU ADMIN --}}
                     @if(Auth::user()->role === 'admin')
                         <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" class="font-bold text-blue-600">
                             <span class="flex items-center gap-1">
@@ -92,29 +96,42 @@
         </div>
     </div>
 
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden bg-white border-t border-gray-50">
+    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden bg-white border-t border-gray-100 shadow-lg">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
 
+            {{-- MENU MOBILE MAHASISWA --}}
             @if(Auth::user()->role === 'mahasiswa')
+                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                    {{ __('Dashboard') }}
+                </x-responsive-nav-link>
+
                 <x-responsive-nav-link :href="route('attendance.index')" :active="request()->routeIs('attendance.index')">
                     {{ __('Presensi') }}
                 </x-responsive-nav-link>
+
                 <x-responsive-nav-link :href="route('logbook.index')" :active="request()->routeIs('logbook.index')">
                     {{ __('Logbook') }}
                 </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('laporan.index')" :active="request()->routeIs('laporan.*')" class="text-green-600 font-bold">
+                    {{ __('Laporan') }}
+                </x-responsive-nav-link>
             @endif
 
+            {{-- MENU MOBILE ADMIN --}}
             @if(Auth::user()->role === 'admin')
                 <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" class="text-blue-600 font-bold">
                     {{ __('Panel Admin') }}
                 </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('admin.students.index')" :active="request()->routeIs('admin.students.*')">
+                    {{ __('Data Mahasiswa') }}
+                </x-responsive-nav-link>
             @endif
+
         </div>
 
-        <div class="pt-4 pb-1 border-t border-gray-100">
+        <div class="pt-4 pb-1 border-t border-gray-100 bg-gray-50/50">
             <div class="px-4 flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
                     {{ substr(Auth::user()->name, 0, 1) }}
@@ -125,10 +142,11 @@
                 </div>
             </div>
 
-            <div class="mt-3 space-y-1 px-2">
+            <div class="mt-3 space-y-1 px-2 pb-2">
                 <x-responsive-nav-link :href="route('profile.edit')" class="rounded-lg font-medium">
                     {{ __('Profile') }}
                 </x-responsive-nav-link>
+
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <x-responsive-nav-link :href="route('logout')" class="rounded-lg font-bold text-red-600"

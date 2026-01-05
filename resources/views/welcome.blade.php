@@ -21,7 +21,7 @@
                 </div>
             </div>
 
-            @if (Route::has('login'))
+            {{-- @if (Route::has('login'))
                 <nav class="flex items-center gap-4">
                     @auth
                         <a href="{{ url('/dashboard') }}" class="px-5 py-2 bg-blue-700 text-white rounded-xl text-sm font-bold shadow-md hover:bg-blue-800 transition">Dashboard &rarr;</a>
@@ -34,7 +34,7 @@
                         @endif
                     @endauth
                 </nav>
-            @endif
+            @endif --}}
         </header>
 
         <main class="flex-grow flex items-center justify-center py-12">
@@ -57,13 +57,13 @@
 
                     <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
                         <a href="{{ route('login') }}" class="w-full sm:w-auto px-10 py-4 bg-blue-700 text-white rounded-2xl font-bold shadow-xl shadow-blue-200 hover:bg-blue-800 transition transform hover:scale-105">
-                            Mulai Presensi
+                            Login Presensi & Logbook
                         </a>
                         <div class="flex items-center gap-2 text-gray-400 text-sm italic">
                             <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                             </svg>
-                            Sistem Lokasi GPS Aktif
+                            Pastikan Sistem Lokasi GPS Aktif
                         </div>
                     </div>
                 </div>

@@ -57,14 +57,14 @@ class AdminController extends Controller
             ->get();
 
         //card validasi laporan
-        $pendingLaporans = Laporan::where('is_validated', false)->get();
+        // $pendingLaporans = Laporan::where('is_validated', false)->get();
 
 
 
         return view('admin.dashboard', compact('activeStudents', 'finishedStudents', 'pendingLogbooks', 'pendingLaporans', 'search', 'students'));
     }
 
-    
+
     public function validateLogbook($id)
     {
         $logbook = Logbook::findOrFail($id);
