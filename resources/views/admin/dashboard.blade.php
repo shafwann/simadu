@@ -1,18 +1,43 @@
 <x-app-layout>
+    {{-- LOGIKA JUDUL BIDANG --}}
+    @php
+        $userBidang = Auth::user()->bidang;
+        $isSuperAdmin = $userBidang === 'Administrator Sistem';
+
+        // Label untuk ditampilkan di kartu
+        // Jika Super Admin -> "Semua Bidang"
+        // Jika Admin Ekonomi -> "Ekonomi"
+        $labelBidang = $isSuperAdmin ? 'Semua Bidang' : $userBidang;
+    @endphp
+
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Dashboard Admin</h2>
+        <div class="flex justify-between items-center">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ __('Dashboard Admin') }}
+            </h2>
+
+            {{-- Badge Nama Divisi --}}
+            <span class="px-3 py-1 rounded-full text-xs font-bold shadow-sm border
+                {{ $isSuperAdmin ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-blue-100 text-blue-700 border-blue-200' }}">
+                Divisi: {{ $userBidang }}
+            </span>
+        </div>
     </x-slot>
 
     <div class="py-12 bg-white min-h-screen">
         <div class="max-w-7xl mx-auto px-6 lg:px-8 space-y-10">
 
-            {{-- 1. SECTION RINGKASAN AKTIVITAS (KARTU ATAS) --}}
+            {{-- 1. SECTION RINGKASAN AKTIVITAS --}}
             <div>
                 <h1 class="text-3xl font-black text-gray-900 tracking-tight">Ringkasan Aktivitas</h1>
-                <p class="text-gray-500 mt-2">Pantau perkembangan mahasiswa magang dan validasi laporan.</p>
+                <p class="text-gray-500 mt-2">
+                    Pantau perkembangan mahasiswa magang di
+                    <span class="font-bold text-gray-800">{{ $isSuperAdmin ? 'Seluruh Lingkungan BAPPERIDA' : 'Bidang ' . $userBidang }}</span>.
+                </p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
                 {{-- Card Mahasiswa Aktif --}}
                 <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-xl shadow-blue-50/50 flex flex-col justify-between group hover:border-blue-200 transition">
                     <div class="flex justify-between items-start mb-4">
@@ -22,7 +47,10 @@
                         <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide">Aktif</span>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-400 font-medium mb-1">Sedang Magang</p>
+                        {{-- JUDUL DINAMIS --}}
+                        <p class="text-sm text-gray-400 font-medium mb-1">
+                            Mahasiswa {{ $isSuperAdmin ? 'Total' : $labelBidang }} Aktif
+                        </p>
                         <p class="text-4xl font-black text-gray-900">{{ $activeStudents }}</p>
                     </div>
                 </div>
@@ -36,7 +64,10 @@
                         <span class="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide">Selesai</span>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-400 font-medium mb-1">Alumni Magang</p>
+                        {{-- JUDUL DINAMIS --}}
+                        <p class="text-sm text-gray-400 font-medium mb-1">
+                            Alumni bidang {{ $isSuperAdmin ? 'Total' : $labelBidang }}
+                        </p>
                         <p class="text-4xl font-black text-gray-900">{{ $finishedStudents }}</p>
                     </div>
                 </div>
@@ -50,7 +81,10 @@
                         <span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide">Pending</span>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-400 font-medium mb-1">Logbook Butuh Validasi</p>
+                        {{-- JUDUL DINAMIS --}}
+                        <p class="text-sm text-gray-400 font-medium mb-1">
+                            Logbook {{ $isSuperAdmin ? '' : $labelBidang }} Butuh Validasi
+                        </p>
                         <p class="text-4xl font-black text-gray-900">{{ $pendingLogbooks->count() }}</p>
                     </div>
                 </div>
@@ -64,7 +98,10 @@
                         <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide">Pending</span>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-400 font-medium mb-1">Laporan Perlu Validasi</p>
+                        {{-- JUDUL DINAMIS --}}
+                        <p class="text-sm text-gray-400 font-medium mb-1">
+                            Laporan {{ $isSuperAdmin ? '' : $labelBidang }} Perlu Validasi
+                        </p>
                         <p class="text-4xl font-black text-gray-900">{{ $pendingLaporans->count() }}</p>
                     </div>
                 </div>
@@ -76,7 +113,7 @@
                 <div class="p-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
                         <h3 class="text-lg font-black text-gray-800">Persetujuan Logbook</h3>
-                        <p class="text-sm text-gray-400">Validasi kegiatan harian mahasiswa.</p>
+                        <p class="text-sm text-gray-400">Validasi kegiatan harian mahasiswa {{ $isSuperAdmin ? '' : $labelBidang }}.</p>
                     </div>
 
                     <form action="{{ route('admin.dashboard') }}" method="GET" class="flex w-full md:w-auto gap-2">
@@ -116,7 +153,7 @@
                             @empty
                             <tr>
                                 <td colspan="4" class="px-8 py-12 text-center text-gray-400 italic">
-                                    Semua logbook aman terkendali.
+                                    Semua logbook {{ $isSuperAdmin ? '' : $labelBidang }} aman terkendali.
                                 </td>
                             </tr>
                             @endforelse
@@ -126,12 +163,11 @@
             </div>
 
 
-            {{-- 3. TABEL VALIDASI LAPORAN (YANG BARU DITAMBAHKAN) --}}
-            {{-- Ini tabel khusus untuk pendingLaporans agar Admin mudah memvalidasi --}}
+            {{-- 3. TABEL VALIDASI LAPORAN --}}
             <div class="bg-white border border-gray-100 rounded-[2rem] shadow-2xl shadow-blue-50/50 overflow-hidden mt-10">
                 <div class="p-8 border-b border-gray-50">
                     <h3 class="text-lg font-black text-gray-800">Validasi Laporan Magang</h3>
-                    <p class="text-sm text-gray-400">Daftar laporan akhir yang perlu diperiksa dan disetujui.</p>
+                    <p class="text-sm text-gray-400">Daftar laporan akhir yang perlu diperiksa dan disetujui untuk bidang {{ $labelBidang }}.</p>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -175,7 +211,7 @@
                             @empty
                             <tr>
                                 <td colspan="4" class="px-8 py-12 text-center text-gray-400 italic">
-                                    Tidak ada laporan yang perlu divalidasi.
+                                    Tidak ada laporan {{ $isSuperAdmin ? '' : $labelBidang }} yang perlu divalidasi.
                                 </td>
                             </tr>
                             @endforelse
@@ -185,12 +221,12 @@
             </div>
 
 
-            {{-- 4. DAFTAR STATUS MAHASISWA & LAPORAN (BAWAAN LAMA) --}}
+            {{-- 4. DAFTAR STATUS MAHASISWA & LAPORAN (ALUMNI) --}}
             <div class="bg-white border border-gray-100 rounded-[2rem] shadow-2xl shadow-gray-100/50 overflow-hidden mt-10">
                 <div class="p-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
                         <h3 class="text-lg font-black text-gray-800">Daftar Status Laporan (Alumni)</h3>
-                        <p class="text-sm text-gray-400">Pantau mahasiswa yang sudah selesai dan status laporannya.</p>
+                        <p class="text-sm text-gray-400">Pantau alumni {{ $labelBidang }} dan status laporannya.</p>
                     </div>
                 </div>
 
@@ -246,7 +282,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-12 text-center italic text-gray-400">Belum ada mahasiswa non-aktif.</td>
+                                <td colspan="5" class="px-6 py-12 text-center italic text-gray-400">Belum ada alumni {{ $isSuperAdmin ? '' : $labelBidang }}.</td>
                             </tr>
                             @endforelse
                         </tbody>
