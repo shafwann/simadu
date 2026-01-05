@@ -163,55 +163,100 @@
             </div>
 
 
+<<<<<<< HEAD
             {{-- 3. TABEL VALIDASI LAPORAN --}}
             <div class="bg-white border border-gray-100 rounded-[2rem] shadow-2xl shadow-blue-50/50 overflow-hidden mt-10">
                 <div class="p-8 border-b border-gray-50">
                     <h3 class="text-lg font-black text-gray-800">Validasi Laporan Magang</h3>
                     <p class="text-sm text-gray-400">Daftar laporan akhir yang perlu diperiksa dan disetujui untuk bidang {{ $labelBidang }}.</p>
+=======
+            {{-- VALIDASI LAPORAN MAGANG --}}
+            <div class="bg-white border border-gray-100 rounded-[2rem] shadow-2xl shadow-blue-50/50 overflow-hidden mt-10">
+                <div class="p-8 border-b border-gray-50">
+                    <h3 class="text-lg font-black text-gray-800">Validasi Laporan Magang</h3>
+                    <p class="text-sm text-gray-400">Laporan akhir mahasiswa yang menunggu persetujuan.</p>
+>>>>>>> f4367863a40b8cd326b09cb896de4e9e6bf491a9
                 </div>
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead>
                             <tr class="bg-blue-50/50 border-b border-blue-100 text-xs uppercase tracking-widest text-blue-600 font-bold">
-                                <th class="px-8 py-4">Mahasiswa</th>
-                                <th class="px-8 py-4">Tanggal Upload</th>
-                                <th class="px-8 py-4">Nama File</th>
-                                <th class="px-8 py-4 text-center">Aksi</th>
+                                <th class="px-6 py-4">Mahasiswa</th>
+                                <th class="px-6 py-4">Status Magang</th>
+                                <th class="px-6 py-4">File Laporan</th>
+                                <th class="px-6 py-4">Tanggal Upload</th>
+                                <th class="px-6 py-4 text-center">Status</th>
+                                <th class="px-6 py-4 text-center">Aksi</th>
                             </tr>
                         </thead>
+
                         <tbody class="divide-y divide-gray-50">
                             @forelse($pendingLaporans as $laporan)
                             <tr class="hover:bg-blue-50/30 transition">
-                                <td class="px-8 py-4 font-bold text-gray-800">{{ $laporan->user->name }}</td>
-                                <td class="px-8 py-4 text-sm text-gray-500">{{ $laporan->created_at->format('d M Y') }}</td>
-                                <td class="px-8 py-4">
-                                    <div class="flex items-center gap-2">
-                                        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                                        <span class="text-sm text-gray-600 truncate max-w-xs">{{ $laporan->nama_file }}</span>
-                                    </div>
+                                {{-- Mahasiswa --}}
+                                <td class="px-6 py-4 font-medium text-gray-800">
+                                    {{ $laporan->user->name }}
                                 </td>
-                                <td class="px-8 py-4 text-center flex items-center justify-center gap-2">
-                                    {{-- Tombol Download --}}
+
+                                {{-- Status Magang --}}
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-1 rounded-full text-xs font-bold
+                                        {{ $laporan->user->status === 'aktif'
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-gray-100 text-gray-600' }}">
+                                        {{ ucfirst($laporan->user->status) }}
+                                    </span>
+                                </td>
+
+                                {{-- File --}}
+                                <td class="px-6 py-4">
                                     <a href="{{ route('laporan.download', $laporan->id) }}"
-                                       class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold rounded-lg transition"
-                                       target="_blank" title="Download">
-                                        ⬇ Download
+                                    class="text-blue-600 font-semibold text-sm hover:underline truncate max-w-xs inline-block">
+                                        {{ $laporan->nama_file }}
+                                    </a>
+                                </td>
+
+                                {{-- Tanggal --}}
+                                <td class="px-6 py-4 text-sm text-gray-500">
+                                    {{ $laporan->created_at->format('d M Y') }}
+                                </td>
+
+                                {{-- Status Laporan --}}
+                                <td class="px-6 py-4 text-center">
+                                    <span class="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">
+                                        Menunggu Validasi
+                                    </span>
+                                </td>
+
+                                {{-- Aksi --}}
+                                <td class="px-6 py-4 text-center flex justify-center gap-2">
+                                    {{-- Preview --}}
+                                    <a href="{{ route('laporan.preview', $laporan->id) }}"
+                                    target="_blank"
+                                    class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold rounded-lg transition">
+                                        Preview
                                     </a>
 
-                                    {{-- Tombol Validasi --}}
+                                    {{-- Validasi --}}
                                     <form action="{{ route('admin.laporan.validate', $laporan->id) }}" method="POST">
                                         @csrf
-                                        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition shadow-md shadow-blue-200">
-                                            Validasi ✅
+                                        <button type="submit"
+                                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition shadow-md shadow-blue-200">
+                                            Validasi
                                         </button>
                                     </form>
                                 </td>
                             </tr>
                             @empty
                             <tr>
+<<<<<<< HEAD
                                 <td colspan="4" class="px-8 py-12 text-center text-gray-400 italic">
                                     Tidak ada laporan {{ $isSuperAdmin ? '' : $labelBidang }} yang perlu divalidasi.
+=======
+                                <td colspan="6" class="px-6 py-12 text-center text-gray-400 italic">
+                                    Tidak ada laporan yang perlu divalidasi.
+>>>>>>> f4367863a40b8cd326b09cb896de4e9e6bf491a9
                                 </td>
                             </tr>
                             @endforelse
@@ -219,6 +264,7 @@
                     </table>
                 </div>
             </div>
+<<<<<<< HEAD
 
 
             {{-- 4. DAFTAR STATUS MAHASISWA & LAPORAN (ALUMNI) --}}
@@ -288,6 +334,8 @@
                         </tbody>
                     </table>
                 </div>
+=======
+>>>>>>> f4367863a40b8cd326b09cb896de4e9e6bf491a9
             </div>
 
         </div>

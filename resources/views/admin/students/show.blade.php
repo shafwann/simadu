@@ -85,58 +85,6 @@
                 {{-- KANAN: Riwayat Laporan, Presensi & Logbook --}}
                 <div class="lg:col-span-2 space-y-6">
 
-                    {{-- Riwayat Laporan --}}
- <div class="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm overflow-hidden">
-    <h3 class="text-lg font-black text-gray-800 mb-4 flex items-center gap-2">
-        <span class="w-2 h-6 bg-purple-600 rounded-full"></span>
-        Riwayat Laporan Mahasiswa
-    </h3>
-
-    <div class="overflow-y-auto max-h-[250px] mb-4">
-        <table class="w-full text-sm text-left">
-            <thead class="bg-gray-50 sticky top-0">
-                <tr>
-                    <th class="p-4 font-bold text-gray-500">Nama File</th>
-                    <th class="p-4 font-bold text-gray-500">Tanggal Upload</th>
-                    <th class="p-4 font-bold text-center text-gray-500">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-50">
-                @forelse($student->laporans as $lap)
-                <tr class="hover:bg-purple-50/50 transition">
-                    <td class="p-4 font-medium">{{ $lap->nama_file }}</td>
-                    <td class="p-4 text-gray-500">{{ \Carbon\Carbon::parse($lap->created_at)->format('d M Y') }}</td>
-                    <td class="p-4 text-center flex justify-center gap-2">
-                        {{-- Tombol Preview --}}
-                        <button onclick="document.getElementById('preview-iframe').src='{{ route('laporan.preview', $lap->id) }}'" 
-                            class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-200 transition">
-                            Preview
-                        </button>
-
-                        {{-- Download --}}
-                        <a href="{{ route('laporan.download', $lap->id) }}" 
-                           class="px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded-lg hover:bg-purple-700 transition">
-                            Download
-                        </a>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="3" class="p-6 text-center italic text-gray-400">Belum ada laporan.</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    {{-- IFRAME Preview --}}
-    <div class="w-full h-[500px] border border-gray-200 rounded-xl overflow-hidden">
-        <iframe id="preview-iframe" class="w-full h-full" src="" frameborder="0"></iframe>
-    </div>
-</div>
-
-
-
                     {{-- Riwayat Presensi --}}
                     <div class="bg-white border border-gray-100 rounded-[2rem] shadow-sm overflow-hidden">
                         <div class="p-6 border-b border-gray-50 bg-gray-50/30">
@@ -223,6 +171,57 @@
                             </table>
                         </div>
                     </div>
+
+                    {{-- Riwayat Laporan --}}
+                    <div class="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm overflow-hidden">
+                        <h3 class="text-lg font-black text-gray-800 mb-4 flex items-center gap-2">
+                            <span class="w-2 h-6 bg-purple-600 rounded-full"></span>
+                            Riwayat Laporan Mahasiswa
+                        </h3>
+
+                        <div class="overflow-y-auto max-h-[250px] mb-4">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-gray-50 sticky top-0">
+                                    <tr>
+                                        <th class="p-4 font-bold text-gray-500">Nama File</th>
+                                        <th class="p-4 font-bold text-gray-500">Tanggal Upload</th>
+                                        <th class="p-4 font-bold text-center text-gray-500">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-50">
+                                    @forelse($student->laporans as $lap)
+                                    <tr class="hover:bg-purple-50/50 transition">
+                                        <td class="p-4 font-medium">{{ $lap->nama_file }}</td>
+                                        <td class="p-4 text-gray-500">{{ \Carbon\Carbon::parse($lap->created_at)->format('d M Y') }}</td>
+                                        <td class="p-4 text-center flex justify-center gap-2">
+                                            {{-- Tombol Preview --}}
+                                            <button onclick="document.getElementById('preview-iframe').src='{{ route('laporan.preview', $lap->id) }}'" 
+                                                class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-200 transition">
+                                                Preview
+                                            </button>
+
+                                            {{-- Download --}}
+                                            <a href="{{ route('laporan.download', $lap->id) }}" 
+                                            class="px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded-lg hover:bg-purple-700 transition">
+                                                Download
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="3" class="p-6 text-center italic text-gray-400">Belum ada laporan.</td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {{-- IFRAME Preview --}}
+                        <div class="w-full h-[500px] border border-gray-200 rounded-xl overflow-hidden">
+                            <iframe id="preview-iframe" class="w-full h-full" src="" frameborder="0"></iframe>
+                        </div>
+                    </div>
+
 
                 </div>
             </div>
