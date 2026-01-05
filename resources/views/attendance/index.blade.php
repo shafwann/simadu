@@ -89,7 +89,7 @@
                                 </form>
                             </div>
                         @else
-                        
+
                             <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200 text-center">
                                 <div class="inline-flex p-2 bg-green-100 text-green-600 rounded-full mb-4">
                                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
