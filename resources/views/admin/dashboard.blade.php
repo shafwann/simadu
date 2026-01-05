@@ -163,19 +163,11 @@
             </div>
 
 
-<<<<<<< HEAD
             {{-- 3. TABEL VALIDASI LAPORAN --}}
             <div class="bg-white border border-gray-100 rounded-[2rem] shadow-2xl shadow-blue-50/50 overflow-hidden mt-10">
                 <div class="p-8 border-b border-gray-50">
                     <h3 class="text-lg font-black text-gray-800">Validasi Laporan Magang</h3>
                     <p class="text-sm text-gray-400">Daftar laporan akhir yang perlu diperiksa dan disetujui untuk bidang {{ $labelBidang }}.</p>
-=======
-            {{-- VALIDASI LAPORAN MAGANG --}}
-            <div class="bg-white border border-gray-100 rounded-[2rem] shadow-2xl shadow-blue-50/50 overflow-hidden mt-10">
-                <div class="p-8 border-b border-gray-50">
-                    <h3 class="text-lg font-black text-gray-800">Validasi Laporan Magang</h3>
-                    <p class="text-sm text-gray-400">Laporan akhir mahasiswa yang menunggu persetujuan.</p>
->>>>>>> f4367863a40b8cd326b09cb896de4e9e6bf491a9
                 </div>
 
                 <div class="overflow-x-auto">
@@ -250,13 +242,8 @@
                             </tr>
                             @empty
                             <tr>
-<<<<<<< HEAD
                                 <td colspan="4" class="px-8 py-12 text-center text-gray-400 italic">
                                     Tidak ada laporan {{ $isSuperAdmin ? '' : $labelBidang }} yang perlu divalidasi.
-=======
-                                <td colspan="6" class="px-6 py-12 text-center text-gray-400 italic">
-                                    Tidak ada laporan yang perlu divalidasi.
->>>>>>> f4367863a40b8cd326b09cb896de4e9e6bf491a9
                                 </td>
                             </tr>
                             @endforelse
@@ -264,7 +251,6 @@
                     </table>
                 </div>
             </div>
-<<<<<<< HEAD
 
 
             {{-- 4. DAFTAR STATUS MAHASISWA & LAPORAN (ALUMNI) --}}
@@ -334,8 +320,6 @@
                         </tbody>
                     </table>
                 </div>
-=======
->>>>>>> f4367863a40b8cd326b09cb896de4e9e6bf491a9
             </div>
 
         </div>
