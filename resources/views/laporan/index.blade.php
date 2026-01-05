@@ -43,6 +43,11 @@
             @forelse($laporans as $lap)
                 <div class="bg-gray-50 p-3 rounded-lg border mb-4">
                     <h4 class="font-semibold mb-2">{{ $lap->nama_file }}</h4>
+                    @if($lap->is_validated)
+                        <span class="text-green-600 text-sm font-semibold">✔ Sudah divalidasi admin</span>
+                    @else
+                        <span class="text-yellow-600 text-sm font-semibold">⏳ Menunggu validasi admin</span>
+                    @endif
 
                     {{-- Preview PDF langsung --}}
                     @if(Str::endsWith($lap->file_path, '.pdf'))
@@ -53,9 +58,14 @@
                         </iframe>
                     @endif
 
-                    <div class="mt-2 flex gap-2">
-                        <a href="{{ route('laporan.download', $lap->id) }}" class="text-blue-600 font-semibold">Download</a>
+                        @if(!$lap->is_validated)
+                            <a href="{{ route('laporan.edit', $lap->id) }}"
+                            class="text-yellow-600 font-semibold">
+                                Edit
+                            </a>
+                        @endif
                     </div>
+
                 </div>
             @empty
                 <p class="text-gray-400 italic">Belum ada laporan</p>

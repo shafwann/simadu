@@ -12,7 +12,7 @@
                 <p class="text-gray-500 mt-2">Pantau perkembangan mahasiswa magang dan validasi laporan.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {{-- Card Aktif --}}
                 <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-xl shadow-blue-50/50 flex flex-col justify-between group hover:border-blue-200 transition">
                     <div class="flex justify-between items-start mb-4">
@@ -54,7 +54,27 @@
                         <p class="text-4xl font-black text-gray-900">{{ $pendingLogbooks->count() }}</p>
                     </div>
                 </div>
+
+            {{-- Card Pending Laporan --}}
+            <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-xl shadow-blue-50/50 flex flex-col justify-between group hover:border-blue-200 transition">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-3 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition duration-300">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 4H7a2 2 0 01-2-2V6a2 2 0 012-2h5l5 5v9a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide">
+                        Pending
+                    </span>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-400 font-medium mb-1">Laporan Perlu Validasi</p>
+                    <p class="text-4xl font-black text-gray-900">{{ $pendingLaporans->count() }}</p>
+                </div>
             </div>
+            </div>
+
 
             {{-- Persetujuan Logbook --}}
             <div class="bg-white border border-gray-100 rounded-[2rem] shadow-2xl shadow-gray-100/50 overflow-hidden">
@@ -160,9 +180,27 @@
                                     {{ $student->laporans->last()?->created_at->format('d M Y') ?? '-' }}
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <a href="{{ route('admin.students.show', $student->id) }}" class="px-4 py-1 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition">
-                                        Lihat Laporan
-                                    </a>
+                                    @php
+                                        $laporanTerakhir = $student->laporans->last();
+                                    @endphp
+
+                                    @if(!$laporanTerakhir)
+                                        <span class="text-gray-400 text-xs italic">Belum upload</span>
+
+                                    @elseif($laporanTerakhir->is_validated)
+                                        <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                                            Sudah divalidasi
+                                        </span>
+
+                                    @else
+                                        <form action="{{ route('admin.laporan.validate', $laporanTerakhir->id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit"
+                                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition">
+                                                Validasi
+                                            </button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                             @empty

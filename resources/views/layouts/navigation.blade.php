@@ -25,12 +25,9 @@
                             {{ __('Logbook') }}
                         </x-nav-link>
 
-                         {{-- Tambahan: Menu Laporan hanya untuk mahasiswa nonaktif --}}
-                        @if(Auth::user()->status !== 'aktif')
                         <x-nav-link :href="route('laporan.index')" :active="request()->routeIs('laporan.*')" class="font-bold text-green-600">
                             {{ __('Laporan') }}
                         </x-nav-link>
-                        @endif
                     @endif
 
                     @if(Auth::user()->role === 'admin')

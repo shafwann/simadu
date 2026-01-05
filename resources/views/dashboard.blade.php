@@ -80,7 +80,7 @@
                 </div>
 
                 {{-- Card Laporan hanya muncul kalau status TIDAK aktif --}}
-                @if(Auth::user()->status !== 'aktif')
+                @if(Auth::user()->status == 'aktif')
                 <a href="{{ route('laporan.index') }}" 
                 class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:border-green-500 transition group">
                     <div class="flex items-center space-x-4">

@@ -8,7 +8,7 @@ class Laporan extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'file_path', 'nama_file'];
+    protected $fillable = ['user_id', 'file_path', 'nama_file', 'is_validated'];
 
     public function user() {
         return $this->belongsTo(User::class);
