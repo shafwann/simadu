@@ -23,6 +23,12 @@ class LogbookController extends Controller
 
         public function store(Request $request)
         {
+            // --- CEK STATUS AKTIF ---
+            $user = Auth::user();
+            if ($user->status !== 'aktif') {
+                return redirect()->back()->with('error', 'Akun Anda tidak aktif, tidak bisa mengisi logbook.');
+            }
+
             // 1. Validasi input
             $request->validate([
                 'tanggal' => 'required|date',

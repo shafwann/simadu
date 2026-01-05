@@ -24,6 +24,10 @@
                         <x-nav-link :href="route('logbook.index')" :active="request()->routeIs('logbook.index')" class="font-bold">
                             {{ __('Logbook') }}
                         </x-nav-link>
+
+                        <x-nav-link :href="route('laporan.index')" :active="request()->routeIs('laporan.*')" class="font-bold text-green-600">
+                            {{ __('Laporan') }}
+                        </x-nav-link>
                     @endif
 
                     @if(Auth::user()->role === 'admin')

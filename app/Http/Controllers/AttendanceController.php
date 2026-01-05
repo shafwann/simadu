@@ -13,14 +13,56 @@ class AttendanceController extends Controller
     {
         $attendance = Attendance::where('user_id', Auth::id())
             ->whereDate('tanggal', Carbon::today())
+            ->orderByDesc('id') // ambil data TERBARU
             ->first();
 
         return view('attendance.index', compact('attendance'));
     }
 
+    //--logika cek status mahasiswa
+    public function store(Request $request)
+    {
+        $user = Auth::user();
+
+        // --- CEK STATUS AKTIF ---
+        if ($user->status !== 'aktif') {
+            return redirect()->back()->with('error', 'Akun Anda tidak aktif, tidak bisa mengisi logbook.');
+        }
+
+        // 1. Validasi input
+        $request->validate([
+            'tanggal' => 'required|date',
+            'kegiatan' => 'required|string|min:5',
+        ]);
+
+        try {
+            // 2. Simpan ke database
+            Logbook::create([
+                'user_id' => $user->id,
+                'tanggal' => $request->tanggal,
+                'kegiatan' => $request->kegiatan,
+                'is_validated' => false, // Default awal belum divalidasi
+            ]);
+
+            // 3. Kembalikan ke halaman sebelumnya dengan pesan sukses
+            return redirect()->route('logbook.index')->with('success', 'Kegiatan berhasil disimpan!');
+
+        } catch (\Exception $e) {
+            // Jika ada error database, munculkan di layar
+            return redirect()->back()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
+        }
+    }
+
+
     // --- LOGIKA CHECK-IN (MASUK) ---
     public function checkIn(Request $request)
     {
+        // --- CEK STATUS AKTIF ---
+        $user = Auth::user();
+        if ($user->status !== 'aktif') {
+            return back()->with('error', 'Akun Anda tidak aktif, tidak bisa melakukan presensi.');
+        }
+
         $request->validate(['location' => 'required']);
 
         // 1. Cek Hari (Opsional: Cegah absen Sabtu/Minggu)
@@ -45,7 +87,7 @@ class AttendanceController extends Controller
         // 4. Validasi Jarak & Simpan (Kode Lama)
         $officeLat = -7.594917597849972;
         $officeLng = 110.94065517764916;
-        $maxRadius = 500;
+        $maxRadius = 99999;
 
         $userLoc = explode(',', $request->location);
         $distance = $this->calculateDistance($officeLat, $officeLng, $userLoc[0], $userLoc[1]);
@@ -82,7 +124,7 @@ class AttendanceController extends Controller
         // 3. Validasi Jarak & Update (Kode Lama)
         $officeLat = -7.594917597849972;
         $officeLng = 110.94065517764916;
-        $maxRadius = 500;
+        $maxRadius = 99999;
 
         $userLoc = explode(',', $request->location);
         $distance = $this->calculateDistance($officeLat, $officeLng, $userLoc[0], $userLoc[1]);
@@ -94,6 +136,10 @@ class AttendanceController extends Controller
         $attendance = Attendance::where('user_id', Auth::id())
             ->whereDate('tanggal', Carbon::today())
             ->first();
+
+        if (!$attendance) {
+            return back()->with('error', 'Anda belum melakukan check-in hari ini.');
+        }
 
         $attendance->update(['check_out' => now()->toTimeString()]);
 
