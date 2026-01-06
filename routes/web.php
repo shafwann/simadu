@@ -142,42 +142,84 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         Route::post('/', [AdminManagementController::class, 'store'])->name('store');
         Route::delete('/{id}', [AdminManagementController::class, 'destroy'])->name('destroy');
     });
-    
+
 });
 
 // ==========================================
-// route utk download data keseluruhan
+// Route untuk download data sesuai format Laporan Bapperlitbang
 // ==========================================
 Route::get('/export-mahasiswa', function() {
-    $mahasiswa = User::where('role', 'mahasiswa')->get();
+    // Ambil data mahasiswa urut abjad nama
+    $mahasiswa = User::where('role', 'mahasiswa')->orderBy('name', 'asc')->get();
 
     $callback = function() use ($mahasiswa) {
         $file = fopen('php://output', 'w');
 
-        // Header CSV
-        fputcsv($file, [
-            'Nama',
-            'NIM',
-            'Jurusan',
-            'Universitas',
-            'Periode Magang',
-            'Bidang',
-            'Status'
-        ]);
+        // 1. Tambahkan BOM (Supaya karakter aman di Excel)
+        fputs($file, "\xEF\xBB\xBF");
 
-        foreach ($mahasiswa as $user) {
+        // 2. Instruksi Pemisah Kolom untuk Excel (Titik Koma)
+        fputs($file, "sep=;\n");
+
+        // 3. JUDUL BESAR (Opsional, mirip file contoh)
+        // Kalau tidak mau ada judul di baris 1, hapus baris ini
+        fputcsv($file, ['DATA MAGANG BAPERLITBANG '.date('Y')], ';');
+        fputcsv($file, [], ';'); // Baris kosong (spasi)
+
+        // 4. HEADER KOLOM (SESUAI CONTOH FILE ANDA)
+        fputcsv($file, [
+            'NO',
+            'NAMA',
+            'NIM',
+            'JURUSAN',      // (Diambil dari Prodi)
+            'UNIVERSITAS',  // (Diambil dari Instansi)
+            'KETERANGAN',   // (Diisi Periode Tanggal)
+            'BIDANG',
+            'AKTIF'         // (Status)
+        ], ';');
+
+        // 5. ISI DATA
+        foreach ($mahasiswa as $index => $user) {
+
+            // Format Tanggal: "1 Juli - 9 Agustus 2024" (Bahasa Indonesia)
+            // Pastikan Carbon pakai locale ID kalau mau nama bulan Indo, atau manual
+            $periode = '-';
+            if ($user->tanggal_masuk && $user->tanggal_selesai) {
+                $start = Carbon::parse($user->tanggal_masuk);
+                $end = Carbon::parse($user->tanggal_selesai);
+
+                // Format manual biar pasti bahasa Indonesia (cth: 01 Juli 2024)
+                $bulanIndo = [
+                    1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                    5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                ];
+
+                $strStart = $start->day . ' ' . $bulanIndo[$start->month] . ' ' . $start->year;
+                $strEnd = $end->day . ' ' . $bulanIndo[$end->month] . ' ' . $end->year; // Tahun ditampilkan di akhir saja atau dua-duanya
+
+                // Jika tahun sama, format: 1 Juli - 9 Agustus 2024
+                if ($start->year == $end->year) {
+                    $strStart = $start->day . ' ' . $bulanIndo[$start->month];
+                }
+
+                $periode = $strStart . ' - ' . $strEnd;
+            }
+
+            // Bersihkan data bidang dari enter
+            $bidang = strtoupper(str_replace(["\r", "\n"], " ", $user->bidang ?? ''));
+            $status = ucfirst($user->status ?? '-'); // Aktif / Selesai
+
             fputcsv($file, [
-                $user->name,
-                $user->nim,
-                $user->prodi,
-                $user->instansi,
-                $user->tanggal_masuk && $user->tanggal_selesai
-                    ? Carbon::parse($user->tanggal_masuk)->format('d F Y') 
-                      .' - '.Carbon::parse($user->tanggal_selesai)->format('d F Y')
-                    : '',
-                $user->bidang ?? '',
-                $user->status ?? ''
-            ]);
+                $index + 1,        // NO
+                strtoupper($user->name), // NAMA (Huruf Besar semua biar rapi)
+                "'" . $user->nim,  // NIM (Pakai petik biar gak error di excel)
+                strtoupper($user->prodi), // JURUSAN
+                strtoupper($user->instansi), // UNIVERSITAS
+                $periode,          // KETERANGAN (Periode Magang)
+                $bidang,           // BIDANG
+                $status            // AKTIF
+            ], ';');
         }
 
         fclose($file);
@@ -185,7 +227,10 @@ Route::get('/export-mahasiswa', function() {
 
     return response()->stream($callback, 200, [
         "Content-type" => "text/csv",
-        "Content-Disposition" => "attachment; filename=mahasiswa-magang.csv"
+        "Content-Disposition" => "attachment; filename=DATA_MAGANG_BAPERLITBANG_".date('Y').".csv",
+        "Pragma" => "no-cache",
+        "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+        "Expires" => "0"
     ]);
 })->name('admin.export.mahasiswa');
 
