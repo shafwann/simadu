@@ -40,10 +40,6 @@
                                 <option value="Fisik & Prasarana">Fisik & Prasarana</option>
                                 <option value="Penelitian, Pengembangan & Penyusunan Program">Penelitian, Pengembangan & Penyusunan Program</option>
                             </select>
-                            {{-- Panah Dropdown Custom --}}
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </div>
                         </div>
                         <p class="text-xs text-gray-400 mt-2">*Admin ini hanya bisa melihat data mahasiswa di bidang yang dipilih.</p>
                         <x-input-error :messages="$errors->get('bidang')" class="mt-2" />
@@ -73,10 +69,9 @@
                     </div>
 
                     <div class="flex items-center gap-4 pt-6 border-t border-gray-100 mt-6">
-                        <button type="submit" class="inline-flex items-center gap-2 bg-purple-700 text-white px-6 py-3 rounded-xl font-bold hover:bg-purple-800 transition shadow-lg shadow-purple-200 hover:-translate-y-0.5">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            Simpan Admin
-                        </button>
+                        <x-primary-button class="bg-blue-600 hover:bg-blue-700 py-3 px-8 text-base shadow-lg shadow-blue-200">
+                            {{ __('Simpan Data') }}
+                        </x-primary-button>
 
                         <a href="{{ route('admin.manage.index') }}" class="px-6 py-3 rounded-xl font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition">
                             Batal

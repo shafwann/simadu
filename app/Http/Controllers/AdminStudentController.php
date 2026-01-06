@@ -65,6 +65,9 @@ class AdminStudentController extends Controller
             'fakultas' => ['nullable', 'string'], // Boleh kosong
             'tanggal_masuk' => ['required', 'date'],
             'tanggal_selesai' => ['required', 'date', 'after:tanggal_masuk'], // Harus setelah tgl masuk
+
+            // ✅ TAMBAHAN: validasi bidang/divisi supaya cocok dengan ENUM
+            'bidang' => ['required', 'in:Ekonomi,Sekretariat,Sosial & Budaya,Fisik & Prasarana,Penelitian, Pengembangan & Penyusunan Program'],
         ]);
 
         $bidangMahasiswa = ($admin->bidang === 'Administrator Sistem') ? 'Sekretariat' : $admin->bidang;
@@ -74,7 +77,11 @@ class AdminStudentController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => 'mahasiswa',
-            'bidang' => $bidangMahasiswa,
+
+            // ✅ PERUBAHAN SATU-SATUNYA DI BAGIAN SIMPAN:
+            // sebelumnya: 'bidang' => $bidangMahasiswa,
+            'bidang' => $request->bidang,
+
             'status' => 'aktif',
             'nim' => $request->nim,
             'prodi' => $request->prodi,
