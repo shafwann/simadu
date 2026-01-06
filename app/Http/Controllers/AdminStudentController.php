@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\Support\Facades\Auth; // Jangan lupa import Auth
+use Illuminate\Validation\Rule; // ✅ TAMBAHAN (agar bidang yang ada koma tidak invalid)
 
 class AdminStudentController extends Controller
 {
@@ -66,8 +67,14 @@ class AdminStudentController extends Controller
             'tanggal_masuk' => ['required', 'date'],
             'tanggal_selesai' => ['required', 'date', 'after:tanggal_masuk'], // Harus setelah tgl masuk
 
-            // ✅ TAMBAHAN: validasi bidang/divisi supaya cocok dengan ENUM
-            'bidang' => ['required', 'in:Ekonomi,Sekretariat,Sosial & Budaya,Fisik & Prasarana,Penelitian, Pengembangan & Penyusunan Program'],
+            // ✅ PERUBAHAN MINIMAL: validasi bidang/divisi supaya cocok dengan ENUM (termasuk yang ada koma)
+            'bidang' => ['required', Rule::in([
+                'Ekonomi',
+                'Sekretariat',
+                'Sosial & Budaya',
+                'Fisik & Prasarana',
+                'Penelitian, Pengembangan & Penyusunan Program',
+            ])],
         ]);
 
         $bidangMahasiswa = ($admin->bidang === 'Administrator Sistem') ? 'Sekretariat' : $admin->bidang;
