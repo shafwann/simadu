@@ -15,11 +15,15 @@ public function up(): void
             $table->string('nim')->nullable();
             $table->string('prodi')->nullable();
             $table->string('instansi')->nullable();
+            $table->string('fakultas')->nullable(); // Boleh kosong (untuk anak SMK)
+            $table->string('kegiatan')->default('Magang'); // Contoh: PKL, Magang, Penelitian
+            $table->date('tanggal_masuk')->nullable();
+            $table->date('tanggal_selesai')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('role', ['mahasiswa', 'pembimbing', 'admin'])->default('mahasiswa');
             $table->enum('bidang', [
-                'Administrator Sistem', 
+                'Administrator Sistem',
                 'Ekonomi',
                 'Sekretariat',
                 'Sosial & Budaya',

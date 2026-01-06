@@ -41,7 +41,9 @@ class DatabaseSeeder extends Seeder
             'Universitas Gadjah Mada (UGM)',
             'Universitas Negeri Semarang (UNNES)',
             'Politeknik Negeri Semarang',
-            'Universitas Amikom Yogyakarta'
+            'Universitas Amikom Yogyakarta',
+            'SMK Negeri 1 Karanganyar',
+            'SMK Negeri 2 Surakarta'
         ];
 
         // Daftar Prodi
@@ -73,6 +75,8 @@ class DatabaseSeeder extends Seeder
         // ==========================================
         // 2. BUAT 15 AKUN MAHASISWA RANDOM
         // ==========================================
+        $tglMasuk = $faker->dateTimeBetween('-3 months', 'now');
+        $tglSelesai = (clone $tglMasuk)->modify('+3 months'); // Durasi 3 bulan
         for ($i = 1; $i <= 100; $i++) {
             User::create([
                 'name' => $faker->name,
@@ -89,6 +93,10 @@ class DatabaseSeeder extends Seeder
                 // Pilih Kampus & Prodi Acak
                 'instansi' => $faker->randomElement($daftarKampus),
                 'prodi' => $faker->randomElement($daftarProdi),
+                'fakultas' => $faker->randomElement(['Teknik', 'Ekonomi & Bisnis', 'Ilmu Sosial', null]), // Ada yang null
+                'kegiatan' => $faker->randomElement(['Magang Reguler', 'PKL SMK', 'Penelitian Skripsi', 'MBKM','Kuliah Kerja Nyata']),
+                'tanggal_masuk' => $tglMasuk,
+                'tanggal_selesai' => $tglSelesai,
             ]);
         }
 

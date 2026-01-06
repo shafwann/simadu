@@ -39,7 +39,7 @@
                         Tambah Data
                     </a>
                 </div>
-            </div>
+            </div>\
 
             {{-- TABLE --}}
             <div class="bg-white border border-gray-100 rounded-[2rem] shadow-2xl shadow-gray-100/50 overflow-hidden mb-6">
@@ -48,7 +48,7 @@
                         <thead>
                             <tr class="bg-gray-50/50 border-b border-gray-100 text-xs uppercase tracking-widest text-gray-400 font-bold">
                                 <th class="px-6 py-5">Mahasiswa</th>
-                                <th class="px-6 py-5">Instansi / Kampus</th>
+                                <th class="px-6 py-5">Instansi & Periode</th> {{-- Header Diupdate --}}
                                 <th class="px-6 py-5">Bidang / Divisi</th>
                                 <th class="px-6 py-5 text-center">Aksi</th>
                             </tr>
@@ -66,21 +66,63 @@
                                         <div>
                                             <div class="font-bold text-gray-900 group-hover:text-blue-700 transition">{{ $s->name }}</div>
                                             <div class="text-xs text-gray-400">{{ $s->email }}</div>
-                                            @if($s->nim)
-                                                <div class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md inline-block mt-1">
-                                                    {{ $s->nim }}
-                                                </div>
-                                            @endif
+
+                                            {{-- Menampilkan NIM & Kegiatan (Baru) --}}
+                                            <div class="flex gap-2 mt-1">
+                                                @if($s->nim)
+                                                    <span class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
+                                                        {{ $s->nim }}
+                                                    </span>
+                                                @endif
+                                                @if($s->kegiatan)
+                                                    <span class="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100">
+                                                        {{ $s->kegiatan }}
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
 
-                                {{-- 2. INSTANSI --}}
+                                {{-- 2. INSTANSI & TANGGAL (UPDATE DISINI) --}}
                                 <td class="px-6 py-4">
                                     @if($s->instansi)
                                         <div class="text-sm font-bold text-gray-700 truncate max-w-[200px]" title="{{ $s->instansi }}">{{ $s->instansi }}</div>
-                                        @if($s->prodi)
-                                            <div class="text-xs text-gray-500">{{ $s->prodi }}</div>
+                                        <div class="text-xs text-gray-500 mb-2">{{ $s->prodi }}</div>
+
+                                        {{-- TAMPILAN TANGGAL --}}
+                                        @if($s->tanggal_masuk && $s->tanggal_selesai)
+                                            @php
+                                                $start = \Carbon\Carbon::parse($s->tanggal_masuk);
+                                                $end = \Carbon\Carbon::parse($s->tanggal_selesai);
+                                                $now = \Carbon\Carbon::now();
+                                                $diff = $now->diffInDays($end, false); // false agar bisa negatif (lewat)
+                                                $isEndingSoon = $diff >= 0 && $diff <= 7; // Kurang dari 7 hari
+                                                $isExpired = $diff < 0; // Sudah lewat
+                                            @endphp
+
+                                            <div class="flex flex-col gap-1">
+                                                {{-- Rentang Tanggal --}}
+                                                <div class="flex items-center gap-1.5 text-[11px] text-gray-600 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 w-fit">
+                                                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                    <span>{{ $start->format('d M') }} - {{ $end->format('d M Y') }}</span>
+                                                </div>
+
+                                                {{-- Indikator Sisa Waktu --}}
+                                                @if($s->status == 'aktif')
+                                                    @if($isExpired)
+                                                        <span class="text-[10px] font-bold text-red-600 flex items-center gap-1">
+                                                            <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+                                                            Lewat {{ abs(intval($diff)) }} hari
+                                                        </span>
+                                                    @elseif($isEndingSoon)
+                                                        <span class="text-[10px] font-bold text-amber-600 flex items-center gap-1">
+                                                            <span class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>
+                                                            Sisa {{ intval($diff) }} hari lagi
+                                                        </span>
+                                                    @endif
+                                                @endif
+                                            </div>
                                         @endif
                                     @else
                                         <span class="text-xs text-gray-400 italic">Data belum lengkap</span>
