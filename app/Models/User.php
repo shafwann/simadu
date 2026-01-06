@@ -26,6 +26,7 @@ class User extends Authenticatable
         'instansi',
         'bidang',
         'status',
+        'pembimbing_id',
     ];
 
     protected $hidden = [
@@ -56,4 +57,25 @@ class User extends Authenticatable
         return $this->hasMany(Laporan::class);
     }
 
+        // dosen → banyak mahasiswa
+    public function mahasiswaBimbingan()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'dosen_mahasiswa',
+            'dosen_id',
+            'mahasiswa_id'
+        );
+    }
+
+    // mahasiswa → banyak dosen
+    public function dosenPembimbing()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'dosen_mahasiswa',
+            'mahasiswa_id',
+            'dosen_id'
+        );
+    }
 }

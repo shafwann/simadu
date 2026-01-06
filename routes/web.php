@@ -13,6 +13,7 @@ use App\Http\Controllers\AdminStudentController;
 use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\AdminManagementController;
+use App\Http\Controllers\AdminDosenController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,13 +25,17 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Dashboard Redirect Logic
+// Dashboard Redirect Logic (ROLE AWARE)
 Route::get('/dashboard', function () {
-    if (Auth::user()->role === 'admin') {
-        return redirect()->route('admin.dashboard');
-    }
-    return view('dashboard');
+    $role = Auth::user()->role;
+
+    return match ($role) {
+        'admin' => redirect()->route('admin.dashboard'),
+        'pembimbing' => redirect()->route('pembimbing.dashboard'),
+        default => view('dashboard'), // mahasiswa
+    };
 })->middleware(['auth', 'verified'])->name('dashboard');
+
 
 // ==========================================
 // GROUP: AUTHENTICATED USERS (UMUM)
@@ -112,19 +117,38 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('students', AdminStudentController::class);
     Route::patch('/students/{id}/status', [AdminStudentController::class, 'updateStatus'])->name('students.updateStatus');
 
-    // 5. Manajemen Absensi (Manual Input/Edit oleh Admin)
+    // 5. CRUD Dosen & Assign Mahasiswa
+    Route::get('dosen', [AdminDosenController::class, 'index'])->name('dosen.index');
+    Route::get('dosen/create', [AdminDosenController::class, 'create'])->name('dosen.create');
+    Route::post('dosen/store', [AdminDosenController::class, 'store'])->name('dosen.store');
+    Route::delete('dosen/{dosen}', [AdminDosenController::class, 'destroy'])->name('dosen.destroy');
+    Route::get('/dosen/{id}/edit', [AdminDosenController::class, 'edit'])->name('dosen.edit');
+    Route::put('/dosen/{id}', [AdminDosenController::class, 'update'])->name('dosen.update');
+
+    Route::get('dosen/{dosen}/assign', [AdminDosenController::class, 'showAssignForm'])->name('dosen.assign.form');
+    Route::post('dosen/{dosen}/assign', [AdminDosenController::class, 'assignMahasiswa'])->name('dosen.assign.submit');
+
+    // 6. Manajemen Absensi (Manual Input/Edit oleh Admin)
     Route::post('/attendance/store', [AdminAttendanceController::class, 'store'])->name('attendance.store');
     Route::delete('/attendance/{id}', [AdminAttendanceController::class, 'destroy'])->name('attendance.destroy');
     Route::get('/attendance/{id}/edit', [AdminAttendanceController::class, 'edit'])->name('attendance.edit');
     Route::put('/attendance/{id}', [AdminAttendanceController::class, 'update'])->name('attendance.update');
 
-    // 6. MANAJEMEN ADMIN (Khusus Super Admin)
+    // 7. MANAJEMEN ADMIN (Khusus Super Admin)
     Route::prefix('manage-admins')->name('manage.')->group(function () {
         Route::get('/', [AdminManagementController::class, 'index'])->name('index');
         Route::get('/create', [AdminManagementController::class, 'create'])->name('create');
         Route::post('/', [AdminManagementController::class, 'store'])->name('store');
         Route::delete('/{id}', [AdminManagementController::class, 'destroy'])->name('destroy');
     });
+});
+
+// ==========================================
+// GROUP: PEMBIMBING ONLY (Dashboard Mahasiswa Bimbingan)
+// ==========================================
+Route::middleware(['auth','role:pembimbing'])->prefix('pembimbing')->name('pembimbing.')->group(function(){
+    Route::get('/dashboard', [AdminDosenController::class, 'dashboard'])->name('dashboard');
+    Route::get('/mahasiswa/{id}', [AdminDosenController::class, 'detailMahasiswa'])->name('mahasiswa.detail');
 });
 
 require __DIR__.'/auth.php';
