@@ -14,6 +14,7 @@ use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\AdminManagementController;
 use App\Http\Controllers\AdminDosenController;
+use App\Models\User;
 
 /*
 |--------------------------------------------------------------------------
@@ -141,7 +142,52 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         Route::post('/', [AdminManagementController::class, 'store'])->name('store');
         Route::delete('/{id}', [AdminManagementController::class, 'destroy'])->name('destroy');
     });
+    
 });
+
+// ==========================================
+// route utk download data keseluruhan
+// ==========================================
+Route::get('/export-mahasiswa', function() {
+    $mahasiswa = User::where('role', 'mahasiswa')->get();
+
+    $callback = function() use ($mahasiswa) {
+        $file = fopen('php://output', 'w');
+
+        // Header CSV
+        fputcsv($file, [
+            'Nama',
+            'NIM',
+            'Jurusan',
+            'Universitas',
+            'Periode Magang',
+            'Bidang',
+            'Status'
+        ]);
+
+        foreach ($mahasiswa as $user) {
+            fputcsv($file, [
+                $user->name,
+                $user->nim,
+                $user->prodi,
+                $user->instansi,
+                $user->tanggal_masuk && $user->tanggal_selesai
+                    ? Carbon::parse($user->tanggal_masuk)->format('d F Y') 
+                      .' - '.Carbon::parse($user->tanggal_selesai)->format('d F Y')
+                    : '',
+                $user->bidang ?? '',
+                $user->status ?? ''
+            ]);
+        }
+
+        fclose($file);
+    };
+
+    return response()->stream($callback, 200, [
+        "Content-type" => "text/csv",
+        "Content-Disposition" => "attachment; filename=mahasiswa-magang.csv"
+    ]);
+})->name('admin.export.mahasiswa');
 
 // ==========================================
 // GROUP: PEMBIMBING ONLY (Dashboard Mahasiswa Bimbingan)

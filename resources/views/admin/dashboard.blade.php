@@ -36,6 +36,13 @@
                 </p>
             </div>
 
+            <div class="flex justify-end mb-6">
+                <a href="{{ route('admin.export.mahasiswa') }}"
+                class="px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-bold text-sm rounded-xl shadow-md transition">
+                    Download CSV Mahasiswa
+                </a>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 {{-- Card Mahasiswa Aktif --}}
