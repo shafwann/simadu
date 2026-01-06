@@ -44,6 +44,14 @@
                         </select>
                     </div>
 
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Link Google Maps</label>
+                        <input type="text" name="location" value="{{ old('location', $attendance->location) }}"
+                               placeholder="https://goo.gl/maps/..."
+                               class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        <p class="text-[10px] text-gray-400 mt-1">*Bisa diisi link share lokasi atau dibiarkan kosong.</p>
+                    </div>
+
                     <div class="flex gap-4 pt-4">
                         <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">
                             Simpan Perubahan
@@ -66,15 +74,22 @@ function toggleJam() {
 
     const checkIn = document.querySelector('input[name="check_in"]');
     const checkOut = document.querySelector('input[name="check_out"]');
+    const locationInput = document.querySelector('input[name="location"]'); // Opsional: disable lokasi juga kalau tidak hadir
 
     checkIn.disabled = disabled;
     checkOut.disabled = disabled;
-    checkIn.required = !disabled;
+
+    // Jika disable, hilangkan required agar tidak error saat submit
+    if(disabled) {
+        checkIn.required = false;
+        checkIn.value = '';
+        checkOut.value = '';
+        // locationInput.value = ''; // Uncomment jika ingin reset lokasi saat status berubah jadi sakit/izin
+    } else {
+        checkIn.required = true;
+    }
 }
 
 document.addEventListener('DOMContentLoaded', toggleJam);
 document.querySelector('select[name="status"]').addEventListener('change', toggleJam);
 </script>
-
-
-

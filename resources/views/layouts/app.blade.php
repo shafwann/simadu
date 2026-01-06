@@ -7,30 +7,29 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
-
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-50 flex flex-col">
+    <body class="font-sans antialiased flex flex-col min-h-screen">
+        {{-- ^^^ Tambahkan class flex flex-col min-h-screen agar footer selalu di bawah --}}
 
+        <div class="bg-gray-100 flex-grow"> {{-- Tambahkan flex-grow --}}
             @include('layouts.navigation')
 
-            @if (isset($header))
+            @isset($header)
                 <header class="bg-white shadow">
                     <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
                 </header>
-            @endif
+            @endisset
 
-            <main class="flex-grow">
+            <main>
                 {{ $slot }}
             </main>
-
-            @include('layouts.footer')
-
         </div>
+
+        {{-- TARUH FOOTER DISINI --}}
+        @include('layouts.footer')
+
     </body>
 </html>

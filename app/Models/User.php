@@ -27,6 +27,10 @@ class User extends Authenticatable
         'bidang',
         'status',
         'pembimbing_id',
+        'fakultas',
+        'kegiatan',
+        'tanggal_masuk',
+        'tanggal_selesai'
     ];
 
     protected $hidden = [

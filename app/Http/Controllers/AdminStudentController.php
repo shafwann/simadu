@@ -47,41 +47,47 @@ class AdminStudentController extends Controller
 
     // 3. SIMPAN MAHASISWA BARU
     public function store(Request $request)
-        {
-            $admin = Auth::user();
+    {
+        $admin = Auth::user();
 
-            $request->validate([
-                'name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-                'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
 
-                // Validasi Tambahan
-                'nim' => ['required', 'string', 'max:20'],
-                'prodi' => ['required', 'string', 'max:100'],
-                'instansi' => ['required', 'string', 'max:100'],
-            ]);
+            // Data Akademik
+            'nim' => ['required', 'string', 'max:20'],
+            'prodi' => ['required', 'string', 'max:100'],
+            'instansi' => ['required', 'string', 'max:100'],
 
-            $bidangMahasiswa = ($admin->bidang === 'Administrator Sistem')
-                                ? 'Sekretariat'
-                                : $admin->bidang;
+            // --- VALIDASI BARU ---
+            'kegiatan' => ['required', 'string'],
+            'fakultas' => ['nullable', 'string'], // Boleh kosong
+            'tanggal_masuk' => ['required', 'date'],
+            'tanggal_selesai' => ['required', 'date', 'after:tanggal_masuk'], // Harus setelah tgl masuk
+        ]);
 
-            User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'role' => 'mahasiswa',
-                'bidang' => $bidangMahasiswa,
-                'status' => 'aktif',
+        $bidangMahasiswa = ($admin->bidang === 'Administrator Sistem') ? 'Sekretariat' : $admin->bidang;
 
-                // Simpan Data Baru
-                'nim' => $request->nim,
-                'prodi' => $request->prodi,
-                'instansi' => $request->instansi,
-            ]);
+        User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => 'mahasiswa',
+            'bidang' => $bidangMahasiswa,
+            'status' => 'aktif',
+            'nim' => $request->nim,
+            'prodi' => $request->prodi,
+            'instansi' => $request->instansi,
+            'fakultas' => $request->fakultas,
+            'kegiatan' => $request->kegiatan,
+            'tanggal_masuk' => $request->tanggal_masuk,
+            'tanggal_selesai' => $request->tanggal_selesai,
+        ]);
 
-            return redirect()->route('admin.students.index')
-                ->with('success', 'Akun mahasiswa berhasil dibuat.');
-        }
+        return redirect()->route('admin.students.index')
+            ->with('success', 'Mahasiswa berhasil ditambahkan.');
+    }
 
     // 4. LIHAT DETAIL
     public function show($id)
