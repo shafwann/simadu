@@ -40,10 +40,6 @@
                                 <option value="Fisik & Prasarana">Fisik & Prasarana</option>
                                 <option value="Penelitian, Pengembangan & Penyusunan Program">Penelitian, Pengembangan & Penyusunan Program</option>
                             </select>
-                            {{-- Panah Dropdown Custom --}}
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </div>
                         </div>
                         <p class="text-xs text-gray-400 mt-2">*Admin ini hanya bisa melihat data mahasiswa di bidang yang dipilih.</p>
                         <x-input-error :messages="$errors->get('bidang')" class="mt-2" />
