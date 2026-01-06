@@ -39,7 +39,7 @@
                         Tambah Data
                     </a>
                 </div>
-            </div>\
+            </div>
 
             {{-- TABLE --}}
             <div class="bg-white border border-gray-100 rounded-[2rem] shadow-2xl shadow-gray-100/50 overflow-hidden mb-6">
