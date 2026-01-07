@@ -17,8 +17,8 @@
                     {{-- Instansi --}}
                     <div>
                         <x-input-label value="Instansi" />
-                        <select name="instansi"
-                                onchange="this.form.submit()"
+                        <select id="instansi_filter"
+                                name="instansi"
                                 class="w-full rounded-lg border-gray-300">
                             <option value="">-- Semua Instansi --</option>
                             @foreach($instansiList as $instansi)
@@ -33,8 +33,8 @@
                     {{-- Prodi --}}
                     <div>
                         <x-input-label value="Program Studi" />
-                        <select name="prodi"
-                                onchange="this.form.submit()"
+                        <select id="prodi_filter"
+                                name="prodi"
                                 class="w-full rounded-lg border-gray-300">
                             <option value="">-- Semua Prodi --</option>
                             @foreach($prodiList as $prodi)
