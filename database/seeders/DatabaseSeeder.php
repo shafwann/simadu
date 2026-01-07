@@ -43,7 +43,12 @@ class DatabaseSeeder extends Seeder
             'Politeknik Negeri Semarang',
             'Universitas Amikom Yogyakarta',
             'SMK Negeri 1 Karanganyar',
-            'SMK Negeri 2 Surakarta'
+            'SMK Negeri 2 Surakarta',
+            'Universitas Veteran Yogyakarta(UPN)',
+            'Institut Teknologi Sepuluh Nopember (ITS)',
+            'Institut Pertanian Bogor (IPB)',
+            'Universitas Indonesia (UI)',
+            'Universitas Padjadjaran (UNPAD)'
         ];
 
         // Daftar Prodi

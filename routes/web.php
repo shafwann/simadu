@@ -13,14 +13,26 @@ use App\Http\Controllers\AdminStudentController;
 use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\AdminManagementController;
+use App\Http\Controllers\AdminDosenController;
 use App\Http\Controllers\AssessmentController;
-use App\Http\Controllers\DashboardController; // ✅ TAMBAH INI
+use App\Http\Controllers\DashboardController;
+
+use App\Models\User;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-// ✅ GANTI /dashboard yang lama -> pakai DashboardController (load assessment)
+/**
+ * Dashboard (Pakai DashboardController)
+ * Pastikan DashboardController handle role redirect (admin/pembimbing/mahasiswa)
+ */
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -31,15 +43,15 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 // ==========================================
 Route::middleware('auth')->group(function () {
 
-    // ✅ TAMBAHAN: DOWNLOAD SERTIFIKAT (USER LOGIN, HANYA MILIK SENDIRI)
+    // DOWNLOAD SERTIFIKAT (USER LOGIN, HANYA MILIK SENDIRI)
     Route::get('/certificate/download', function () {
-        $user = \App\Models\User::with('assessment')->findOrFail(Auth::id());
+        $user = User::with('assessment')->findOrFail(Auth::id());
 
         if (!$user->assessment) {
             abort(404, 'Penilaian belum ada.');
         }
 
-        return app(\App\Http\Controllers\AssessmentController::class)->certificate($user);
+        return app(AssessmentController::class)->certificate($user);
     })->name('certificate.download');
 
     // Profile
@@ -56,8 +68,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/logbook', [LogbookController::class, 'index'])->name('logbook.index');
     Route::post('/logbook', [LogbookController::class, 'store'])->name('logbook.store');
 
-    // ✅ LAPORAN SHARED (OWNER / ADMIN)
-    // ini yang bikin route('laporan.download') & route('laporan.preview') ADA dan aman
+    // LAPORAN SHARED (OWNER / ADMIN)
     Route::get('/laporan/download/{laporan}', [LaporanController::class, 'download'])->name('laporan.download');
     Route::get('/laporan/preview/{laporan}', [LaporanController::class, 'preview'])->name('laporan.preview');
 
@@ -65,7 +76,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/laporan/{laporan}/edit', [LaporanController::class, 'edit'])->name('laporan.edit');
     Route::put('/laporan/{laporan}', [LaporanController::class, 'update'])->name('laporan.update');
 
-    // --- EXPORT ROUTES (punyamu boleh tetap) ---
+    // EXPORT PRESENSI
     Route::get('/export-presensi', function () {
         $data = \App\Models\Attendance::where('user_id', Auth::id())->with('user')->get();
 
@@ -91,6 +102,7 @@ Route::middleware('auth')->group(function () {
         ]);
     })->name('attendance.export');
 
+    // EXPORT LOGBOOK
     Route::get('/export-logbook', function () {
         $data = \App\Models\Logbook::where('user_id', Auth::id())->get();
 
@@ -141,21 +153,34 @@ Route::middleware(['auth', 'role:admin'])
         // admin lihat semua laporan
         Route::get('/laporan-list', [LaporanController::class, 'adminIndex'])->name('laporan.index');
 
-        // ✅ OPTIONAL: admin download versi route admin.*
+        // admin download laporan
         Route::get('/laporan/download/{laporan}', [LaporanController::class, 'download'])->name('laporan.download');
 
         // CRUD mahasiswa
         Route::resource('students', AdminStudentController::class);
         Route::patch('/students/{user}/status', [AdminStudentController::class, 'updateStatus'])->name('students.updateStatus');
 
+        // ===== DOSEN & ASSIGN MAHASISWA =====
+        Route::get('dosen', [AdminDosenController::class, 'index'])->name('dosen.index');
+        Route::get('dosen/create', [AdminDosenController::class, 'create'])->name('dosen.create');
+        Route::post('dosen/store', [AdminDosenController::class, 'store'])->name('dosen.store');
+        Route::delete('dosen/{dosen}', [AdminDosenController::class, 'destroy'])->name('dosen.destroy');
+        Route::get('/dosen/{id}/edit', [AdminDosenController::class, 'edit'])->name('dosen.edit');
+        Route::put('/dosen/{id}', [AdminDosenController::class, 'update'])->name('dosen.update');
+        Route::get('dosen/{dosen}/mahasiswa', [AdminDosenController::class, 'showMahasiswa'])->name('dosen.mahasiswa');
+        Route::get('/mahasiswa/{id}', [AdminStudentController::class, 'show'])->name('mahasiswa.show');
+
+        Route::get('dosen/{dosen}/assign', [AdminDosenController::class, 'showAssignForm'])->name('dosen.assign.form');
+        Route::post('dosen/{dosen}/assign', [AdminDosenController::class, 'assignMahasiswa'])->name('dosen.assign.submit');
+
         // absensi manual
         Route::post('/attendance/store', [AdminAttendanceController::class, 'store'])->name('attendance.store');
-        Route::delete('/attendance/{attendance}', [AdminAttendanceController::class, 'destroy'])->name('attendance.destroy');
-        Route::get('/attendance/{attendance}/edit', [AdminAttendanceController::class, 'edit'])->name('attendance.edit');
-        Route::put('/attendance/{attendance}', [AdminAttendanceController::class, 'update'])->name('attendance.update');
+        Route::delete('/attendance/{id}', [AdminAttendanceController::class, 'destroy'])->name('attendance.destroy');
+        Route::get('/attendance/{id}/edit', [AdminAttendanceController::class, 'edit'])->name('attendance.edit');
+        Route::put('/attendance/{id}', [AdminAttendanceController::class, 'update'])->name('attendance.update');
 
         // assessment
-        Route::middleware(['auth', 'role:admin'])->prefix('assessment')->name('assessment.')->group(function () {
+        Route::prefix('assessment')->name('assessment.')->group(function () {
             Route::post('/{user}', [AssessmentController::class, 'store'])->name('store');
             Route::patch('/{assessment}', [AssessmentController::class, 'update'])->name('update');
             Route::delete('/{assessment}', [AssessmentController::class, 'destroy'])->name('destroy');
@@ -169,6 +194,93 @@ Route::middleware(['auth', 'role:admin'])
             Route::post('/', [AdminManagementController::class, 'store'])->name('store');
             Route::delete('/{id}', [AdminManagementController::class, 'destroy'])->name('destroy');
         });
+    });
+
+
+// ==========================================
+// Route download data format Bapperlitbang (CSV)
+// ==========================================
+Route::get('/export-mahasiswa', function () {
+
+    $mahasiswa = User::where('role', 'mahasiswa')->orderBy('name', 'asc')->get();
+
+    $callback = function () use ($mahasiswa) {
+        $file = fopen('php://output', 'w');
+
+        // BOM utk Excel
+        fputs($file, "\xEF\xBB\xBF");
+
+        // Separator Excel
+        fputs($file, "sep=;\n");
+
+        fputcsv($file, ['DATA MAGANG BAPERLITBANG ' . date('Y')], ';');
+        fputcsv($file, [], ';');
+
+        fputcsv($file, [
+            'NO', 'NAMA', 'NIM', 'JURUSAN', 'UNIVERSITAS', 'KETERANGAN', 'BIDANG', 'AKTIF'
+        ], ';');
+
+        foreach ($mahasiswa as $index => $user) {
+
+            $periode = '-';
+            if ($user->tanggal_masuk && $user->tanggal_selesai) {
+                $start = Carbon::parse($user->tanggal_masuk);
+                $end = Carbon::parse($user->tanggal_selesai);
+
+                $bulanIndo = [
+                    1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                    5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                ];
+
+                $strStart = $start->day . ' ' . $bulanIndo[$start->month] . ' ' . $start->year;
+                $strEnd = $end->day . ' ' . $bulanIndo[$end->month] . ' ' . $end->year;
+
+                if ($start->year == $end->year) {
+                    $strStart = $start->day . ' ' . $bulanIndo[$start->month];
+                }
+
+                $periode = $strStart . ' - ' . $strEnd;
+            }
+
+            $bidang = strtoupper(str_replace(["\r", "\n"], " ", $user->bidang ?? ''));
+            $status = ucfirst($user->status ?? '-');
+
+            fputcsv($file, [
+                $index + 1,
+                strtoupper($user->name),
+                "'" . $user->nim,
+                strtoupper($user->prodi),
+                strtoupper($user->instansi),
+                $periode,
+                $bidang,
+                $status
+            ], ';');
+        }
+
+        fclose($file);
+    };
+
+    return response()->stream($callback, 200, [
+        "Content-type" => "text/csv",
+        "Content-Disposition" => "attachment; filename=DATA_MAGANG_BAPERLITBANG_" . date('Y') . ".csv",
+        "Pragma" => "no-cache",
+        "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+        "Expires" => "0"
+    ]);
+})->name('admin.export.mahasiswa');
+
+
+// ==========================================
+// GROUP: PEMBIMBING ONLY
+// ==========================================
+Route::middleware(['auth', 'role:pembimbing'])
+    ->prefix('pembimbing')
+    ->name('pembimbing.')
+    ->group(function () {
+
+        Route::get('/dashboard', [AdminDosenController::class, 'dashboard'])->name('dashboard');
+        Route::get('/mahasiswa/{id}', [AdminDosenController::class, 'detailMahasiswa'])->name('mahasiswa.detail');
     });
 
 require __DIR__ . '/auth.php';

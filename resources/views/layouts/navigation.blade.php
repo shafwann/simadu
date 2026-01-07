@@ -48,6 +48,17 @@
                             </span>
                         </x-nav-link>
 
+                            {{-- MENU MANAJEMEN DOSEN --}}
+                        <x-nav-link :href="route('admin.dosen.index')" :active="request()->routeIs('admin.dosen.*')" class="font-bold text-indigo-600 hover:text-indigo-800">
+                            <span class="flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.84 5.422L12 14z"></path>
+                                </svg>
+                                {{ __('Manajemen Dosen') }}
+                            </span>
+                        </x-nav-link>
+
                         {{-- MENU MANAJEMEN ADMIN (Hanya untuk Super Admin) --}}
                         @if(Auth::user()->bidang === 'Administrator Sistem')
                             <x-nav-link :href="route('admin.manage.index')" :active="request()->routeIs('admin.manage.*')" class="font-bold text-purple-600 hover:text-purple-800">

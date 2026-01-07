@@ -36,6 +36,13 @@
                 </p>
             </div>
 
+            <div class="flex justify-end mb-6">
+                <a href="{{ route('admin.export.mahasiswa') }}"
+                class="px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-bold text-sm rounded-xl shadow-md transition">
+                    Download CSV Mahasiswa
+                </a>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 {{-- Card Mahasiswa Aktif --}}
@@ -203,7 +210,7 @@
 
                                 {{-- File --}}
                                 <td class="px-6 py-4">
-                                    <a href="{{ route('laporan.download', $laporan->id) }}"
+                                    <a href="{{ route('admin.laporan.download', $laporan->id) }}"
                                     class="text-blue-600 font-semibold text-sm hover:underline truncate max-w-xs inline-block">
                                         {{ $laporan->nama_file }}
                                     </a>
@@ -242,79 +249,9 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="4" class="px-8 py-12 text-center text-gray-400 italic">
+                                <td colspan="10" class="px-6 py-12 text-center italic text-gray-400">
                                     Tidak ada laporan {{ $isSuperAdmin ? '' : $labelBidang }} yang perlu divalidasi.
                                 </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-
-            {{-- 4. DAFTAR STATUS MAHASISWA & LAPORAN (ALUMNI) --}}
-            <div class="bg-white border border-gray-100 rounded-[2rem] shadow-2xl shadow-gray-100/50 overflow-hidden mt-10">
-                <div class="p-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div>
-                        <h3 class="text-lg font-black text-gray-800">Daftar Status Laporan (Alumni)</h3>
-                        <p class="text-sm text-gray-400">Pantau alumni {{ $labelBidang }} dan status laporannya.</p>
-                    </div>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="bg-gray-50/50 border-b border-gray-100 text-xs uppercase tracking-widest text-gray-400 font-bold">
-                                <th class="px-6 py-4">Mahasiswa</th>
-                                <th class="px-6 py-4">Status Magang</th>
-                                <th class="px-6 py-4">Status Laporan</th>
-                                <th class="px-6 py-4">Tanggal Upload Terakhir</th>
-                                <th class="px-6 py-4 text-center">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-50">
-                            @forelse($students as $student)
-                            <tr class="hover:bg-blue-50/30 transition">
-                                <td class="px-6 py-4 font-medium">{{ $student->name }}</td>
-                                <td class="px-6 py-4">
-                                    @if($student->status === 'aktif')
-                                        <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">Aktif</span>
-                                    @else
-                                        <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">Selesai</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4">
-                                    @if($student->laporans->isEmpty())
-                                        <span class="px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs font-bold">Belum Upload</span>
-                                    @else
-                                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">Sudah Upload</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 text-gray-500 text-sm">
-                                    {{ $student->laporans->last()?->created_at->format('d M Y') ?? '-' }}
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    @php
-                                        $laporanTerakhir = $student->laporans->last();
-                                    @endphp
-
-                                    @if(!$laporanTerakhir)
-                                        <span class="text-gray-400 text-xs italic">Belum upload</span>
-                                    @elseif($laporanTerakhir->is_validated)
-                                        <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
-                                            Sudah divalidasi
-                                        </span>
-                                    @else
-                                        <span class="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">
-                                            Menunggu Validasi
-                                        </span>
-                                    @endif
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="5" class="px-6 py-12 text-center italic text-gray-400">Belum ada alumni {{ $isSuperAdmin ? '' : $labelBidang }}.</td>
                             </tr>
                             @endforelse
                         </tbody>
