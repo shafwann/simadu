@@ -9,7 +9,7 @@
                                 bg-blue-50 border border-blue-100 mb-2">
                         <span class="w-2 h-2 rounded-full bg-blue-600"></span>
                         <span class="text-xs font-bold text-blue-700 uppercase tracking-wider">
-                            Mahasiswa Bimbingan
+                            Mahasiswa Bimbingan oleh Dosen :
                         </span>
                     </div>
                     <h1 class="text-3xl font-black text-gray-900 tracking-tight">

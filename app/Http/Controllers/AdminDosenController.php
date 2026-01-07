@@ -110,16 +110,15 @@ class AdminDosenController extends Controller
     // 6. Assign mahasiswa ke dosen (opsional)
     public function assignMahasiswa(Request $request, User $dosen)
     {
-        $mahasiswaIds = $request->input('mahasiswa_ids', []);
+        $dosen->mahasiswaBimbingan()->sync(
+            $request->input('mahasiswa_ids', [])
+        );
 
-        // Reset assignment sebelumnya
-        User::where('pembimbing_id', $dosen->id)->update(['pembimbing_id' => null]);
-
-        // Assign baru
-        User::whereIn('id', $mahasiswaIds)->update(['pembimbing_id' => $dosen->id]);
-
-        return redirect()->route('admin.dosen.index')->with('success','Mahasiswa berhasil diassign ke dosen.');
+        return redirect()
+            ->route('admin.dosen.index')
+            ->with('success','Mahasiswa berhasil diassign ke dosen.');
     }
+
 
     //7. edit dosen dari admin
     public function edit(Request $request, $id)
@@ -164,14 +163,6 @@ class AdminDosenController extends Controller
                 $q->where('prodi', $prodi))
             ->get();
 
-        // ===============================
-        // 4. MAHASISWA SUDAH DI-ASSIGN
-        // ===============================
-        $mahasiswaAssigned = User::where('role', 'mahasiswa')
-            ->where('pembimbing_id', $dosen->id)
-            ->pluck('id')
-            ->toArray();
-
         return view('admin.dosen.edit', compact(
             'dosen',
             'instansiList',
@@ -179,6 +170,11 @@ class AdminDosenController extends Controller
             'mahasiswa',
             'mahasiswaAssigned'
         ));
+
+        $mahasiswaAssigned = $dosen->mahasiswaBimbingan
+            ->pluck('id')
+            ->toArray();
+
     }
 
     //8. update data dosen
@@ -211,20 +207,15 @@ class AdminDosenController extends Controller
         }
 
         $dosen->save();
+        if ($request->has('mahasiswa_ids')) {
+            $dosen->mahasiswaBimbingan()
+                ->sync($request->input('mahasiswa_ids', []));
+        }
+
 
         // ===============================
         // RESET & ASSIGN MAHASISWA
         // ===============================
-        // lepas semua mahasiswa dari dosen ini
-        User::where('pembimbing_id', $dosen->id)
-            ->update(['pembimbing_id' => null]);
-
-        // assign ulang
-        if ($request->filled('mahasiswa_ids')) {
-            User::whereIn('id', $request->mahasiswa_ids)
-                ->update(['pembimbing_id' => $dosen->id]);
-        }
-
         return redirect()
             ->route('admin.dosen.index')
             ->with('success', 'Data dosen berhasil diperbarui.');
@@ -232,8 +223,8 @@ class AdminDosenController extends Controller
     //9. dashboard dosen
     public function dashboard()
     {
-        $mahasiswa = User::where('role', 'mahasiswa')
-            ->where('pembimbing_id', auth()->id())
+        $dosen = auth()->user();
+        $mahasiswa = $dosen->mahasiswaBimbingan()
             ->with([
                 'attendances' => function ($q) {
                     $q->latest()->limit(10);
@@ -253,12 +244,12 @@ class AdminDosenController extends Controller
     // 10. detail mahasiswa
     public function detailMahasiswa($id)
     {
-        $pembimbingId = auth()->id();
+        $dosen = auth()->user();
 
         // pastikan mahasiswa ini memang bimbingannya
-        $mahasiswa = User::where('role', 'mahasiswa')
-            ->where('pembimbing_id', $pembimbingId)
-            ->findOrFail($id);
+        $mahasiswa = $dosen->mahasiswaBimbingan()
+            ->where('users.id', $id)
+            ->firstOrFail();
 
         $presensi = Attendance::where('user_id', $id)
             ->orderByDesc('tanggal')
