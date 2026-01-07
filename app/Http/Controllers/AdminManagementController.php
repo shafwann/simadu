@@ -28,7 +28,7 @@ class AdminManagementController extends Controller
             ->orderBy('bidang')
             ->orderBy('name')
             ->get();
-
+        
         return view('admin.manage.index', compact('admins'));
     }
 

@@ -60,6 +60,9 @@
                         <x-text-input name="name" class="w-full" required />
                     </div>
 
+                    {{-- Instansi --}}
+                    <input type="hidden" name="instansi" value="{{ request('instansi') }}">
+
                     {{-- Email --}}
                     <div>
                         <x-input-label value="Email" />
