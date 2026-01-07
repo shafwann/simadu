@@ -15,7 +15,7 @@ class AdminDosenController extends Controller
     // 1. Daftar Dosen
     public function index()
     {
-        $dosen = User::where('role', 'pembimbing')->latest()->paginate(10);
+        $dosen = User::where('role', 'pembimbing')->latest()->with('mahasiswaBimbingan')->paginate(10);
         return view('admin.dosen.index', compact('dosen'));
     }
 
