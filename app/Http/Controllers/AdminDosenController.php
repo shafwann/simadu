@@ -66,6 +66,7 @@ class AdminDosenController extends Controller
         'name' => 'required',
         'email' => 'required|email|unique:users',
         'password' => 'required|confirmed|min:8',
+        'instansi' => 'required|string',
         'mahasiswa_ids' => 'array'
         ]);
 
@@ -279,6 +280,17 @@ class AdminDosenController extends Controller
         ));
     }
 
+    // 11. lihat mahasiswa bimbingan dosen (ADMIN)
+    public function showMahasiswa(User $dosen)
+    {
+        // pastikan ini dosen
+        abort_if($dosen->role !== 'pembimbing', 404);
 
+        $mahasiswa = $dosen->mahasiswaBimbingan()
+            ->with(['attendances', 'logbooks'])
+            ->paginate(10);
+
+        return view('admin.dosen.mahasiswa', compact('dosen', 'mahasiswa'));
+    }
 
 }
