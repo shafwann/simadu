@@ -249,7 +249,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="4" class="px-8 py-12 text-center text-gray-400 italic">
+                                <td colspan="10" class="px-6 py-12 text-center italic text-gray-400">
                                     Tidak ada laporan {{ $isSuperAdmin ? '' : $labelBidang }} yang perlu divalidasi.
                                 </td>
                             </tr>
