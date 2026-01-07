@@ -48,7 +48,7 @@
                                 {{-- Value dibuat sesuai ENUM migration (aman), label mengikuti permintaan kamu --}}
                                 <option value="Penelitian, Pengembangan & Penyusunan Program"
                                     {{ old('bidang') == 'Penelitian, Pengembangan & Penyusunan Program' ? 'selected' : '' }}>
-                                    Penelitian Pengembangan & Penyusunan Program
+                                    Penelitian, Pengembangan & Penyusunan Program
                                 </option>
                                 <option value="Fisik & Prasarana" {{ old('bidang') == 'Fisik & Prasarana' ? 'selected' : '' }}>
                                     Fisik & Prasarana

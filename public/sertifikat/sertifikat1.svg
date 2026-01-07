@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1123" height="794">
+  <style>
+    .t {
+      font-family:
+        "Bookman Old Style",
+        "URW Bookman L",
+        "Times New Roman",
+        "Liberation Serif",
+        serif;
+      font-size: 18px;
+      fill: #000;
+    }
+    .b { font-weight: bold; }
+    .title {
+      font-size: 36px;
+      font-weight: bold;
+    }
+  </style>
+
+  <!-- JUDUL -->
+  <text x="561" y="140" text-anchor="middle" class="title t">Magang Kerja</text>
+  <text x="561" y="180" text-anchor="middle" class="t">
+    Nomor : {{Nomor Sertifikat}}
+  </text>
+
+  <!-- SUBJUDUL -->
+  <text x="561" y="240" text-anchor="middle" class="t b">
+    Diberikan Kepada :
+  </text>
+
+  <!-- IDENTITAS -->
+  <text x="300" y="300" class="t">Nama</text>
+  <text x="480" y="300" class="t">: {{Nama}}</text>
+
+  <text x="300" y="330" class="t">NIM.</text>
+  <text x="480" y="330" class="t">: {{NIM}}</text>
+
+  <text x="300" y="360" class="t">Program Studi</text>
+  <text x="480" y="360" class="t">: {{Program Studi}}</text>
+
+  <text x="300" y="390" class="t">Fakultas</text>
+  <text x="480" y="390" class="t">: {{Fakultas}}</text>
+
+  <text x="480" y="420" class="t">{{Asal Instansi/Universitas}}</text>
+
+  <!-- ISI -->
+  <text x="561" y="470" text-anchor="middle" class="t">
+    Telah melaksanakan Magang Kerja di Badan Perencanaan Pembangunan,
+  </text>
+  <text x="561" y="500" text-anchor="middle" class="t">
+    Riset, dan Inovasi Daerah (BAPPERIDA) Kabupaten Karanganyar
+  </text>
+  <text x="561" y="530" text-anchor="middle" class="t">
+    dari {{Tanggal Mulai}} sampai {{Tanggal Selesai}} dengan hasil
+    {{KETERANGAN DARI NILAI HURUF}}.
+  </text>
+
+  <!-- PENUTUP -->
+  <text x="561" y="590" text-anchor="middle" class="t">
+    Karanganyar, {{Tanggal Sekarang}}
+  </text>
+
+  <text x="561" y="630" text-anchor="middle" class="t">
+    Kepala Badan Perencanaan Pembangunan, Riset, dan Inovasi Daerah
+  </text>
+  <text x="561" y="660" text-anchor="middle" class="t">
+    Kabupaten Karanganyar
+  </text>
+
+  <!-- TANDA TANGAN -->
+  <text x="561" y="740" text-anchor="middle" class="t b">
+    Dwi Cahyono, S.Sos., M.Si.
+  </text>
+  <text x="561" y="770" text-anchor="middle" class="t">
+    NIP. 19730614 199303 1 002
+  </text>
+</svg>

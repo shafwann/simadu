@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1123" height="794">
+  <style>
+    .t {
+      font-family:
+        "Bookman Old Style",
+        "URW Bookman L",
+        "Times New Roman",
+        "Liberation Serif",
+        serif;
+      font-size: 18px;
+      fill: #000;
+    }
+    .b { font-weight: bold; }
+    .h { font-size: 30px; font-weight: bold; }
+    .line { stroke:#000; stroke-width:1; }
+  </style>
+
+  <!-- JUDUL -->
+  <text x="561" y="120" text-anchor="middle" class="h t">
+    Form Penilaian Magang Kerja
+  </text>
+
+  <!-- IDENTITAS -->
+  <text x="120" y="190" class="t">Nama</text>
+  <text x="260" y="190" class="t">: {{Nama}}</text>
+
+  <text x="120" y="220" class="t">NIM</text>
+  <text x="260" y="220" class="t">: {{NIM}}</text>
+
+  <text x="120" y="250" class="t">Program Studi</text>
+  <text x="260" y="250" class="t">: {{Program Studi}}</text>
+
+  <text x="120" y="280" class="t">Fakultas</text>
+  <text x="260" y="280" class="t">: {{Fakultas}}, {{Universitas}}</text>
+
+  <!-- PARAGRAF -->
+  <text x="120" y="330" class="t">
+    Telah melaksanakan Magang Kerja di Kantor Badan Perencanaan Pembangunan, Riset,
+  </text>
+  <text x="120" y="360" class="t">
+    dan Inovasi Daerah Kabupaten Karanganyar dengan nilai sebagai berikut :
+  </text>
+
+  <!-- TABEL UTAMA -->
+  <!-- Header -->
+  <rect x="120" y="390" width="880" height="35" fill="none" class="line"></rect>
+  <line x1="180" y1="390" x2="180" y2="610" class="line"></line>
+  <line x1="860" y1="390" x2="860" y2="610" class="line"></line>
+
+  <text x="140" y="415" class="t b">No</text>
+  <text x="500" y="415" text-anchor="middle" class="t b">Aspek Penilaian</text>
+  <text x="930" y="415" text-anchor="middle" class="t b">Skor</text>
+
+  <!-- Row lines -->
+  <line x1="120" y1="425" x2="1000" y2="425" class="line"></line>
+  <line x1="120" y1="455" x2="1000" y2="455" class="line"></line>
+  <line x1="120" y1="485" x2="1000" y2="485" class="line"></line>
+  <line x1="120" y1="515" x2="1000" y2="515" class="line"></line>
+  <line x1="120" y1="545" x2="1000" y2="545" class="line"></line>
+  <line x1="120" y1="575" x2="1000" y2="575" class="line"></line>
+  <line x1="120" y1="610" x2="1000" y2="610" class="line"></line>
+
+  <!-- Rows -->
+  <text x="140" y="445" class="t">1.</text>
+  <text x="200" y="445" class="t">Etika dan Kedisiplinan</text>
+
+  <text x="140" y="475" class="t">2.</text>
+  <text x="200" y="475" class="t">Kemampuan Berkomunikasi dan Bekerjasama</text>
+
+  <text x="140" y="505" class="t">3.</text>
+  <text x="200" y="505" class="t">Kemandirian</text>
+
+  <text x="140" y="535" class="t">4.</text>
+  <text x="200" y="535" class="t">Kreativitas</text>
+
+  <text x="140" y="565" class="t">5.</text>
+  <text x="200" y="565" class="t">
+    Kemampuan menyelesaikan pekerjaan di bidangnya
+  </text>
+
+  <text x="140" y="595" class="t">6.</text>
+  <text x="200" y="595" class="t">
+    Kemampuan mengidentifikasi dan memecahkan masalah
+  </text>
+
+  <!-- TOTAL / RATA / NILAI -->
+  <rect x="120" y="610" width="880" height="90" fill="none" class="line"></rect>
+  <line x1="860" y1="610" x2="860" y2="700" class="line"></line>
+  <line x1="120" y1="640" x2="1000" y2="640" class="line"></line>
+  <line x1="120" y1="670" x2="1000" y2="670" class="line"></line>
+
+  <text x="500" y="635" text-anchor="middle" class="t b">TOTAL</text>
+  <text x="930" y="635" text-anchor="middle" class="t">0</text>
+
+  <text x="500" y="665" text-anchor="middle" class="t b">RATA-RATA</text>
+  <text x="930" y="665" text-anchor="middle" class="t">0,00</text>
+
+  <text x="500" y="695" text-anchor="middle" class="t b">NILAI HURUF</text>
+  <text x="930" y="695" text-anchor="middle" class="t b">{{Nilai Huruf}}</text>
+
+  <!-- KETERANGAN -->
+  <text x="120" y="735" class="t b">Keterangan :</text>
+
+  <!-- TABEL KETERANGAN -->
+  <rect x="120" y="750" width="360" height="120" fill="none" class="line"></rect>
+  <line x1="300" y1="750" x2="300" y2="870" class="line"></line>
+  <line x1="120" y1="780" x2="480" y2="780" class="line"></line>
+  <line x1="120" y1="810" x2="480" y2="810" class="line"></line>
+  <line x1="120" y1="840" x2="480" y2="840" class="line"></line>
+
+  <text x="150" y="770" class="t b">Nilai Standar</text>
+  <text x="330" y="770" class="t b">Nilai Huruf</text>
+
+  <text x="150" y="800" class="t">0 – 30</text>
+  <text x="330" y="800" class="t">E (sangat kurang)</text>
+
+  <text x="150" y="830" class="t">31 – 55</text>
+  <text x="330" y="830" class="t">D (kurang)</text>
+
+  <text x="150" y="860" class="t">56 – 75</text>
+  <text x="330" y="860" class="t">C (cukup)</text>
+
+  <text x="150" y="890" class="t">76 – 90</text>
+  <text x="330" y="890" class="t">B (baik)</text>
+
+  <text x="150" y="920" class="t">91 – 100</text>
+  <text x="330" y="920" class="t">A (sangat baik)</text>
+
+  <!-- TANDA TANGAN -->
+  <text x="700" y="770" class="t">
+    Karanganyar, {{Tanggal Sekarang}}
+  </text>
+
+  <text x="700" y="800" class="t">
+    Kepala Badan Perencanaan Pembangunan, Riset, dan Inovasi Daerah
+  </text>
+  <text x="700" y="830" class="t">
+    Kabupaten Karanganyar
+  </text>
+
+  <text x="700" y="880" class="t b">
+    Dwi Cahyono, S.Sos., M.Si.
+  </text>
+  <text x="700" y="910" class="t">
+    NIP. 19730614 199303 1 002
+  </text>
+</svg>

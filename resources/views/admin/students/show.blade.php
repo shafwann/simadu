@@ -102,6 +102,120 @@
                 {{-- KANAN: Riwayat --}}
                 <div class="lg:col-span-2 space-y-6">
 
+                    {{-- ✅ RIWAYAT PENILAIAN MAGANG (TAMBAHAN TANPA MENGURANGI KODEMU) --}}
+                    <div class="bg-white border border-gray-100 rounded-[2rem] shadow-sm overflow-hidden">
+                        <div class="p-6 border-b border-gray-50 bg-gray-50/30 flex items-center justify-between">
+                            <h3 class="font-bold text-lg text-gray-800">Riwayat Penilaian Magang</h3>
+
+                            @if($student->assessment)
+                                <div class="flex items-center gap-2">
+                                    <button type="button"
+                                            id="btnEditAssessmentTop"
+                                            class="px-3 py-2 rounded-xl bg-amber-500 text-white font-bold text-sm hover:bg-amber-600 transition">
+                                        Edit
+                                    </button>
+
+                                    <form action="{{ route('admin.assessment.destroy', $student->assessment->id) }}"
+                                          method="POST"
+                                          onsubmit="return confirm('Yakin ingin menghapus penilaian ini?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                                class="px-3 py-2 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 transition">
+                                            Hapus
+                                        </button>
+                                    </form>
+
+                                    <a href="{{ route('admin.assessment.certificate', $student->id) }}"
+                                       class="px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 transition">
+                                        Download
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="p-6">
+                            @if($student->assessment)
+                                @php
+                                    $scores = [
+                                        (int) $student->assessment->aspek_1,
+                                        (int) $student->assessment->aspek_2,
+                                        (int) $student->assessment->aspek_3,
+                                        (int) $student->assessment->aspek_4,
+                                        (int) $student->assessment->aspek_5,
+                                        (int) $student->assessment->aspek_6,
+                                    ];
+                                    $total = (int) $student->assessment->total;
+                                    $rata = (float) $student->assessment->average;
+                                    $grade = (string) $student->assessment->grade_letter;
+                                @endphp
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="bg-gray-50 rounded-2xl p-4 border">
+                                        <p class="text-xs uppercase font-bold text-gray-400">Nomor Sertifikat</p>
+                                        <p class="text-lg font-black text-gray-900 mt-1">{{ $student->assessment->certificate_no }}</p>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-2xl p-4 border">
+                                        <p class="text-xs uppercase font-bold text-gray-400">Total</p>
+                                        <p class="text-lg font-black text-gray-900 mt-1">{{ $total }}</p>
+                                    </div>
+                                    <div class="bg-blue-50 rounded-2xl p-4 border border-blue-100">
+                                        <p class="text-xs uppercase font-bold text-blue-400">Rata-rata / Nilai Huruf</p>
+                                        <p class="text-lg font-black text-blue-700 mt-1">{{ number_format($rata, 2, ',', '.') }} / {{ $grade }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="mt-6 overflow-x-auto">
+                                    <table class="min-w-full text-sm">
+                                        <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                                            <tr>
+                                                <th class="p-4 text-left">No</th>
+                                                <th class="p-4 text-left">Aspek Penilaian</th>
+                                                <th class="p-4 text-center">Nilai</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-100">
+                                            <tr>
+                                                <td class="p-4">1</td>
+                                                <td class="p-4">Etika dan Kedisiplinan</td>
+                                                <td class="p-4 text-center font-bold">{{ $student->assessment->aspek_1 }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="p-4">2</td>
+                                                <td class="p-4">Kemampuan Berkomunikasi dan Bekerjasama</td>
+                                                <td class="p-4 text-center font-bold">{{ $student->assessment->aspek_2 }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="p-4">3</td>
+                                                <td class="p-4">Kemandirian</td>
+                                                <td class="p-4 text-center font-bold">{{ $student->assessment->aspek_3 }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="p-4">4</td>
+                                                <td class="p-4">Kreativitas</td>
+                                                <td class="p-4 text-center font-bold">{{ $student->assessment->aspek_4 }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="p-4">5</td>
+                                                <td class="p-4">Kemampuan menyelesaikan pekerjaan di bidangnya</td>
+                                                <td class="p-4 text-center font-bold">{{ $student->assessment->aspek_5 }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="p-4">6</td>
+                                                <td class="p-4">Kemampuan mengidentifikasi dan memecahkan masalah</td>
+                                                <td class="p-4 text-center font-bold">{{ $student->assessment->aspek_6 }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <p class="text-gray-500 italic">
+                                    Belum ada penilaian. Klik <b>Tandai Selesai Magang</b> untuk mengisi penilaian.
+                                </p>
+                            @endif
+                        </div>
+                    </div>
+
                     {{-- Riwayat Presensi --}}
                     <div class="bg-white border border-gray-100 rounded-[2rem] shadow-sm overflow-hidden">
                         <div class="p-6 border-b border-gray-50 bg-gray-50/30">
@@ -254,4 +368,136 @@
             </div>
         </div>
     </div>
+
+    {{-- ✅ MODAL PENILAIAN (TAMBAHAN TANPA MENGURANGI KODEMU) --}}
+    <div id="assessmentModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-3xl shadow-lg p-8 w-full max-w-lg relative">
+            <button id="closeModal"
+                class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-lg">&times;</button>
+
+            <h2 class="text-2xl font-black mb-6">
+                Penilaian Akhir Magang: {{ $student->name }}
+            </h2>
+
+            <form id="assessmentForm"
+                  method="POST"
+                  action="{{ route('admin.assessment.store', $student->id) }}"
+                  class="space-y-4">
+                @csrf
+                <input type="hidden" id="methodSpoof" name="_method" value="POST">
+
+                <div>
+                    <label class="block text-sm font-bold">Nomor Sertifikat</label>
+                    <input id="inputNomor" type="text" name="certificate_no" required
+                           value="{{ old('certificate_no', optional($student->assessment)->certificate_no) }}"
+                           class="w-full mt-2 rounded-xl border-gray-300">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold">1. Etika dan Kedisiplinan</label>
+                        <input id="input1" type="number" name="aspek_1" min="0" max="100" required
+                               value="{{ old('aspek_1', optional($student->assessment)->aspek_1) }}"
+                               class="w-full mt-2 rounded-xl border-gray-300">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold">2. Kemampuan Berkomunikasi dan Bekerjasama</label>
+                        <input id="input2" type="number" name="aspek_2" min="0" max="100" required
+                               value="{{ old('aspek_2', optional($student->assessment)->aspek_2) }}"
+                               class="w-full mt-2 rounded-xl border-gray-300">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold">3. Kemandirian</label>
+                        <input id="input3" type="number" name="aspek_3" min="0" max="100" required
+                               value="{{ old('aspek_3', optional($student->assessment)->aspek_3) }}"
+                               class="w-full mt-2 rounded-xl border-gray-300">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold">4. Kreativitas</label>
+                        <input id="input4" type="number" name="aspek_4" min="0" max="100" required
+                               value="{{ old('aspek_4', optional($student->assessment)->aspek_4) }}"
+                               class="w-full mt-2 rounded-xl border-gray-300">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold">5. Kemampuan menyelesaikan pekerjaan di bidangnya</label>
+                        <input id="input5" type="number" name="aspek_5" min="0" max="100" required
+                               value="{{ old('aspek_5', optional($student->assessment)->aspek_5) }}"
+                               class="w-full mt-2 rounded-xl border-gray-300">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold">6. Kemampuan mengidentifikasi dan memecahkan masalah</label>
+                        <input id="input6" type="number" name="aspek_6" min="0" max="100" required
+                               value="{{ old('aspek_6', optional($student->assessment)->aspek_6) }}"
+                               class="w-full mt-2 rounded-xl border-gray-300">
+                    </div>
+                </div>
+
+                <button id="assessmentSubmitBtn" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl">
+                    Simpan Penilaian
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {{-- ✅ SCRIPT MODAL (TAMBAHAN TANPA MENGURANGI KODEMU) --}}
+    <script>
+        const assessmentModal = document.getElementById('assessmentModal');
+        const closeAssessmentModal = document.getElementById('closeModal');
+
+        // Tombol "Tandai Selesai Magang" yang sudah ada (kita "tumpangi" kliknya)
+        const statusForm = document.querySelector('form[action="{{ route('admin.students.updateStatus', $student->id) }}"]');
+        const statusButton = statusForm?.querySelector('button[type="submit"]');
+
+        // Form assessment
+        const assessmentForm = document.getElementById('assessmentForm');
+        const methodSpoof = document.getElementById('methodSpoof');
+
+        // Kalau sudah punya assessment, mode edit
+        const hasAssessment = {{ $student->assessment ? 'true' : 'false' }};
+        const updateUrl = "{{ $student->assessment ? route('admin.assessment.update', $student->assessment->id) : '' }}";
+
+        function openAssessment(mode) {
+            assessmentModal.classList.remove('hidden');
+
+            if (mode === 'edit') {
+                assessmentForm.action = updateUrl;
+                methodSpoof.value = "PATCH";
+                document.getElementById('assessmentSubmitBtn').textContent = "Simpan Perubahan";
+            } else {
+                assessmentForm.action = "{{ route('admin.assessment.store', $student->id) }}";
+                methodSpoof.value = "POST";
+                document.getElementById('assessmentSubmitBtn').textContent = "Simpan Penilaian";
+            }
+        }
+
+        // ✅ Saat klik "Tandai Selesai Magang" (status aktif), tampilkan modal, BUKAN submit form
+        if (statusButton && "{{ $student->status }}" === "aktif") {
+            statusButton.addEventListener('click', function (e) {
+                e.preventDefault();
+                openAssessment(hasAssessment ? 'edit' : 'create');
+            });
+        }
+
+        // Tombol edit dari Riwayat Penilaian (kalau ada)
+        const btnEditAssessmentTop = document.getElementById('btnEditAssessmentTop');
+        if (btnEditAssessmentTop) {
+            btnEditAssessmentTop.addEventListener('click', function (e) {
+                e.preventDefault();
+                openAssessment('edit');
+            });
+        }
+
+        closeAssessmentModal?.addEventListener('click', () => {
+            assessmentModal.classList.add('hidden');
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === assessmentModal) assessmentModal.classList.add('hidden');
+        });
+    </script>
 </x-app-layout>

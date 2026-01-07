@@ -8,6 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use App\Models\Attendance;
 use App\Models\Logbook;
 use App\Models\Laporan;
+use App\Models\Assessment; // ✅ TAMBAH INI
 
 class User extends Authenticatable
 {
@@ -55,9 +56,20 @@ class User extends Authenticatable
         return $this->hasMany(Logbook::class);
     }
 
+    // ✅ TAMBAH: kalau mau histori penilaian (hasMany)
+    public function assessments()
+    {
+        return $this->hasMany(Assessment::class);
+    }
+
+    // ✅ BENAHIN: ambil penilaian TERBARU untuk tampil di "Riwayat Penilaian" & download
+    public function assessment()
+    {
+        return $this->hasOne(Assessment::class)->latestOfMany('assessed_at');
+    }
+
     public function laporans()
     {
         return $this->hasMany(Laporan::class);
     }
-
 }

@@ -99,7 +99,17 @@ class AdminStudentController extends Controller
     // 4. LIHAT DETAIL
     public function show($id)
     {
-        $student = User::with(['attendances', 'logbooks'])->findOrFail($id);
+        // ✅ TAMBAHKAN relasi yang dibutuhkan view:
+        // - laporans (riwayat laporan)
+        // - assessment (penilaian terbaru) / atau assessments jika kamu butuh histori banyak
+        $student = User::with([
+                'attendances',
+                'logbooks',
+                'laporans' => function ($q) {
+                    $q->latest();
+                },
+                'assessment', // latestOfMany('assessed_at') kalau relasi user->assessment sudah dibuat
+            ])->findOrFail($id);
 
         // KEAMANAN: Cek apakah admin berhak melihat mahasiswa ini
         $admin = Auth::user();

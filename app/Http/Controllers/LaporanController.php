@@ -17,7 +17,6 @@ class LaporanController extends Controller
 
     public function upload(Request $request)
     {
-        // CEK STATUS AKTIF (sama kayak logbook)
         $user = auth()->user();
         if ($user->status !== 'aktif') {
             return back()->with('error', 'Akun Anda tidak aktif, tidak bisa mengunggah laporan.');
@@ -37,36 +36,18 @@ class LaporanController extends Controller
 
         $file = $request->file('file');
         $filename = $file->getClientOriginalName();
+
+        // simpan ke storage/app/laporan/...
         $path = $file->store('laporan');
 
         Laporan::create([
             'user_id' => auth()->id(),
             'nama_file' => $filename,
             'file_path' => $path,
-            'is_validated' => false, // PENTING, sama seperti logbook
+            'is_validated' => false,
         ]);
 
         return back()->with('success', 'Laporan berhasil diunggah dan menunggu validasi admin.');
-    }
-
-
-    //validasi laporan
-    public function validateLaporan($id)
-    {
-        // pastikan admin
-        if (auth()->user()->role !== 'admin') {
-            abort(403, 'Akses ditolak');
-        }
-
-        $laporan = Laporan::findOrFail($id);
-
-        // validasi laporan
-        $laporan->update([
-            'is_validated' => true,
-            'validated_at' => now(),
-        ]);
-
-        return redirect()->back()->with('success', 'Laporan berhasil divalidasi');
     }
 
     // Admin lihat semua
@@ -85,50 +66,49 @@ class LaporanController extends Controller
             abort(403, 'Akses ditolak');
         }
 
-        $filePath = storage_path(
-            'app/private/laporan/' . basename($laporan->file_path)
-        );
+        // ✅ Path sesuai file yang di-store()
+        $filePath = storage_path('app/' . $laporan->file_path);
 
         if (!file_exists($filePath)) {
-            abort(404, 'File tidak ditemukan');
+            abort(404, 'File tidak ditemukan: ' . $laporan->file_path);
         }
 
         return response()->download($filePath, $laporan->nama_file);
     }
 
-
-    //lihat preview pdf
+    // Preview pdf/doc (kalau bukan pdf, browser biasanya download)
     public function preview(Laporan $laporan)
     {
         $user = auth()->user();
 
-        // cuma owner atau admin
         if ($user->id !== $laporan->user_id && $user->role !== 'admin') {
             abort(403, "Akses ditolak");
         }
 
-        $filePath = storage_path('app/private/laporan/' . basename($laporan->file_path));
+        $filePath = storage_path('app/' . $laporan->file_path);
 
         if (!file_exists($filePath)) {
-            abort(404, "File tidak ditemukan");
+            abort(404, "File tidak ditemukan: " . $laporan->file_path);
         }
 
-        // preview di browser
+        // kalau file bukan pdf, sebaiknya download saja
+        $ext = strtolower(pathinfo($laporan->nama_file, PATHINFO_EXTENSION));
+        if ($ext !== 'pdf') {
+            return response()->download($filePath, $laporan->nama_file);
+        }
+
         return response()->file($filePath, [
-            'Content-Type' => 'application/pdf', // wajib!
+            'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . $laporan->nama_file . '"'
         ]);
     }
 
-    //edit laporan
     public function edit(Laporan $laporan)
     {
-        // hanya pemilik
         if (auth()->id() !== $laporan->user_id) {
             abort(403);
         }
 
-        // sudah divalidasi → tidak boleh edit
         if ($laporan->is_validated) {
             return back()->withErrors('Laporan sudah divalidasi dan tidak dapat diubah.');
         }
@@ -136,7 +116,6 @@ class LaporanController extends Controller
         return view('laporan.edit', compact('laporan'));
     }
 
-    //update laporan
     public function update(Request $request, Laporan $laporan)
     {
         if (auth()->id() !== $laporan->user_id) {
@@ -165,14 +144,10 @@ class LaporanController extends Controller
         $laporan->update([
             'file_path' => $path,
             'nama_file' => $file->getClientOriginalName(),
-            'is_validated' => false, // reset kalau perlu
+            'is_validated' => false,
         ]);
 
         return redirect()->route('laporan.index')
             ->with('success', 'Laporan berhasil diperbarui.');
     }
-
-
-
-
 }
