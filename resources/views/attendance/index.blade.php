@@ -167,7 +167,7 @@
             btn.disabled = true;
             if(infoDiv) { infoDiv.classList.remove('hidden'); infoDiv.innerText = "Sedang menghubungi satelit GPS..."; }
 
-            const options = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
+            const options = { enableHighAccuracy: true, timeout: 300000, maximumAge: 0 };
             navigator.geolocation.getCurrentPosition(
                 function(position) {
                     const userLat = position.coords.latitude;

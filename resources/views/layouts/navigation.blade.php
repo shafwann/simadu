@@ -67,6 +67,17 @@
                                     {{ __('Data Admin') }}
                                 </span>
                             </x-nav-link>
+
+                            {{-- MENU ABOUT (Hanya untuk Super Admin) --}}
+                            <x-nav-link :href="route('admin.about.index')" :active="request()->routeIs('admin.about.*')" class="font-bold text-gray-600 hover:text-blue-600">
+                                <span class="flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/>
+                                    </svg>
+                                    {{ __('About') }}
+                                </span>
+                            </x-nav-link>
                         @endif
                     @endif
                 </div>
@@ -153,6 +164,17 @@
                         <span class="flex items-center gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                             {{ __('Data Admin') }}
+                        </span>
+                    </x-responsive-nav-link>
+
+                    {{-- MENU ABOUT (Hanya untuk Super Admin) --}}
+                    <x-responsive-nav-link :href="route('admin.about.index')" :active="request()->routeIs('admin.about.*')" class="font-bold">
+                        <span class="flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/>
+                            </svg>
+                            {{ __('About') }}
                         </span>
                     </x-responsive-nav-link>
                 @endif

@@ -83,7 +83,7 @@ if ($len <= 20) {
             </div>
 
             {{-- DIBERIKAN KEPADA --}}
-            <div style="position:absolute; top:72mm; left:95; width:297mm; text-align:center; font-size:20px; font-weight:700;">
+            <div style="position:absolute; top:72mm; left:95mm; width:140mm; text-align:center; font-size:20px; font-weight:700;">
                 Diberikan Kepada :
             </div>
 
@@ -105,40 +105,50 @@ if ($len <= 20) {
                             :
                         </td>
 
-
                         <td style="vertical-align:top;">
                             <span style="font-weight:700; font-size:24px; padding-top:1px;">{{ $student->name }}</span><br>
                             {{ $student->nim }}<br>
                             {{ $student->prodi }}<br>
                             {{ $student->fakultas }}<br>
-                            <span style="<?php echo $instansiStyle; ?>">
-                                <?php echo e($instansiText); ?>
-                            </span>
+
+                            {{-- instansi mahasiswa (1 baris + auto font) --}}
+                            <span style="<?php echo $instansiStyle; ?>"> <?php echo e($instansiText); ?> </span>
                         </td>
                     </tr>
                 </table>
             </div>
 
-            {{-- PARAGRAF --}}
+            {{-- PARAGRAF (DINAMIS NAMA INSTANSI DARI ABOUT) --}}
             <div style="position:absolute; top:123mm; left:40mm; right:40mm; text-align:center; font-size:18px; line-height:1.30;">
-                Telah melaksanakan Magang Kerja di Badan Perencanaan Pembangunan, Riset, dan Inovasi Daerah
-                (BAPPERIDA) Kabupaten Karanganyar dari {{ $mulai }} sampai {{ $selesai }} dengan hasil
+                Telah melaksanakan Magang Kerja di
+                {{ $about->nama_instansi ?? '-' }}
+                dari {{ $mulai }} sampai {{ $selesai }} dengan hasil
                 <span style="font-weight:700; text-transform:uppercase;">{{ $hasilLabel }}</span>.
             </div>
 
             {{-- TANGGAL --}}
-            <div style="position:absolute; top:139mm; left:60; width:297mm; text-align:center; font-size: 18.5px; font-weight:700;">
+            <div style="position:absolute; top:139mm; left:60mm; width:210mm; text-align:center; font-size: 18.5px; font-weight:700;">
                 Karanganyar, {{ $hariIni }}
             </div>
 
-            {{-- JABATAN --}}
-            <div style="position:absolute; top:145mm; left:60; width:297mm; text-align:center; font-size:18px; line-height:1.10;">
-                Kepala Badan Perencanaan Pembangunan, Riset, dan Inovasi Daerah<br>
-                Kabupaten Karanganyar
-                <br><br><br><br><br><br>
-                <div style="font-weight:700; line-height: 1.30;">Dwi Cahyono, S.Sos., M.Si.</div>
-                <div style="font-weight:700; line-height: 1.30;">NIP. 19730614 199303 1 002</div>
+            {{-- JABATAN + TTD (DINAMIS NAMA + NIP DARI ABOUT) --}}
+            <div style="position:absolute; top:145mm; left:60mm; width:210mm; text-align:center; font-size:18px; line-height:1.10;">
+                <div style="margin-top:0;">
+                    Kepala {{ $about->nama_instansi ?? '-' }}
+                </div>
+                <div style="margin-top:0;">
+                    Kabupaten Karanganyar
+                </div>
+                <div style="height:26mm;"></div>
+
+                <div style="font-weight:700; line-height:1.30;">
+                    {{ $about->kepala_instansi ?? '-' }}
+                </div>
+                <div style="font-weight:700; line-height:1.30;">
+                    NIP. {{ $about->nip_kepala_instansi ?? '-' }}
+                </div>
             </div>
+
 
 
         </div>

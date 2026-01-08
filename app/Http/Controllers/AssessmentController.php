@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Assessment;
 use App\Models\User;
+use App\Models\AboutSetting;              // <-- TAMBAH
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -60,7 +61,6 @@ class AssessmentController extends Controller
 
         [$total, $avg, $grade] = $this->computeTotalAvgGrade($validated);
 
-        // kalau sudah ada assessment, update aja
         $assessment = Assessment::updateOrCreate(
             ['user_id' => $user->id],
             [
@@ -78,7 +78,6 @@ class AssessmentController extends Controller
             ]
         );
 
-        // set mahasiswa selesai magang
         $user->update(['status' => 'nonaktif']);
 
         return back()->with('success', 'Penilaian berhasil disimpan & mahasiswa ditandai selesai magang.');
@@ -113,7 +112,6 @@ class AssessmentController extends Controller
             'assessed_at' => now(),
         ]);
 
-        // pastikan user nonaktif
         $assessment->user?->update(['status' => 'nonaktif']);
 
         return back()->with('success', 'Penilaian berhasil diperbarui.');
@@ -125,7 +123,6 @@ class AssessmentController extends Controller
         $user = $assessment->user;
         $assessment->delete();
 
-        // kalau penilaian dihapus, boleh aktifkan lagi (opsional)
         if ($user) {
             $user->update(['status' => 'aktif']);
         }
@@ -133,35 +130,38 @@ class AssessmentController extends Controller
         return back()->with('success', 'Penilaian berhasil dihapus.');
     }
 
-    // DOWNLOAD PDF 2 halaman
+    // DOWNLOAD PDF 2 halaman (SUDAH DINAMIS DARI ABOUT)
     public function certificate(User $user)
-{
-    $assessment = $user->assessment;
+    {
+        $assessment = $user->assessment;
 
-    if (!$assessment) {
-        abort(404, 'Penilaian belum ada.');
+        if (!$assessment) {
+            abort(404, 'Penilaian belum ada.');
+        }
+
+        $today = Carbon::now();
+        $hasilLabel = $this->labelFromGrade($assessment->grade_letter);
+
+        // ambil data about (1 row)
+        // karena AdminAboutController pakai firstOrCreate, harusnya pasti ada
+        $about = AboutSetting::first();
+
+        // F4: 210 x 330 mm (landscape => 330 x 210)
+        $w = 330 / 25.4 * 72;
+        $h = 210 / 25.4 * 72;
+
+        $pdf = Pdf::loadView('admin.assessments.certificate-pdf', [
+            'student' => $user,
+            'assessment' => $assessment,
+            'today' => $today,
+            'hasilLabel' => $hasilLabel,
+            'about' => $about, // <-- INI PENTING
+        ])
+            ->setPaper([0, 0, $w, $h], 'landscape')
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isRemoteEnabled', true);
+
+        $filename = 'Sertifikat_Magang_' . preg_replace('/\s+/', '_', $user->name) . '.pdf';
+        return $pdf->download($filename);
     }
-
-    $today = Carbon::now();
-    $hasilLabel = $this->labelFromGrade($assessment->grade_letter);
-
-    // F4: 210 x 330 mm  (landscape => 330 x 210)
-    // DomPDF pakai point: mm * 72 / 25.4
-    $w = 330 / 25.4 * 72; // 935.433...
-    $h = 210 / 25.4 * 72; // 595.276...
-
-    $pdf = Pdf::loadView('admin.assessments.certificate-pdf', [
-        'student' => $user,
-        'assessment' => $assessment,
-        'today' => $today,
-        'hasilLabel' => $hasilLabel,
-    ])
-        ->setPaper([0, 0, $w, $h], 'landscape')
-        ->setOption('isHtml5ParserEnabled', true)
-        ->setOption('isRemoteEnabled', true);
-
-    $filename = 'Sertifikat_Magang_' . preg_replace('/\s+/', '_', $user->name) . '.pdf';
-    return $pdf->download($filename);
-}
-
 }

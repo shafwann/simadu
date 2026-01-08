@@ -16,6 +16,8 @@ use App\Http\Controllers\AdminManagementController;
 use App\Http\Controllers\AdminDosenController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AdminAboutController;
+
 
 use App\Models\User;
 
@@ -194,6 +196,12 @@ Route::middleware(['auth', 'role:admin'])
             Route::post('/', [AdminManagementController::class, 'store'])->name('store');
             Route::delete('/{id}', [AdminManagementController::class, 'destroy'])->name('destroy');
         });
+
+        // ==========================================
+        // ABOUT (SUPER ADMIN ONLY - Administrator Sistem)
+        // ==========================================
+        Route::get('/about', [AdminAboutController::class, 'index'])->name('about.index');
+        Route::put('/about', [AdminAboutController::class, 'update'])->name('about.update');
     });
 
 

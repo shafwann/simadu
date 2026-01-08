@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Models\Logbook;
+use App\Models\AboutSetting;
 
 class AttendanceController extends Controller
 {
@@ -14,7 +15,7 @@ class AttendanceController extends Controller
     {
         $attendance = Attendance::where('user_id', Auth::id())
             ->whereDate('tanggal', Carbon::today())
-            ->orderByDesc('id') // ambil data TERBARU
+            ->orderByDesc('id')
             ->first();
 
         return view('attendance.index', compact('attendance'));
@@ -30,53 +31,142 @@ class AttendanceController extends Controller
             return redirect()->back()->with('error', 'Akun Anda tidak aktif, tidak bisa mengisi logbook.');
         }
 
-        // 1. Validasi input
         $request->validate([
             'tanggal' => 'required|date',
             'kegiatan' => 'required|string|min:5',
         ]);
 
         try {
-            // 2. Simpan ke database
             Logbook::create([
                 'user_id' => $user->id,
                 'tanggal' => $request->tanggal,
                 'kegiatan' => $request->kegiatan,
-                'is_validated' => false, // Default awal belum divalidasi
+                'is_validated' => false,
             ]);
 
-            // 3. Kembalikan ke halaman sebelumnya dengan pesan sukses
             return redirect()->route('logbook.index')->with('success', 'Kegiatan berhasil disimpan!');
-
         } catch (\Exception $e) {
-            // Jika ada error database, munculkan di layar
             return redirect()->back()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
 
+    /**
+     * Ambil jadwal absensi hari ini (check-in & check-out) dari AboutSetting.
+     */
+    private function getTodayAbsensiSchedule(): array
+    {
+        $about = AboutSetting::first();
+
+        if (!$about) {
+            return ['error' => 'Jam absensi belum diatur oleh admin.'];
+        }
+
+        $now = Carbon::now('Asia/Jakarta');
+        $dow = $now->dayOfWeekIso; // 1=Senin ... 5=Jumat ... 7=Minggu
+
+        if ($dow >= 6) {
+            return ['error' => 'Absensi tidak tersedia di hari Sabtu/Minggu.'];
+        }
+
+        $map = [
+            1 => [
+                'label' => 'Senin',
+                'checkin_mulai' => $about->senin_mulai,
+                'checkin_selesai' => $about->senin_selesai,
+                'checkout_mulai' => $about->senin_checkout_mulai,
+                'checkout_selesai' => $about->senin_checkout_selesai,
+            ],
+            2 => [
+                'label' => 'Selasa',
+                'checkin_mulai' => $about->selasa_mulai,
+                'checkin_selesai' => $about->selasa_selesai,
+                'checkout_mulai' => $about->selasa_checkout_mulai,
+                'checkout_selesai' => $about->selasa_checkout_selesai,
+            ],
+            3 => [
+                'label' => 'Rabu',
+                'checkin_mulai' => $about->rabu_mulai,
+                'checkin_selesai' => $about->rabu_selesai,
+                'checkout_mulai' => $about->rabu_checkout_mulai,
+                'checkout_selesai' => $about->rabu_checkout_selesai,
+            ],
+            4 => [
+                'label' => 'Kamis',
+                'checkin_mulai' => $about->kamis_mulai,
+                'checkin_selesai' => $about->kamis_selesai,
+                'checkout_mulai' => $about->kamis_checkout_mulai,
+                'checkout_selesai' => $about->kamis_checkout_selesai,
+            ],
+            5 => [
+                'label' => 'Jumat',
+                'checkin_mulai' => $about->jumat_mulai,
+                'checkin_selesai' => $about->jumat_selesai,
+                'checkout_mulai' => $about->jumat_checkout_mulai,
+                'checkout_selesai' => $about->jumat_checkout_selesai,
+            ],
+        ];
+
+        $today = $map[$dow];
+
+        if (
+            !$today['checkin_mulai'] || !$today['checkin_selesai'] ||
+            !$today['checkout_mulai'] || !$today['checkout_selesai']
+        ) {
+            return ['error' => 'Jam check-in/check-out hari ini belum diatur oleh admin.'];
+        }
+
+        return $today;
+    }
+
+    private function ensureWithinCheckInWindow(): ?string
+    {
+        $today = $this->getTodayAbsensiSchedule();
+        if (isset($today['error'])) return $today['error'];
+
+        $now = Carbon::now('Asia/Jakarta');
+        $start = Carbon::createFromTimeString($today['checkin_mulai'], 'Asia/Jakarta');
+        $end = Carbon::createFromTimeString($today['checkin_selesai'], 'Asia/Jakarta');
+
+        if ($now->lt($start) || $now->gt($end)) {
+            return "Absensi masuk hanya bisa dilakukan pada jam {$start->format('H:i')} - {$end->format('H:i')} WIB ({$today['label']}).";
+        }
+
+        return null;
+    }
+
+    private function ensureWithinCheckOutWindow(): ?string
+    {
+        $today = $this->getTodayAbsensiSchedule();
+        if (isset($today['error'])) return $today['error'];
+
+        $now = Carbon::now('Asia/Jakarta');
+        $start = Carbon::createFromTimeString($today['checkout_mulai'], 'Asia/Jakarta');
+        $end = Carbon::createFromTimeString($today['checkout_selesai'], 'Asia/Jakarta');
+
+        if ($now->lt($start) || $now->gt($end)) {
+            return "Absensi pulang hanya bisa dilakukan pada jam {$start->format('H:i')} - {$end->format('H:i')} WIB ({$today['label']}).";
+        }
+
+        return null;
+    }
 
     // --- LOGIKA CHECK-IN (MASUK) ---
     public function checkIn(Request $request)
     {
-        // --- CEK STATUS AKTIF ---
         $user = Auth::user();
         if ($user->status !== 'aktif') {
             return back()->with('error', 'Akun Anda tidak aktif, tidak bisa melakukan presensi.');
         }
 
+        $msg = $this->ensureWithinCheckInWindow();
+        if ($msg) return back()->with('error', $msg);
+
         $request->validate(['location' => 'required']);
 
-        // 1. Cek Hari (Opsional: Cegah absen Sabtu/Minggu)
-        // if (Carbon::now()->isWeekend()) {
-        //     return back()->with('error', 'Hari ini libur, tidak perlu absen.');
-        // }
-
-        // 2. Tentukan Batas Jam Masuk (08:00)
-        $jamMasukTelat = Carbon::createFromTime(8, 0, 0); // Jam 08:00:00
+        // Status telat (tetap sesuai kode lama)
+        $jamMasukTelat = Carbon::createFromTime(8, 0, 0);
         $sekarang = Carbon::now();
 
-        // 3. Tentukan Status
-        // Jika waktu sekarang LEBIH DARI jam 08:00, status = Telat
         if ($sekarang->gt($jamMasukTelat)) {
             $status = 'Telat';
             $pesan = 'Absen berhasil, namun Anda tercatat Telat (Lewat jam 08:00).';
@@ -85,10 +175,21 @@ class AttendanceController extends Controller
             $pesan = 'Berhasil melakukan presensi tepat waktu!';
         }
 
-        // 4. Validasi Jarak & Simpan (Kode Lama)
+        // Validasi jarak
         $officeLat = -7.594917597849972;
         $officeLng = 110.94065517764916;
         $maxRadius = 99999;
+
+        // ============================
+        // TAMBAHAN: Ambil koordinat dari setting Super Admin (jika ada)
+        // ============================
+        $about = AboutSetting::first();
+        if ($about && $about->office_latitude && $about->office_longitude) {
+            $officeLat = $about->office_latitude;
+            $officeLng = $about->office_longitude;
+            $maxRadius = $about->radius_meter ?? $maxRadius;
+        }
+        // ============================
 
         $userLoc = explode(',', $request->location);
         $distance = $this->calculateDistance($officeLat, $officeLng, $userLoc[0], $userLoc[1]);
@@ -101,7 +202,7 @@ class AttendanceController extends Controller
             'user_id' => Auth::id(),
             'tanggal' => now()->toDateString(),
             'check_in' => now()->toTimeString(),
-            'status' => $status, // <--- Simpan status (Hadir/Telat)
+            'status' => $status,
             'location' => $request->location,
         ]);
 
@@ -113,19 +214,24 @@ class AttendanceController extends Controller
     {
         $request->validate(['location' => 'required']);
 
-        // 1. Tentukan Jam Mulai Pulang (14:30)
-        $jamBolehPulang = Carbon::createFromTime(14, 30, 0);
-        $sekarang = Carbon::now();
+        $msg = $this->ensureWithinCheckOutWindow();
+        if ($msg) return back()->with('error', $msg);
 
-        // 2. Cek Apakah Sudah Waktunya?
-        if ($sekarang->lt($jamBolehPulang)) {
-            return back()->with('error', 'Belum waktunya pulang! Absen pulang baru dibuka jam 14:30.');
-        }
-
-        // 3. Validasi Jarak & Update (Kode Lama)
+        // Validasi jarak
         $officeLat = -7.594917597849972;
         $officeLng = 110.94065517764916;
         $maxRadius = 99999;
+
+        // ============================
+        // TAMBAHAN: Ambil koordinat dari setting Super Admin (jika ada)
+        // ============================
+        $about = AboutSetting::first();
+        if ($about && $about->office_latitude && $about->office_longitude) {
+            $officeLat = $about->office_latitude;
+            $officeLng = $about->office_longitude;
+            $maxRadius = $about->radius_meter ?? $maxRadius;
+        }
+        // ============================
 
         $userLoc = explode(',', $request->location);
         $distance = $this->calculateDistance($officeLat, $officeLng, $userLoc[0], $userLoc[1]);
