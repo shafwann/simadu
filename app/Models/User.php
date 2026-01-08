@@ -75,7 +75,7 @@ class User extends Authenticatable
     }
         // dosen → banyak mahasiswa
     public function mahasiswaBimbingan()
-    {
+    {   
         return $this->belongsToMany(
             User::class,
             'dosen_mahasiswa',

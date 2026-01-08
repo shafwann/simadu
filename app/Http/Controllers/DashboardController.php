@@ -16,17 +16,18 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // ✅ FIX: Jangan pakai $user->load() karena Auth::user() bisa GenericUser
-        // ✅ Ambil ulang dari Eloquent supaya relasi bisa dipakai
-        $user = User::with([
-            'assessment', // ambil assessment terbaru (latestOfMany)
-        ])->findOrFail(Auth::id());
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
 
-        // ✅ Kalau kamu punya dashboard admin berbeda, bisa redirect di sini (opsional)
-        // if ($user->role === 'admin') {
-        //     return redirect()->route('admin.dashboard');
-        // }
+        if ($user->role === 'pembimbing') {
+            return redirect()->route('pembimbing.dashboard');
+        }
 
-        return view('dashboard', compact('user'));
+        // default = mahasiswa
+        return view('dashboard', [
+            'user' => User::with('assessment')->findOrFail($user->id)
+        ]);
     }
+
 }

@@ -163,6 +163,10 @@ class AdminDosenController extends Controller
                 $q->where('prodi', $prodi))
             ->get();
 
+        $mahasiswaAssigned = $dosen->mahasiswaBimbingan
+            ->pluck('id')
+            ->toArray();
+
         return view('admin.dosen.edit', compact(
             'dosen',
             'instansiList',
@@ -170,10 +174,6 @@ class AdminDosenController extends Controller
             'mahasiswa',
             'mahasiswaAssigned'
         ));
-
-        $mahasiswaAssigned = $dosen->mahasiswaBimbingan
-            ->pluck('id')
-            ->toArray();
 
     }
 
@@ -189,8 +189,6 @@ class AdminDosenController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $dosen->id,
             'password' => 'nullable|confirmed|min:8',
-            'instansi' => 'nullable|string',
-            'prodi' => 'nullable|string',
             'mahasiswa_ids' => 'array',
         ]);
 
@@ -199,27 +197,54 @@ class AdminDosenController extends Controller
         // ===============================
         $dosen->name = $request->name;
         $dosen->email = $request->email;
-        $dosen->instansi = $request->instansi;
-        $dosen->prodi = $request->prodi;
 
         if ($request->filled('password')) {
             $dosen->password = Hash::make($request->password);
         }
 
-        $dosen->save();
-        if ($request->has('mahasiswa_ids')) {
-            $dosen->mahasiswaBimbingan()
-                ->sync($request->input('mahasiswa_ids', []));
+        // ===============================
+        // FILTER MAHASISWA SESUAI INSTANSI
+        // ===============================
+        $mahasiswaIds = User::whereIn('id', $request->input('mahasiswa_ids', []))
+            ->pluck('id')
+            ->toArray();
+
+        // SYNC PIVOT
+        $dosen->mahasiswaBimbingan()->sync($mahasiswaIds);
+
+        // ===============================
+        // UPDATE INSTANSI DOSEN SESUAI MAHASISWA TERPILIH
+        // ===============================
+        if (!empty($mahasiswaIds)) {
+            // Ambil data mahasiswa yang dipilih
+            $mahasiswa = User::whereIn('id', $mahasiswaIds)->get();
+
+            // Update instansi, prodi, fakultas, kegiatan sesuai mahasiswa pertama
+            $dosen->instansi  = $mahasiswa->first()->instansi ?? $dosen->instansi;
+            $dosen->prodi     = $mahasiswa->first()->prodi ?? $dosen->prodi;
+            $dosen->fakultas  = $mahasiswa->first()->fakultas ?? $dosen->fakultas;
+            $dosen->kegiatan  = $mahasiswa->first()->kegiatan ?? $dosen->kegiatan;
+            $dosen->bidang    = $mahasiswa->first()->bidang ?? $dosen->bidang;
+
+            // Jika mau, bisa diganti logikanya: misal gabungkan semua unik mahasiswa
+            // $dosen->instansi = $mahasiswa->pluck('instansi')->unique()->implode(', ');
+        } else {
+            // Kalau tidak ada mahasiswa dipilih, tetap gunakan input dari form atau biarkan
+            $dosen->instansi  = $request->instansi ?? $dosen->instansi;
+            $dosen->prodi     = $request->prodi ?? $dosen->prodi;
+            $dosen->fakultas  = $dosen->fakultas; // biarkan tetap
+            $dosen->kegiatan  = $dosen->kegiatan; // biarkan tetap
+            $dosen->bidang    = $dosen->bidang;
         }
 
+        $dosen->save();
 
-        // ===============================
-        // RESET & ASSIGN MAHASISWA
-        // ===============================
         return redirect()
             ->route('admin.dosen.index')
             ->with('success', 'Data dosen berhasil diperbarui.');
     }
+
+
     //9. dashboard dosen
     public function dashboard()
     {
