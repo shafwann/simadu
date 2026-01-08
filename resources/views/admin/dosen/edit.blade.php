@@ -87,16 +87,43 @@
                                       required />
                         <x-input-error :messages="$errors->get('email')" />
                     </div>
+                    
+                    {{-- ========================= --}}
+                    {{-- PASSWORD (OPSIONAL) --}}
+                    {{-- ========================= --}}
+                    <div class="border border-yellow-200 bg-yellow-50 rounded-xl p-5">
+                        <h3 class="font-bold text-gray-800 mb-2">
+                            Update Password (Opsional)
+                        </h3>
 
-                    {{-- Password --}}
-                    {{-- Konfirmasi Password --}}
-                    <div>
-                        <x-input-label for="password_confirmation" value="Konfirmasi Password Baru" />
-                        <x-text-input id="password_confirmation"
-                                    class="block mt-1 w-full"
-                                    type="password"
-                                    name="password_confirmation"
-                                    placeholder="Ulangi password baru" />
+                        <p class="text-sm text-gray-600 mb-4">
+                            Kosongkan bagian ini jika <strong>tidak ingin mengubah password</strong>.
+                        </p>
+
+                        {{-- Password Baru --}}
+                        <div class="mb-4">
+                            <x-input-label for="password" value="Password Baru" />
+                            <x-text-input
+                                id="password"
+                                class="block mt-1 w-full"
+                                type="password"
+                                name="password"
+                                placeholder="Biarkan kosong jika tidak diubah"
+                            />
+                            <x-input-error :messages="$errors->get('password')" />
+                        </div>
+
+                        {{-- Konfirmasi Password --}}
+                        <div>
+                            <x-input-label for="password_confirmation" value="Konfirmasi Password Baru" />
+                            <x-text-input
+                                id="password_confirmation"
+                                class="block mt-1 w-full"
+                                type="password"
+                                name="password_confirmation"
+                                placeholder="Ulangi password baru"
+                            />
+                        </div>
                     </div>
 
 
