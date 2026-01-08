@@ -22,9 +22,9 @@ class AdminAboutController extends Controller
 
         // Pastikan ada 1 row data settings (sekalian default jam absensi per hari)
         $about = AboutSetting::firstOrCreate([], [
-            'nama_instansi' => '',
-            'kepala_instansi' => '',
-            'nip_kepala_instansi' => '',
+            'nama_instansi' => 'Badan Perencanaan Pembangunan, Riset, dan Inovasi Daerah (BAPPERIDA)',
+            'kepala_instansi' => 'Dwi Cahyono, S.Sos., M.Si.',
+            'nip_kepala_instansi' => '19730614 199303 1 002',
             'jam_operasional' => 'Senin 07:30-15:00, Selasa 07:30-15:00, Rabu 07:30-15:00, Kamis 07:30-15:00, Jumat 07:30-11:30',
 
             // ======================
