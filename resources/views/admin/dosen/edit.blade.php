@@ -15,14 +15,14 @@
             {{-- ========================= --}}
             <div class="mb-6 p-6 border rounded-2xl bg-gray-50">
                 <form method="GET"
-                      action="{{ route('admin.dosen.edit', $dosen->id) }}"
-                      class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    action="{{ route('admin.dosen.edit', $dosen->id) }}"
+                    class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                     {{-- Instansi --}}
                     <div>
                         <x-input-label value="Instansi" />
-                        <select name="instansi"
-                                onchange="this.form.submit()"
+                        <select id="instansi_filter"
+                                name="instansi"
                                 class="w-full rounded-lg border-gray-300">
                             <option value="">-- Semua Instansi --</option>
                             @foreach($instansiList as $instansi)
@@ -37,13 +37,13 @@
                     {{-- Prodi --}}
                     <div>
                         <x-input-label value="Program Studi" />
-                        <select name="prodi"
-                                onchange="this.form.submit()"
+                        <select id="prodi_filter"
+                                name="prodi"
                                 class="w-full rounded-lg border-gray-300">
                             <option value="">-- Semua Prodi --</option>
                             @foreach($prodiList as $prodi)
                                 <option value="{{ $prodi }}"
-                                    {{ request('prodi', $dosen->prodi) == $prodi ? 'selected' : '' }}>
+                                    {{ request('prodi') == $prodi ? 'selected' : '' }}>
                                     {{ $prodi }}
                                 </option>
                             @endforeach
@@ -52,6 +52,7 @@
 
                 </form>
             </div>
+
 
             {{-- ========================= --}}
             {{-- FORM UPDATE (PUT) --}}
@@ -88,14 +89,16 @@
                     </div>
 
                     {{-- Password --}}
+                    {{-- Konfirmasi Password --}}
                     <div>
-                        <x-input-label for="password" value="Password Baru (Opsional)" />
-                        <x-text-input id="password"
-                                      class="block mt-1 w-full"
-                                      type="password"
-                                      name="password"
-                                      placeholder="Kosongkan jika tidak ingin mengganti" />
+                        <x-input-label for="password_confirmation" value="Konfirmasi Password Baru" />
+                        <x-text-input id="password_confirmation"
+                                    class="block mt-1 w-full"
+                                    type="password"
+                                    name="password_confirmation"
+                                    placeholder="Ulangi password baru" />
                     </div>
+
 
                     {{-- ========================= --}}
                     {{-- ASSIGN MAHASISWA --}}
