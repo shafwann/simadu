@@ -73,9 +73,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(Laporan::class);
     }
-<<<<<<< HEAD
-=======
-
         // dosen → banyak mahasiswa
     public function mahasiswaBimbingan()
     {
@@ -97,5 +94,4 @@ class User extends Authenticatable
             'dosen_id'
         );
     }
->>>>>>> 604e463736ecc25aa113b9dabd7e4b00bd89167e
 }

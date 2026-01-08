@@ -14,17 +14,17 @@ $rows = [
 <div style="
   position:absolute; left:0; top:0;
   width:297mm; height:205mm;
-  padding:7mm 7mm 0mm 25mm;              /* lebih pas kiri kanan */
-  font-family:'DejaVu Sans', sans-serif;
+  padding:5mm 7mm 0mm 18mm;              /* lebih pas kiri kanan */
+  font-family:'Arial', sans-serif;
   color:#111;
 ">
 {{-- JUDUL --}}
-    <div style="text-align:center; top: 198px; font-size:24px; font-weight:700; margin:3mm 3mm 0;">
+    <div style="text-align:center; top: 198px; font-size:28px; font-weight:700; margin:3mm 3mm 0;">
         Form Penilaian Magang Kerja
     </div>
     {{-- IDENTITAS --}}
     <br>
-  <table style="width:100%; font-size:15px; line-height:1.12;" cellpadding="0" cellspacing="0">
+  <table style="width:100%; font-size:18px; line-height:1.12;" cellpadding="0" cellspacing="0">
     <tr>
       <td style="width:32mm; padding:0.5mm 0;">Nama</td>
       <td style="width:8mm;  padding:0.5mm 0; text-align:center;">:</td>
@@ -47,7 +47,7 @@ $rows = [
     </tr>
   </table>
 
-  <div style="margin-top:2.5mm; font-size:13px; line-height:1.18;">
+  <div style="margin-top:2.5mm; font-size:17px; line-height:1.18;">
     Telah melaksanakan Magang Kerja di Kantor Badan Perencanaan Pembangunan,
     Riset, dan Inovasi Daerah Kabupaten Karanganyar dengan nilai sebagai berikut:
   </div>
@@ -56,8 +56,8 @@ $rows = [
   <table style="
       width:250mm;                 /* lebih lebar biar kanan-kiri enak */
       margin-top:2.5mm;
-      margin-left:15mm;
-      font-size:13.5px;
+      margin-left:22mm;
+      font-size:17.5px;
       border-collapse:collapse;
       border:1.2px solid #000;     /* tebalin garis luar */
   ">
@@ -106,11 +106,11 @@ $rows = [
   <tr>
     {{-- KETERANGAN --}}
     <td style="width:118mm; vertical-align:top; padding-right:5mm;">
-      <div style="font-size:13.5px; font-weight:700; margin-bottom:1.5mm;">Keterangan:</div>
+      <div style="font-size:16.5px; font-weight:700; margin-bottom:1.5mm;">Keterangan:</div>
 
       <table style="
   width:100%;
-  font-size:13px;
+  font-size:16px;
   border-collapse:collapse;
   border:1.5px solid #000;
 " cellspacing="0" cellpadding="0">
@@ -143,7 +143,7 @@ $rows = [
     </td>
 
     {{-- TTD (SEJAJAR DENGAN KETERANGAN) --}}
-    <td style="vertical-align:top; text-align:center; font-size:13px; line-height:1.2;">
+    <td style="vertical-align:top; text-align:center; font-size:16px; line-height:1.2;">
       <div style="margin-top:0; font-weight: 700;">Karanganyar, {{ $hariIni }}</div>
       <div style="margin-top:0;">
         Kepala Badan Perencanaan Pembangunan, Riset, dan Inovasi Daerah<br>
@@ -153,7 +153,7 @@ $rows = [
       {{-- ruang tanda tangan --}}
       <div style="height:28mm;"></div>
 
-      <b style="font-size:13px;">Dwi Cahyono, S.Sos., M.Si.</b><br>
+      <b style="font-size:16px;">Dwi Cahyono, S.Sos., M.Si.</b><br>
       NIP. 19730614 199303 1 002
     </td>
   </tr>
