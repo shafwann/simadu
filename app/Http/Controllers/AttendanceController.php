@@ -164,16 +164,9 @@ class AttendanceController extends Controller
         $request->validate(['location' => 'required']);
 
         // Status telat (tetap sesuai kode lama)
-        $jamMasukTelat = Carbon::createFromTime(8, 0, 0);
-        $sekarang = Carbon::now();
+        $status = 'Hadir';
+        $pesan = 'Berhasil melakukan presensi masuk.';
 
-        if ($sekarang->gt($jamMasukTelat)) {
-            $status = 'Telat';
-            $pesan = 'Absen berhasil, namun Anda tercatat Telat (Lewat jam 08:00).';
-        } else {
-            $status = 'Hadir';
-            $pesan = 'Berhasil melakukan presensi tepat waktu!';
-        }
 
         // Validasi jarak
         $officeLat = -7.594917597849972;
