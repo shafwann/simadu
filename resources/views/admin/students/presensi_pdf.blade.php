@@ -190,6 +190,7 @@
                 <div>{{ $student->jabatan_pembimbing ?? '-' }}</div>
 
                 <div class="gap"></div>
+                <br>
 
                 <div class="name">{{ $student->nama_pembimbing ?? '-' }}</div>
                 <div>NIP. {{ $student->nip_pembimbing ?? '-' }}</div>
