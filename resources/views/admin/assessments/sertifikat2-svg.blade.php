@@ -1,11 +1,11 @@
 @php
 $rows = [
-    [1,'Etika dan Kedisiplinan',$assessment->aspek_1],
-    [2,'Kemampuan Berkomunikasi dan Bekerjasama',$assessment->aspek_2],
-    [3,'Kemandirian',$assessment->aspek_3],
-    [4,'Kreativitas',$assessment->aspek_4],
-    [5,'Kemampuan menyelesaikan pekerjaan di bidangnya',$assessment->aspek_5],
-    [6,'Kemampuan mengidentifikasi dan memecahkan masalah',$assessment->aspek_6],
+[1,'Etika dan Kedisiplinan',$assessment->aspek_1],
+[2,'Kemampuan Berkomunikasi dan Bekerjasama',$assessment->aspek_2],
+[3,'Kemandirian',$assessment->aspek_3],
+[4,'Kreativitas',$assessment->aspek_4],
+[5,'Kemampuan menyelesaikan pekerjaan di bidangnya',$assessment->aspek_5],
+[6,'Kemampuan mengidentifikasi dan memecahkan masalah',$assessment->aspek_6],
 ];
 @endphp
 
@@ -17,45 +17,59 @@ $rows = [
     color:#111;
 ">
 
-    {{-- JUDUL --}}
-    <div style="text-align:center; font-size:28px; font-weight:700; margin:3mm 3mm 0;">
-        Form Penilaian Magang Kerja
-    </div>
+  {{-- JUDUL --}}
+  <div style="text-align:center; font-size:28px; font-weight:700; margin:3mm 3mm 0;">
+    Form Penilaian Magang Kerja
+  </div>
 
-    <br>
+  <br>
 
-    {{-- IDENTITAS --}}
-    <table style="width:100%; font-size:18px; line-height:1.12;" cellpadding="0" cellspacing="0">
-        <tr>
-            <td style="width:32mm; padding:0.5mm 0;">Nama</td>
-            <td style="width:8mm;  padding:0.5mm 0; text-align:center;">:</td>
-            <td style="padding:0.5mm 0;"><b>{{ $student->name }}</b></td>
-        </tr>
-        <tr>
-            <td style="padding:0.5mm 0;">NIM</td>
-            <td style="padding:0.5mm 0; text-align:center;">:</td>
-            <td style="padding:0.5mm 0;">{{ $student->nim }}</td>
-        </tr>
-        <tr>
-            <td style="padding:0.5mm 0;">Program Studi</td>
-            <td style="padding:0.5mm 0; text-align:center;">:</td>
-            <td style="padding:0.5mm 0;">{{ $student->prodi }}</td>
-        </tr>
-        <tr>
-            <td style="padding:0.5mm 0;">Fakultas</td>
-            <td style="padding:0.5mm 0; text-align:center;">:</td>
-            <td style="padding:0.5mm 0;">{{ $student->fakultas }}, {{ $student->instansi }}</td>
-        </tr>
-    </table>
+  {{-- IDENTITAS --}}
+  <table style="width:100%; font-size:18px; line-height:1.12;" cellpadding="0" cellspacing="0">
+    <tr>
+      <td style="width:32mm; padding:0.5mm 0;">Nama</td>
+      <td style="width:8mm;  padding:0.5mm 0; text-align:center;">:</td>
+      <td style="padding:0.5mm 0;"><b>{{ $student->name }}</b></td>
+    </tr>
+    <tr>
+      <td style="padding:0.5mm 0;">NIM</td>
+      <td style="padding:0.5mm 0; text-align:center;">:</td>
+      <td style="padding:0.5mm 0;">{{ $student->nim }}</td>
+    </tr>
+    <tr>
+      <td style="padding:0.5mm 0;">Program Studi</td>
+      <td style="padding:0.5mm 0; text-align:center;">:</td>
+      <td style="padding:0.5mm 0;">{{ $student->prodi }}</td>
+    </tr>
+    <tr>
+      <td style="padding:0.5mm 0;">Fakultas</td>
+      <td style="padding:0.5mm 0; text-align:center;">:</td>
+      <td style="padding:0.5mm 0;">{{ $student->fakultas }}, {{ $student->instansi }}</td>
+    </tr>
+  </table>
 
-    <div style="margin-top:2.5mm; font-size:17px; line-height:1.18;">
-        Telah melaksanakan Magang Kerja di
-        {{ $about->nama_instansi ?? '-' }}
-        dengan nilai sebagai berikut:
-    </div>
+  <div style="
+    margin-top:2.5mm;
+    font-size:17px;
+    line-height:1.18;
 
-    {{-- TABEL NILAI --}}
-    <table style="
+    /* DomPDF aman pakai mm */
+    width:305mm;
+
+    white-space:normal;
+    word-wrap:break-word;
+    overflow-wrap:break-word;
+    word-break:break-word;
+">
+    Telah melaksanakan Magang Kerja di Kantor
+    {{ $about->nama_instansi ?? '-' }} Kabupaten Karanganyar
+    dengan nilai sebagai berikut:
+  </div>
+
+
+
+  {{-- TABEL NILAI --}}
+  <table style="
         width:250mm;
         margin-top:2.5mm;
         margin-left:22mm;
@@ -63,97 +77,108 @@ $rows = [
         border-collapse:collapse;
         border:1.2px solid #000;
     ">
-        <colgroup>
-            <col style="width:12mm;">
-            <col style="width:188mm;">
-            <col style="width:50mm;">
-        </colgroup>
+    <colgroup>
+      <col style="width:12mm;">
+      <col style="width:188mm;">
+      <col style="width:50mm;">
+    </colgroup>
 
-        <thead>
-            <tr>
-                <th style="padding:1.0mm; text-align:center; border:1.2px solid #000;">No</th>
-                <th style="padding:1.0mm; text-align:center; border:1.2px solid #000;">Aspek Penilaian</th>
-                <th style="padding:1.0mm; text-align:center; border:1.2px solid #000;">Skor</th>
-            </tr>
-        </thead>
+    <thead>
+      <tr>
+        <th style="padding:1.0mm; text-align:center; border:1.2px solid #000;">No</th>
+        <th style="padding:1.0mm; text-align:center; border:1.2px solid #000;">Aspek Penilaian</th>
+        <th style="padding:1.0mm; text-align:center; border:1.2px solid #000;">Skor</th>
+      </tr>
+    </thead>
 
-        <tbody>
-            @foreach ($rows as [$no,$aspek,$skor])
-                <tr>
-                    <td style="padding:1.0mm; text-align:center; border:1.2px solid #000;">{{ $no }}.</td>
-                    <td style="padding:1.0mm; line-height:1.15; border:1.2px solid #000;">{{ $aspek }}</td>
-                    <td style="padding:1.0mm; text-align:center; border:1.2px solid #000;">{{ $skor }}</td>
-                </tr>
-            @endforeach
+    <tbody>
+      @foreach ($rows as [$no,$aspek,$skor])
+      <tr>
+        <td style="padding:1.0mm; text-align:center; border:1.2px solid #000;">{{ $no }}.</td>
+        <td style="padding:1.0mm; line-height:1.15; border:1.2px solid #000;">{{ $aspek }}</td>
+        <td style="padding:1.0mm; text-align:center; border:1.2px solid #000;">{{ $skor }}</td>
+      </tr>
+      @endforeach
 
-            <tr>
-                <th colspan="2" style="padding:1.0mm; text-align:center; border:1.2px solid #000;">TOTAL</th>
-                <th style="padding:1.0mm; text-align:center; border:1.2px solid #000;">{{ $assessment->total }}</th>
-            </tr>
-            <tr>
-                <th colspan="2" style="padding:1.0mm; text-align:center; border:1.2px solid #000;">RATA-RATA</th>
-                <th style="padding:1.0mm; text-align:center; border:1.2px solid #000;">
-                    {{ number_format($assessment->average, 2, ',', '.') }}
-                </th>
-            </tr>
-            <tr>
-                <th colspan="2" style="padding:1.0mm; text-align:center; border:1.2px solid #000;">NILAI HURUF</th>
-                <th style="padding:1.0mm; text-align:center; border:1.2px solid #000;">{{ $assessment->grade_letter }}</th>
-            </tr>
-        </tbody>
-    </table>
+      <tr>
+        <th colspan="2" style="padding:1.0mm; text-align:center; border:1.2px solid #000;">TOTAL</th>
+        <th style="padding:1.0mm; text-align:center; border:1.2px solid #000;">{{ $assessment->total }}</th>
+      </tr>
+      <tr>
+        <th colspan="2" style="padding:1.0mm; text-align:center; border:1.2px solid #000;">RATA-RATA</th>
+        <th style="padding:1.0mm; text-align:center; border:1.2px solid #000;">
+          {{ number_format($assessment->average, 2, ',', '.') }}
+        </th>
+      </tr>
+      <tr>
+        <th colspan="2" style="padding:1.0mm; text-align:center; border:1.2px solid #000;">NILAI HURUF</th>
+        <th style="padding:1.0mm; text-align:center; border:1.2px solid #000;">{{ $assessment->grade_letter }}</th>
+      </tr>
+    </tbody>
+  </table>
 
-    {{-- BAWAH --}}
-    <table style="width:100%; margin-top:5mm; margin-left:7mm;" cellpadding="0" cellspacing="0">
-        <tr>
-            {{-- KETERANGAN --}}
-            <td style="width:118mm; vertical-align:top; padding-right:5mm;">
-                <div style="font-size:16.5px; font-weight:700; margin-bottom:1.5mm;">Keterangan:</div>
+  {{-- BAWAH --}}
+  <table style="width:100%; margin-top:5mm; margin-left:7mm;" cellpadding="0" cellspacing="0">
+    <tr>
+      {{-- KETERANGAN --}}
+      <td style="width:118mm; vertical-align:top; padding-right:5mm;">
+        <div style="font-size:16.5px; font-weight:700; margin-bottom:1.5mm;">Keterangan:</div>
 
-                <table style="width:100%; font-size:16px; border-collapse:collapse; border:1.5px solid #000;" cellspacing="0" cellpadding="0">
-                    <tr>
-                        <th style="padding:1.1mm; text-align:center; border:1.2px solid #000;">Nilai Standar</th>
-                        <th style="padding:1.1mm; text-align:center; border:1.2px solid #000;">Nilai Huruf</th>
-                    </tr>
-                    <tr>
-                        <td style="padding:1.0mm; text-align:center; border:1.2px solid #000;">0 – 30</td>
-                        <td style="padding:1.0mm; border:1.2px solid #000;">E (sangat kurang)</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:1.0mm; text-align:center; border:1.2px solid #000;">31 – 55</td>
-                        <td style="padding:1.0mm; border:1.2px solid #000;">D (kurang)</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:1.0mm; text-align:center; border:1.2px solid #000;">56 – 75</td>
-                        <td style="padding:1.0mm; border:1.2px solid #000;">C (cukup)</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:1.0mm; text-align:center; border:1.2px solid #000;">76 – 90</td>
-                        <td style="padding:1.0mm; border:1.2px solid #000;">B (baik)</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:1.0mm; text-align:center; border:1.2px solid #000;">91 – 100</td>
-                        <td style="padding:1.0mm; border:1.2px solid #000;">A (sangat baik)</td>
-                    </tr>
-                </table>
-            </td>
+        <table style="width:100%; font-size:16px; border-collapse:collapse; border:1.5px solid #000;" cellspacing="0" cellpadding="0">
+          <tr>
+            <th style="padding:1.1mm; text-align:center; border:1.2px solid #000;">Nilai Standar</th>
+            <th style="padding:1.1mm; text-align:center; border:1.2px solid #000;">Nilai Huruf</th>
+          </tr>
+          <tr>
+            <td style="padding:1.0mm; text-align:center; border:1.2px solid #000;">0 – 30</td>
+            <td style="padding:1.0mm; border:1.2px solid #000;">E (sangat kurang)</td>
+          </tr>
+          <tr>
+            <td style="padding:1.0mm; text-align:center; border:1.2px solid #000;">31 – 55</td>
+            <td style="padding:1.0mm; border:1.2px solid #000;">D (kurang)</td>
+          </tr>
+          <tr>
+            <td style="padding:1.0mm; text-align:center; border:1.2px solid #000;">56 – 75</td>
+            <td style="padding:1.0mm; border:1.2px solid #000;">C (cukup)</td>
+          </tr>
+          <tr>
+            <td style="padding:1.0mm; text-align:center; border:1.2px solid #000;">76 – 90</td>
+            <td style="padding:1.0mm; border:1.2px solid #000;">B (baik)</td>
+          </tr>
+          <tr>
+            <td style="padding:1.0mm; text-align:center; border:1.2px solid #000;">91 – 100</td>
+            <td style="padding:1.0mm; border:1.2px solid #000;">A (sangat baik)</td>
+          </tr>
+        </table>
+      </td>
 
-            {{-- TTD (DINAMIS DARI ABOUT) --}}
-            <td style="vertical-align:top; text-align:center; font-size:16px; line-height:1.2;">
-                <div style="margin-top:0; font-weight:700;">Karanganyar, {{ $hariIni }}</div>
-                <div style="margin-top:0;">
-                    Kepala {{ $about->nama_instansi ?? '-' }}
-                </div>
-                <div style="margin-top:0;">
-                    Kabupaten Karanganyar
-                </div>
+      {{-- TTD (DINAMIS DARI ABOUT) --}}
+      <td style="vertical-align:top; text-align:center; font-size:16px; line-height:1.2;">
 
-                <div style="height:28mm;"></div>
+        <div style="margin-top:0; font-weight:700;">Karanganyar, {{ $hariIni }}</div>
 
-                <b style="font-size:16px;">{{ $about->kepala_instansi ?? '-' }}</b><br>
-                NIP. {{ $about->nip_kepala_instansi ?? '-' }}
-            </td>
-        </tr>
-    </table>
+        <div style="
+        /* bikin blok tengah dan boleh turun baris */
+        width:150mm;           /* sesuaikan kalau mau lebih lebar: 160/170mm */
+        margin:0 auto;
+
+        white-space:normal;
+        word-wrap:break-word;
+        overflow-wrap:break-word;
+        word-break:break-word;
+    ">
+          Kepala {{ $about->nama_instansi ?? '-' }}<br>
+          Kabupaten Karanganyar
+        </div>
+
+        <div style="height:26mm;"></div>
+
+        <b style="font-size:16px;">{{ $about->kepala_instansi ?? '-' }}</b><br>
+        NIP. {{ $about->nip_kepala_instansi ?? '-' }}
+
+      </td>
+
+    </tr>
+  </table>
 
 </div>

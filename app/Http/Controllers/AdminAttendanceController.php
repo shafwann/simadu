@@ -13,13 +13,20 @@ class AdminAttendanceController extends Controller
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'tanggal' => 'required|date',
-            'status' => 'required',
-            'tipe_absensi' => 'nullable',
-            'location' => 'nullable|string|max:255', // <--- BARU: Validasi Lokasi
+            'status' => 'required|in:Hadir,Telat,Ijin,Sakit,Dinas Luar,Cuti,Tanpa Keterangan,Alpha',
+            'tipe_absensi' => 'nullable|in:check_in,check_out',
+            'jam' => 'nullable',
+            'location' => 'nullable|string|max:255',
         ]);
 
-        // --- KELOMPOK 1: KETIDAKHADIRAN (Alpha, Sakit, Izin) ---
-        if (in_array($request->status, ['Alpha', 'Sakit', 'Izin'])) {
+        // normalisasi status legacy
+        $status = $request->status;
+        if ($status === 'Alpha') {
+            $status = 'Tanpa Keterangan'; // legacy -> TK
+        }
+
+        // ===== kelompok TIDAK HADIR (I/S/DL/CT/TK) =====
+        if (in_array($status, ['Tanpa Keterangan', 'Sakit', 'Ijin', 'Dinas Luar', 'Cuti'])) {
 
             $exists = Attendance::where('user_id', $request->user_id)
                 ->whereDate('tanggal', $request->tanggal)
@@ -34,70 +41,67 @@ class AdminAttendanceController extends Controller
                 'tanggal' => $request->tanggal,
                 'check_in' => null,
                 'check_out' => null,
-                'status' => $request->status,
-                'location' => null, // Tidak perlu lokasi kalau tidak hadir
+                'status' => $status,
+                'location' => null,
             ]);
 
-            return back()->with('success', 'Berhasil input keterangan: ' . $request->status);
+            return back()->with('success', 'Berhasil input keterangan: ' . $status);
         }
 
-        // --- KELOMPOK 2: KEHADIRAN FISIK (Hadir, Telat) ---
-        else {
-            if (!$request->tipe_absensi) {
-                return back()->with('error', 'Jika status Hadir/Telat, mohon pilih Tipe Absensi.');
-            }
-
-            $jamMasuk = $request->jam ?? '07:30:00'; // Gunakan input jam manual atau default
-            $jamPulang = '15:00:00';
-
-            $attendance = Attendance::where('user_id', $request->user_id)
-                ->whereDate('tanggal', $request->tanggal)
-                ->first();
-
-            // JIKA PILIH CHECK IN (PAGI)
-            if ($request->tipe_absensi == 'check_in') {
-                if ($attendance) {
-                    return back()->with('error', 'Data Check-In sudah ada. Gunakan Edit.');
-                }
-
-                Attendance::create([
-                    'user_id' => $request->user_id,
-                    'tanggal' => $request->tanggal,
-                    'check_in' => $jamMasuk,
-                    'check_out' => null,
-                    'status' => $request->status,
-                    'location' => $request->location, // <--- BARU: Simpan Lokasi
-                ]);
-
-                return back()->with('success', 'Berhasil Check-In manual jam ' . $jamMasuk);
-            }
-
-            // JIKA PILIH CHECK OUT (SORE)
-            else {
-                if ($attendance) {
-                    $attendance->update([
-                        'check_out' => $jamPulang,
-                        'status' => $request->status,
-                        // Update lokasi jika diisi (opsional, biasanya lokasi checkout beda)
-                        'location' => $request->location ?? $attendance->location
-                    ]);
-                    $pesan = 'Berhasil update Check-Out jam ' . $jamPulang;
-                } else {
-                    // Buat Full Day
-                    Attendance::create([
-                        'user_id' => $request->user_id,
-                        'tanggal' => $request->tanggal,
-                        'check_in' => $jamMasuk,
-                        'check_out' => $jamPulang,
-                        'status' => $request->status,
-                        'location' => $request->location, // <--- BARU
-                    ]);
-                    $pesan = 'Berhasil Check-In & Check-Out sekaligus.';
-                }
-                return back()->with('success', $pesan);
-            }
+        // ===== kelompok HADIR / TELAT =====
+        // wajib pilih tipe_absensi
+        if (!$request->tipe_absensi) {
+            return back()->with('error', 'Jika status Hadir/Telat, mohon pilih Tipe Absensi.');
         }
+
+        $jamMasuk  = $request->jam ?? '07:30:00';
+        $jamPulang = '15:00:00';
+
+        $attendance = Attendance::where('user_id', $request->user_id)
+            ->whereDate('tanggal', $request->tanggal)
+            ->first();
+
+        // CHECK IN
+        if ($request->tipe_absensi === 'check_in') {
+            if ($attendance) {
+                return back()->with('error', 'Data Check-In sudah ada. Gunakan Edit.');
+            }
+
+            Attendance::create([
+                'user_id' => $request->user_id,
+                'tanggal' => $request->tanggal,
+                'check_in' => $jamMasuk,
+                'check_out' => null,
+                'status' => $status, // Hadir / Telat
+                'location' => $request->location,
+            ]);
+
+            return back()->with('success', 'Berhasil Check-In manual jam ' . $jamMasuk);
+        }
+
+        // CHECK OUT
+        if ($attendance) {
+            $attendance->update([
+                'check_out' => $jamPulang,
+                'status' => $status,
+                'location' => $request->location ?? $attendance->location,
+            ]);
+            return back()->with('success', 'Berhasil update Check-Out jam ' . $jamPulang);
+        }
+
+        // jika belum ada record, buat full day
+        Attendance::create([
+            'user_id' => $request->user_id,
+            'tanggal' => $request->tanggal,
+            'check_in' => $jamMasuk,
+            'check_out' => $jamPulang,
+            'status' => $status,
+            'location' => $request->location,
+        ]);
+
+        return back()->with('success', 'Berhasil Check-In & Check-Out sekaligus.');
     }
+
 
     // 2. FORM EDIT ABSENSI
     public function edit($id)
@@ -113,40 +117,47 @@ class AdminAttendanceController extends Controller
 
         $request->validate([
             'tanggal' => 'required|date',
-            'status' => 'required|in:Hadir,Telat,Sakit,Izin,Alpha',
-            'location' => 'nullable|string|max:255', // <--- BARU
+            'status' => 'required|in:Hadir,Telat,Ijin,Sakit,Dinas Luar,Cuti,Tanpa Keterangan,Alpha',
+            'check_in' => 'nullable',
+            'check_out' => 'nullable',
+            'location' => 'nullable|string|max:255',
         ]);
 
-        // ===== KELOMPOK TIDAK HADIR =====
-        if (in_array($request->status, ['Alpha', 'Sakit', 'Izin'])) {
+        $status = $request->status;
+        if ($status === 'Alpha') {
+            $status = 'Tanpa Keterangan';
+        }
+
+        // ===== kelompok TIDAK HADIR =====
+        if (in_array($status, ['Tanpa Keterangan', 'Sakit', 'Ijin', 'Dinas Luar', 'Cuti'])) {
             $attendance->update([
                 'tanggal' => $request->tanggal,
                 'check_in' => null,
                 'check_out' => null,
-                'status' => $request->status,
+                'status' => $status,
                 'location' => null,
             ]);
-        }
-        // ===== KELOMPOK HADIR / TELAT =====
-        else {
-                    $request->validate([
-                        'check_in' => 'required',
-                        'check_out' => 'nullable',
-                    ]);
+        } else {
+            // ===== kelompok HADIR / TELAT =====
+            // kalau hadir/telat, minimal check_in harus ada
+            $request->validate([
+                'check_in' => 'required',
+            ]);
 
-                    $attendance->update([
-                        'tanggal' => $request->tanggal,
-                        'check_in' => $request->check_in,
-                        'check_out' => $request->check_out,
-                        'status' => $request->status,
-                        'location' => $request->location, // Update Lokasi sudah ada
-                    ]);
-                }
+            $attendance->update([
+                'tanggal' => $request->tanggal,
+                'check_in' => $request->check_in,
+                'check_out' => $request->check_out,
+                'status' => $status,
+                'location' => $request->location,
+            ]);
+        }
 
         return redirect()
             ->route('admin.students.show', $attendance->user_id)
             ->with('success', 'Data absensi berhasil diperbarui.');
     }
+
 
     // 4. HAPUS ABSENSI
     public function destroy($id)
