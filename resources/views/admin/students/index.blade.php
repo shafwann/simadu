@@ -170,6 +170,16 @@
                                         {{ $s->status === 'aktif' ? 'bg-purple-50 text-purple-700 border-purple-100' : 'bg-gray-100 text-gray-500 border-gray-200' }}">
                                         {{ $s->bidang }}
                                     </span>
+
+                                    @if($s->nama_pembimbing)
+    <div class="mt-1 pl-3 text-xs text-gray-600">
+        Pembimbing:
+        <span class="font-semibold text-gray-800">
+            {{ $s->nama_pembimbing }}
+        </span>
+    </div>
+@endif
+
                                 </td>
 
                                 {{-- 4. AKSI --}}

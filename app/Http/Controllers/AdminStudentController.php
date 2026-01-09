@@ -76,6 +76,10 @@ class AdminStudentController extends Controller
                 'Fisik & Prasarana',
                 'Penelitian, Pengembangan & Penyusunan Program',
             ])],
+
+            'jabatan_pembimbing' => ['required', 'string', 'max:255'],
+            'nama_pembimbing' => ['required', 'string', 'max:255'],
+            'nip_pembimbing' => ['required', 'string', 'max:255'],
         ]);
 
         User::create([
@@ -92,6 +96,9 @@ class AdminStudentController extends Controller
             'kegiatan' => $request->kegiatan,
             'tanggal_masuk' => $request->tanggal_masuk,
             'tanggal_selesai' => $request->tanggal_selesai,
+            'jabatan_pembimbing' => $request->jabatan_pembimbing,
+            'nama_pembimbing' => $request->nama_pembimbing,
+            'nip_pembimbing' => $request->nip_pembimbing,
         ]);
 
         return redirect()->route('admin.students.index')
@@ -176,6 +183,10 @@ class AdminStudentController extends Controller
                 'Fisik & Prasarana',
                 'Penelitian, Pengembangan & Penyusunan Program',
             ])],
+
+            'jabatan_pembimbing' => ['required', 'string', 'max:255'],
+            'nama_pembimbing' => ['required', 'string', 'max:255'],
+            'nip_pembimbing' => ['required', 'string', 'max:255'],
         ]);
 
         // Update Data Utama
@@ -191,6 +202,9 @@ class AdminStudentController extends Controller
             'kegiatan' => $request->kegiatan,
             'tanggal_masuk' => $request->tanggal_masuk,
             'tanggal_selesai' => $request->tanggal_selesai,
+            'jabatan_pembimbing' => $request->jabatan_pembimbing,
+            'nama_pembimbing' => $request->nama_pembimbing,
+            'nip_pembimbing' => $request->nip_pembimbing,
         ]);
 
         // Cek Password (Hanya update jika diisi)

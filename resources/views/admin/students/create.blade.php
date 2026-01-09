@@ -66,6 +66,47 @@
                             <x-input-error :messages="$errors->get('bidang')" class="mt-2" />
                         </div>
                         {{-- END TAMBAHAN --}}
+
+                        {{-- TAMBAHAN: Pembimbing Lapangan (di bawah Bidang / Divisi) --}}
+                        <div class="md:col-span-2">
+                            <x-input-label for="jabatan_pembimbing" :value="__('Jabatan Pembimbing Lapangan')" />
+                            <x-text-input
+                                id="jabatan_pembimbing"
+                                class="block mt-1 w-full"
+                                type="text"
+                                name="jabatan_pembimbing"
+                                :value="old('jabatan_pembimbing', 'Sekretaris')"
+                                required
+                            />
+                            <x-input-error :messages="$errors->get('jabatan_pembimbing')" class="mt-2" />
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <x-input-label for="nama_pembimbing" :value="__('Nama Pembimbing Lapangan')" />
+                            <x-text-input
+                                id="nama_pembimbing"
+                                class="block mt-1 w-full"
+                                type="text"
+                                name="nama_pembimbing"
+                                :value="old('nama_pembimbing', 'Dr. Nining Indrastuti, S.T., M.T.')"
+                                required
+                            />
+                            <x-input-error :messages="$errors->get('nama_pembimbing')" class="mt-2" />
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <x-input-label for="nip_pembimbing" :value="__('NIP Pembimbing Lapangan')" />
+                            <x-text-input
+                                id="nip_pembimbing"
+                                class="block mt-1 w-full"
+                                type="text"
+                                name="nip_pembimbing"
+                                :value="old('nip_pembimbing', 'NIP. 19761026 200604 2 022')"
+                                required
+                            />
+                            <x-input-error :messages="$errors->get('nip_pembimbing')" class="mt-2" />
+                        </div>
+                        {{-- END TAMBAHAN --}}
                     </div>
                 </div>
 

@@ -136,6 +136,47 @@
                             <p class="text-xs text-gray-500 mt-1">Mengubah bidang akan memindahkan mahasiswa ke admin bidang tersebut.</p>
                         </div>
 
+                        {{-- TAMBAHAN: Pembimbing Lapangan --}}
+                        <div class="md:col-span-2 mt-4">
+                            <x-input-label for="jabatan_pembimbing" :value="__('Jabatan Pembimbing Lapangan')" />
+                            <x-text-input
+                                id="jabatan_pembimbing"
+                                class="block mt-1 w-full"
+                                type="text"
+                                name="jabatan_pembimbing"
+                                value="{{ old('jabatan_pembimbing', $student->jabatan_pembimbing) }}"
+                                required
+                            />
+                            <x-input-error :messages="$errors->get('jabatan_pembimbing')" class="mt-2" />
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <x-input-label for="nama_pembimbing" :value="__('Nama Pembimbing Lapangan')" />
+                            <x-text-input
+                                id="nama_pembimbing"
+                                class="block mt-1 w-full"
+                                type="text"
+                                name="nama_pembimbing"
+                                value="{{ old('nama_pembimbing', $student->nama_pembimbing) }}"
+                                required
+                            />
+                            <x-input-error :messages="$errors->get('nama_pembimbing')" class="mt-2" />
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <x-input-label for="nip_pembimbing" :value="__('NIP Pembimbing Lapangan')" />
+                            <x-text-input
+                                id="nip_pembimbing"
+                                class="block mt-1 w-full"
+                                type="text"
+                                name="nip_pembimbing"
+                                value="{{ old('nip_pembimbing', $student->nip_pembimbing) }}"
+                                required
+                            />
+                            <x-input-error :messages="$errors->get('nip_pembimbing')" class="mt-2" />
+                        </div>
+                        {{-- END TAMBAHAN --}}
+
                         {{-- Status Aktif/Nonaktif --}}
                         <div class="md:col-span-2">
                             <x-input-label for="status" :value="__('Status Mahasiswa')" />
