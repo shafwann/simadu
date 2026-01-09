@@ -178,7 +178,7 @@ class AttendanceController extends Controller
         // Validasi jarak
         $officeLat = -7.594917597849972;
         $officeLng = 110.94065517764916;
-        $maxRadius = 99999;
+        $maxRadius = 20;
 
         // ============================
         // TAMBAHAN: Ambil koordinat dari setting Super Admin (jika ada)

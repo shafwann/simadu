@@ -30,9 +30,9 @@ class AdminAboutController extends Controller
             // ======================
             // DEFAULT LOKASI KANTOR (ABSENSI GPS)
             // ======================
-            'office_latitude' => null,
-            'office_longitude' => null,
-            'radius_meter' => 100,
+            'office_latitude' => '-7.594917597849972',
+            'office_longitude' => '110.94065517764916',
+            'radius_meter' => 20,
 
             // ======================
             // DEFAULT CHECK-IN
