@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\View;
+use App\Models\AboutSetting;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,7 +22,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Pagination Tailwind
         Paginator::useTailwind();
+
+        // Share data AboutSetting ke semua Blade (footer, dll)
+            View::composer('*', function ($view) { $view->with('aboutSetting', AboutSetting::first());});
     }
 }

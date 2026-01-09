@@ -67,6 +67,14 @@
                     {{-- JAM OPERASIONAL (DESKRIPSI) --}}
                     <div>
                         <x-input-label for="jam_operasional" value="Jam Operasional" />
+                        <p class="mt-1 text-sm text-gray-500">
+                            Digunakan untuk mengatur <span class="font-semibold">jam operasional instansi</span> yang akan
+                            ditampilkan pada <span class="font-semibold">footer aplikasi</span>.
+                            Gunakan tanda <span class="font-semibold">koma (,)</span> untuk memisahkan jam operasional
+                            ke baris berikutnya.
+                        </p>
+                        
+
                         <x-text-input
                             id="jam_operasional"
                             name="jam_operasional"
@@ -77,6 +85,11 @@
                             required
                         />
                         <x-input-error class="mt-2" :messages="$errors->get('jam_operasional')" />
+
+                        <p class="mt-1 text-xs text-gray-400">
+                            Contoh: Senin–Kamis 08.00–16.00, Jumat 08.00–11.30
+                        </p>
+
                     </div>
 
                     {{-- ================= LOKASI KANTOR (ABSENSI GPS) ================= --}}

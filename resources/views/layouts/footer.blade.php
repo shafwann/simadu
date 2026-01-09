@@ -80,20 +80,27 @@
                 </div>
 
                 {{-- KOLOM 4: JAM PELAYANAN & SAPAMAS --}}
-                <div class="space-y-4">
-                    <div>
-                        <h5 class="text-xs font-bold uppercase tracking-wider border-b border-white/20 pb-1 mb-2">Jam Pelayanan</h5>
-                        <div class="space-y-1 text-[10px] opacity-90">
-                            <div class="flex justify-between border-b border-white/10 pb-0.5">
-                                <span>Senin - Kamis</span><span>07:30 – 16:00</span>
+                {{-- JAM PELAYANAN --}}
+                <div>
+                    <h5 class="text-xs font-bold uppercase tracking-wider border-b border-white/20 pb-1 mb-2">
+                        Jam Pelayanan
+                    </h5>
+
+                    @php
+                        $jamOperasional = $aboutSetting->jam_operasional ?? '';
+                        $listJam = array_map('trim', explode(',', $jamOperasional));
+                    @endphp
+
+                    <div class="space-y-1 text-[10px] opacity-90">
+                        @foreach ($listJam as $jam)
+                            <div class="border-b border-white/10 pb-0.5">
+                                {{ $jam }}
                             </div>
-                            <div class="flex justify-between border-b border-white/10 pb-0.5">
-                                <span>Jumat</span><span>07:30 – 11:30</span>
-                            </div>
-                        </div>
+                        @endforeach
                     </div>
 
                     <div>
+                        <br>
                         <a href="https://api.whatsapp.com/send?phone=628112629999" target="_blank">
                             <img src="https://baperlitbang.karanganyarkab.go.id/wp-content/uploads/2025/07/sapamas-button.png"
                                  alt="Sapa Mas"
@@ -103,6 +110,7 @@
                     </div>
                 </div>
 
+            </div>
             </div>
         </div>
     </div>
