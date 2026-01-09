@@ -10,7 +10,7 @@
                     <div class="flex items-center gap-3">
                         <img src="{{ asset('img/logobaperlitbang.png') }}" alt="Logo" style="height: 50px; width: auto;" class="bg-white/10 p-1 rounded backdrop-blur-sm">
                         <div class="leading-tight">
-                            <h3 class="font-bold text-sm uppercase">Baperlitbang</h3>
+                            <h3 class="font-bold text-sm uppercase">Bapperida</h3>
                             <p class="text-[10px] opacity-90">Kab. Karanganyar</p>
                         </div>
                     </div>
