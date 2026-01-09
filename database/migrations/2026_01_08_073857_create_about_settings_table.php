@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration {
     public function up(): void
@@ -14,15 +13,38 @@ return new class extends Migration {
             $table->string('kepala_instansi')->nullable();
             $table->string('nip_kepala_instansi')->nullable();
             $table->string('jam_operasional')->nullable();
+
+            // LOKASI
+            $table->decimal('office_latitude', 10, 7)->nullable();
+            $table->decimal('office_longitude', 10, 7)->nullable();
+            $table->integer('radius_meter')->default(50);
+
+            // CHECK-IN
+            $table->time('senin_mulai')->nullable();
+            $table->time('senin_selesai')->nullable();
+            $table->time('selasa_mulai')->nullable();
+            $table->time('selasa_selesai')->nullable();
+            $table->time('rabu_mulai')->nullable();
+            $table->time('rabu_selesai')->nullable();
+            $table->time('kamis_mulai')->nullable();
+            $table->time('kamis_selesai')->nullable();
+            $table->time('jumat_mulai')->nullable();
+            $table->time('jumat_selesai')->nullable();
+
+            // CHECK-OUT
+            $table->time('senin_checkout_mulai')->nullable();
+            $table->time('senin_checkout_selesai')->nullable();
+            $table->time('selasa_checkout_mulai')->nullable();
+            $table->time('selasa_checkout_selesai')->nullable();
+            $table->time('rabu_checkout_mulai')->nullable();
+            $table->time('rabu_checkout_selesai')->nullable();
+            $table->time('kamis_checkout_mulai')->nullable();
+            $table->time('kamis_checkout_selesai')->nullable();
+            $table->time('jumat_checkout_mulai')->nullable();
+            $table->time('jumat_checkout_selesai')->nullable();
+
             $table->timestamps();
         });
-
-        // INSERT DEFAULT DATA (HARUS DI DALAM up())
-        DB::table('about_settings')->insert([
-            'jam_operasional' => 'Senin 07:30-15:00, Selasa 07:30-15:00, Rabu 07:30-15:00, Kamis 07:30-15:00, Jumat 07:30-11:30',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
     }
 
     public function down(): void
