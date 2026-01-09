@@ -23,7 +23,7 @@
                     @method('PUT')
 
                     {{-- NAMA INSTANSI --}}
-                    <div>
+                    <div class="mb-6">
                         <x-input-label for="nama_instansi" value="Nama Instansi" />
                         <x-text-input
                             id="nama_instansi"
@@ -37,7 +37,7 @@
                     </div>
 
                     {{-- KEPALA INSTANSI --}}
-                    <div>
+                    <div class="mb-6">
                         <x-input-label for="kepala_instansi" value="Kepala Instansi" />
                         <x-text-input
                             id="kepala_instansi"
@@ -51,7 +51,7 @@
                     </div>
 
                     {{-- NIP --}}
-                    <div>
+                    <div class="mb-6">
                         <x-input-label for="nip_kepala_instansi" value="NIP Kepala Instansi" />
                         <x-text-input
                             id="nip_kepala_instansi"
