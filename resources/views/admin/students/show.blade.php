@@ -94,12 +94,17 @@
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status Kehadiran</label>
                                 <select name="status"
                                     class="w-full rounded-xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800">
-                                    <option value="Hadir">✅ Hadir (WFO/WFH)</option>
-                                    <option value="Sakit">💊 Sakit</option>
-                                    <option value="Izin">✉️ Izin</option>
-                                    <option value="Alpha">❌ Alpha (Tanpa Ket.)</option>
+                                    <option value="Hadir">✅ Hadir</option>
+                                    <option value="Telat">⏰ Telat (dianggap Hadir)</option>
+                                    <option value="Ijin">✉️ Ijin (I)</option>
+                                    <option value="Sakit">💊 Sakit (S)</option>
+                                    <option value="Dinas Luar">🚗 Dinas Luar (DL)</option>
+                                    <option value="Cuti">🏖️ Cuti (CT)</option>
+                                    <option value="Tanpa Keterangan">❌ Tanpa Keterangan (TK)</option>
+                                    <option value="Alpha">❌ Alpha (legacy)</option>
                                 </select>
                             </div>
+
 
                             {{-- Link Maps --}}
                             <div>
@@ -226,9 +231,14 @@
 
                     {{-- Riwayat Presensi --}}
                     <div class="bg-white border border-gray-100 rounded-[2rem] shadow-sm overflow-hidden">
-                        <div class="p-6 border-b border-gray-50 bg-gray-50/30">
+                        <div class="p-6 border-b border-gray-50 bg-gray-50/30 flex items-center justify-between">
                             <h3 class="font-bold text-lg text-gray-800">Riwayat Presensi</h3>
+                            <button type="button" id="btnDownloadPresensi"
+                                class="px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-sm hover:bg-purple-700 transition">
+                                Download PDF
+                            </button>
                         </div>
+
                         <div class="overflow-y-auto max-h-[400px]">
                             <table class="w-full text-sm text-left">
                                 <thead class="bg-gray-50 sticky top-0">
@@ -252,11 +262,18 @@
                                             <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md text-xs font-bold">Telat</span>
                                             @elseif($a->status == 'Sakit')
                                             <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md text-xs font-bold">Sakit</span>
-                                            @elseif($a->status == 'Izin')
-                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-bold">Izin</span>
+                                            @elseif($a->status == 'Ijin' || $a->status == 'Izin')
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-bold">Ijin</span>
+                                            @elseif($a->status == 'Dinas Luar')
+                                            <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs font-bold">Dinas Luar</span>
+                                            @elseif($a->status == 'Cuti')
+                                            <span class="px-2 py-1 bg-pink-100 text-pink-700 rounded-md text-xs font-bold">Cuti</span>
+                                            @elseif($a->status == 'Tanpa Keterangan' || $a->status == 'Alpha')
+                                            <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">TK</span>
                                             @else
-                                            <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">Alpha</span>
+                                            <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">{{ $a->status }}</span>
                                             @endif
+
                                         </td>
 
                                         <td class="p-4 text-xs">
@@ -673,4 +690,80 @@
             });
         });
     </script>
+
+    {{-- MODAL DOWNLOAD PRESENSI --}}
+    <div id="downloadPresensiModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/50" data-backdrop></div>
+
+        <div class="relative min-h-full flex items-center justify-center p-4">
+            <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+                <div class="p-5 border-b border-gray-100 relative">
+                    <button id="closeDownloadModal" type="button"
+                        class="absolute top-4 right-4 w-10 h-10 rounded-xl flex items-center justify-center
+                           text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition">
+                        <span class="text-2xl leading-none">&times;</span>
+                    </button>
+                    <h2 class="text-xl font-black text-gray-900 text-center">Download Presensi (PDF)</h2>
+                    <p class="text-sm text-gray-500 mt-1">Pilih bulan & tahun yang ingin dicetak.</p>
+                </div>
+
+                <form class="p-5 space-y-4"
+                    method="GET"
+                    action="{{ route('admin.students.presensi.pdf', $student->id) }}">
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Bulan</label>
+                        <select name="month" class="w-full rounded-xl border-gray-200 bg-gray-50 font-bold">
+                            @for($m=1; $m<=12; $m++)
+                                <option value="{{ $m }}" {{ $m==now()->month ? 'selected' : '' }}>
+                                {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                                </option>
+                                @endfor
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tahun</label>
+                        <input type="number" name="year" value="{{ now()->year }}"
+                            class="w-full rounded-xl border-gray-200 bg-gray-50 font-bold">
+                    </div>
+
+                    <button type="submit"
+                        class="w-full py-3 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-black transition">
+                        Download PDF
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('downloadPresensiModal');
+            const btn = document.getElementById('btnDownloadPresensi');
+            const close = document.getElementById('closeDownloadModal');
+            const backdrop = modal?.querySelector('[data-backdrop]');
+
+            function openM() {
+                if (!modal) return;
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+
+            function closeM() {
+                if (!modal) return;
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+
+            btn?.addEventListener('click', openM);
+            close?.addEventListener('click', closeM);
+            backdrop?.addEventListener('click', closeM);
+
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) closeM();
+            });
+        });
+    </script>
+
 </x-app-layout>

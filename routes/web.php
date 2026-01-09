@@ -17,7 +17,7 @@ use App\Http\Controllers\AdminDosenController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminAboutController;
-
+use App\Http\Controllers\AdminPresensiPdfController;
 
 use App\Models\User;
 
@@ -78,7 +78,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/laporan/{laporan}/edit', [LaporanController::class, 'edit'])->name('laporan.edit');
     Route::put('/laporan/{laporan}', [LaporanController::class, 'update'])->name('laporan.update');
 
-    // EXPORT PRESENSI
+    // EXPORT PRESENSI (CSV pribadi)
     Route::get('/export-presensi', function () {
         $data = \App\Models\Attendance::where('user_id', Auth::id())->with('user')->get();
 
@@ -104,7 +104,7 @@ Route::middleware('auth')->group(function () {
         ]);
     })->name('attendance.export');
 
-    // EXPORT LOGBOOK
+    // EXPORT LOGBOOK (CSV pribadi)
     Route::get('/export-logbook', function () {
         $data = \App\Models\Logbook::where('user_id', Auth::id())->get();
 
@@ -161,6 +161,10 @@ Route::middleware(['auth', 'role:admin'])
         // CRUD mahasiswa
         Route::resource('students', AdminStudentController::class);
         Route::patch('/students/{user}/status', [AdminStudentController::class, 'updateStatus'])->name('students.updateStatus');
+
+        // ✅ ROUTE DOWNLOAD PDF PRESENSI (TARUH DI DALAM GROUP ADMIN)
+        Route::get('/students/{id}/presensi-pdf', [AdminPresensiPdfController::class, 'download'])
+            ->name('students.presensi.pdf');
 
         // ===== DOSEN & ASSIGN MAHASISWA =====
         Route::get('dosen', [AdminDosenController::class, 'index'])->name('dosen.index');

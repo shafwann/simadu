@@ -21,6 +21,33 @@ return [
     'convert_entities' => true,
 
     'options' => [
+        'options' => [
+
+            'font_dir' => storage_path('fonts'),
+            'font_cache' => storage_path('fonts'),
+
+            // ✅ Biar dompdf bisa akses public/fonts
+            'chroot' => realpath(base_path()),
+
+            // ✅ Remote enabled untuk API tanggal merah (kalau dompdf load gambar remote juga)
+            'enable_remote' => true,
+
+            // ✅ Default font kita paksa ke arialcustom
+            'default_font' => 'arialcustom',
+
+            // ✅ Daftarkan font custom
+            'font_data' => [
+                'arialcustom' => [
+                    'R'  => public_path('fonts/arial/ARIAL.TTF'),
+                    'B'  => public_path('fonts/arial/ARIALBD 1.TTF'),
+                    'I'  => public_path('fonts/arial/ARIALI 1.TTF'),
+                    'BI' => public_path(path: 'fonts/arial/ARIALBI 1.TTF'),
+                ],
+            ],
+
+            // ... sisanya biarkan seperti config kamu
+        ],
+
         /**
          * The location of the DOMPDF font directory
          *
