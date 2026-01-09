@@ -22,17 +22,17 @@ class AdminAboutController extends Controller
 
         // Pastikan ada 1 row data settings (sekalian default jam absensi per hari)
         $about = AboutSetting::firstOrCreate([], [
-            'nama_instansi' => '',
-            'kepala_instansi' => '',
-            'nip_kepala_instansi' => '',
+            'nama_instansi' => 'Badan Perencanaan Pembangunan, Riset, dan Inovasi Daerah (BAPPERIDA)',
+            'kepala_instansi' => 'Dwi Cahyono, S.Sos., M.Si.',
+            'nip_kepala_instansi' => '19730614 199303 1 002',
             'jam_operasional' => 'Senin 07:30-15:00, Selasa 07:30-15:00, Rabu 07:30-15:00, Kamis 07:30-15:00, Jumat 07:30-11:30',
 
             // ======================
             // DEFAULT LOKASI KANTOR (ABSENSI GPS)
             // ======================
-            'office_latitude' => null,
-            'office_longitude' => null,
-            'radius_meter' => 100,
+            'office_latitude' => '-7.594917597849972',
+            'office_longitude' => '110.94065517764916',
+            'radius_meter' => 20,
 
             // ======================
             // DEFAULT CHECK-IN
