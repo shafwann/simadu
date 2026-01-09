@@ -18,7 +18,7 @@ class AboutSettingSeeder extends Seeder
             // LOKASI
             'office_latitude' => -7.5949176,
             'office_longitude' => 110.9406552,
-            'radius_meter' => 50,
+            'radius_meter' => 500,
 
             // CHECK-IN
             'senin_mulai' => '07:00',
