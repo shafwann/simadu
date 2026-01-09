@@ -121,7 +121,7 @@ if ($len <= 20) {
             {{-- PARAGRAF (DINAMIS NAMA INSTANSI DARI ABOUT) --}}
             <div style="position:absolute; top:123mm; left:40mm; right:40mm; text-align:center; font-size:18px; line-height:1.30;">
                 Telah melaksanakan Magang Kerja di
-                {{ $about->nama_instansi ?? '-' }}
+                {{ $about->nama_instansi ?? '-' }} Kabupaten Karanganyar 
                 dari {{ $mulai }} sampai {{ $selesai }} dengan hasil
                 <span style="font-weight:700; text-transform:uppercase;">{{ $hasilLabel }}</span>.
             </div>
