@@ -6,7 +6,7 @@
                     <a href="{{ Auth::user()->role === 'admin' ? route('admin.dashboard') : route('dashboard') }}" class="flex items-center gap-3 group">
                         <img src="{{ asset('img/logobaperlitbang.png') }}" alt="Logo" class="h-12 w-auto transition-transform group-hover:scale-105">
                         <div class="hidden md:block leading-tight">
-                            <span class="block text-sm font-black text-gray-800 uppercase tracking-wider">Baperlitbang</span>
+                            <span class="block text-sm font-black text-gray-800 uppercase tracking-wider">Bapperida</span>
                             <span class="block text-[10px] font-bold text-blue-600 uppercase tracking-tight">Kab. Karanganyar</span>
                         </div>
                     </a>
