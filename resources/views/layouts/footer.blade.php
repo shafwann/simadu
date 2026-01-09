@@ -88,7 +88,9 @@
 
                     @php
                         $jamOperasional = $aboutSetting->jam_operasional ?? '';
-                        $listJam = array_map('trim', explode(',', $jamOperasional));
+                        $listJam = $jamOperasional
+                            ? array_map('trim', explode(',', $jamOperasional))
+                            : [];
                     @endphp
 
                     <div class="space-y-1 text-[10px] opacity-90">
