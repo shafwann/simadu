@@ -16,7 +16,7 @@
     table.presensi th {
         text-align:center;
         font-weight:700;
-        font-size:12px;
+        font-size:13px;
         padding:8px 2px;
         white-space:nowrap; /* ✅ cegah "TANGGA L" turun */
     }
