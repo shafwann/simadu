@@ -19,9 +19,37 @@ class AttendanceController extends Controller
             ->orderByDesc('id')
             ->first();
 
-        return view('attendance.index', compact('attendance'));
+        // ===== TAMBAHAN =====
+        $schedule = $this->getTodayAbsensiSchedule();
+
+        $checkinExpired = false;
+        $checkoutAvailable = false;
+        $checkoutExpired = false;
+
+        if (!isset($schedule['error'])) {
+            $now = Carbon::now('Asia/Jakarta');
+
+            $checkinStart = Carbon::createFromTimeString($schedule['checkin_mulai']);
+            $checkinEnd   = Carbon::createFromTimeString($schedule['checkin_selesai']);
+
+            $checkoutStart = Carbon::createFromTimeString($schedule['checkout_mulai']);
+            $checkoutEnd   = Carbon::createFromTimeString($schedule['checkout_selesai']);
+
+            $checkinExpired     = $now->gt($checkinEnd);
+            $checkoutAvailable  = $now->between($checkoutStart, $checkoutEnd);
+            $checkoutExpired    = $now->gt($checkoutEnd);
+        }
+
+        return view('attendance.index', compact(
+            'attendance',
+            'schedule',
+            'checkinExpired',
+            'checkoutAvailable',
+            'checkoutExpired'
+        ));
     }
 
+<<<<<<< HEAD
     // ✅ RIWAYAT PRESENSI
     public function history()
     {
@@ -91,6 +119,8 @@ class AttendanceController extends Controller
 
         return $pdf->download("PRESENSI_{$student->name}_{$month}_{$year}.pdf");
     }
+=======
+>>>>>>> d31cc61b235ff7a1744ce459f41e367a7b53124a
 
     //--logika cek status mahasiswa
     public function store(Request $request)
@@ -227,16 +257,15 @@ class AttendanceController extends Controller
 
         $request->validate(['location' => 'required']);
 
+<<<<<<< HEAD
         $jamMasukTelat = Carbon::createFromTime(8, 0, 0);
         $sekarang = Carbon::now();
+=======
+        // Status telat (tetap sesuai kode lama)
+        $status = 'Hadir';
+        $pesan = 'Berhasil melakukan presensi masuk.';
+>>>>>>> d31cc61b235ff7a1744ce459f41e367a7b53124a
 
-        if ($sekarang->gt($jamMasukTelat)) {
-            $status = 'Telat';
-            $pesan = 'Absen berhasil, namun Anda tercatat Telat (Lewat jam 08:00).';
-        } else {
-            $status = 'Hadir';
-            $pesan = 'Berhasil melakukan presensi tepat waktu!';
-        }
 
         $officeLat = -7.594917597849972;
         $officeLng = 110.94065517764916;

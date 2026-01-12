@@ -2,54 +2,61 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-20">
             <div class="flex">
+                {{-- LOGO --}}
                 <div class="shrink-0 flex items-center">
                     <a href="{{ Auth::user()->role === 'admin' ? route('admin.dashboard') : route('dashboard') }}" class="flex items-center gap-3 group">
                         <img src="{{ asset('img/logobaperlitbang.png') }}" alt="Logo" class="h-12 w-auto transition-transform group-hover:scale-105">
                         <div class="hidden md:block leading-tight">
-                            <span class="block text-sm font-black text-gray-800 uppercase tracking-wider">Baperlitbang</span>
-                            <span class="block text-[10px] font-bold text-blue-600 uppercase tracking-tight">Kab. Karanganyar</span>
+                            <span class="block text-sm font-black text-gray-900 uppercase tracking-wider">Bapperida</span>
+                            {{-- Ganti warna biru jadi hitam/abu gelap --}}
+                            <span class="block text-[10px] font-bold text-gray-900 uppercase tracking-tight">Kab. Karanganyar</span>
                         </div>
                     </a>
                 </div>
 
+                {{-- MENU DESKTOP --}}
                 <div class="hidden space-x-6 sm:-my-px sm:ms-10 sm:flex">
-                    {{-- MENU MAHASISWA --}}
+
+                    {{-- 1. MENU MAHASISWA --}}
                     @if(Auth::user()->role === 'mahasiswa')
-                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="font-bold text-gray-600">
+                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="font-bold text-gray-900">
                             {{ __('Dashboard') }}
                         </x-nav-link>
 
-                        <x-nav-link :href="route('attendance.index')" :active="request()->routeIs('attendance.index')" class="font-bold">
+                        <x-nav-link :href="route('attendance.index')" :active="request()->routeIs('attendance.index')" class="font-bold text-gray-900">
                             {{ __('Presensi') }}
                         </x-nav-link>
 
-                        <x-nav-link :href="route('logbook.index')" :active="request()->routeIs('logbook.index')" class="font-bold">
+                        <x-nav-link :href="route('logbook.index')" :active="request()->routeIs('logbook.index')" class="font-bold text-gray-900">
                             {{ __('Logbook') }}
                         </x-nav-link>
 
-                        <x-nav-link :href="route('laporan.index')" :active="request()->routeIs('laporan.*')" class="font-bold text-green-600">
+                        {{-- Laporan: Hapus text-green-600, ganti text-gray-900 --}}
+                        <x-nav-link :href="route('laporan.index')" :active="request()->routeIs('laporan.*')" class="font-bold text-gray-900">
                             {{ __('Laporan') }}
                         </x-nav-link>
                     @endif
 
-                    {{-- MENU ADMIN --}}
+                    {{-- 2. MENU ADMIN --}}
                     @if(Auth::user()->role === 'admin')
-                        <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" class="font-bold text-blue-600">
+                        {{-- Panel Admin: Hapus text-blue-600 --}}
+                        <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" class="font-bold text-gray-900">
                             <span class="flex items-center gap-1">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                 {{ __('Panel Admin') }}
                             </span>
                         </x-nav-link>
 
-                        <x-nav-link :href="route('admin.students.index')" :active="request()->routeIs('admin.students.*')" class="font-bold text-gray-600 hover:text-blue-600">
+                        {{-- Data Mahasiswa: Hapus hover:text-blue-600 --}}
+                        <x-nav-link :href="route('admin.students.index')" :active="request()->routeIs('admin.students.*')" class="font-bold text-gray-900 hover:text-black">
                             <span class="flex items-center gap-1">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                                 {{ __('Data Mahasiswa') }}
                             </span>
                         </x-nav-link>
 
-                            {{-- MENU MANAJEMEN DOSEN --}}
-                        <x-nav-link :href="route('admin.dosen.index')" :active="request()->routeIs('admin.dosen.*')" class="font-bold text-indigo-600 hover:text-indigo-800">
+                        {{-- Manajemen Dosen: Hapus text-indigo-600 --}}
+                        <x-nav-link :href="route('admin.dosen.index')" :active="request()->routeIs('admin.dosen.*')" class="font-bold text-gray-900 hover:text-black">
                             <span class="flex items-center gap-1">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
@@ -59,17 +66,17 @@
                             </span>
                         </x-nav-link>
 
-                        {{-- MENU MANAJEMEN ADMIN (Hanya untuk Super Admin) --}}
+                        {{-- Data Admin: Hapus text-purple-600 --}}
                         @if(Auth::user()->bidang === 'Administrator Sistem')
-                            <x-nav-link :href="route('admin.manage.index')" :active="request()->routeIs('admin.manage.*')" class="font-bold text-purple-600 hover:text-purple-800">
+                            <x-nav-link :href="route('admin.manage.index')" :active="request()->routeIs('admin.manage.*')" class="font-bold text-gray-900 hover:text-black">
                                 <span class="flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                                     {{ __('Data Admin') }}
                                 </span>
                             </x-nav-link>
 
-                            {{-- MENU ABOUT (Hanya untuk Super Admin) --}}
-                            <x-nav-link :href="route('admin.about.index')" :active="request()->routeIs('admin.about.*')" class="font-bold text-gray-600 hover:text-blue-600">
+                            {{-- About --}}
+                            <x-nav-link :href="route('admin.about.index')" :active="request()->routeIs('admin.about.*')" class="font-bold text-gray-900 hover:text-black">
                                 <span class="flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -88,7 +95,7 @@
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-4 py-2 border border-gray-100 text-sm leading-4 font-bold rounded-xl text-gray-700 bg-gray-50 hover:bg-white hover:shadow-sm focus:outline-none transition ease-in-out duration-150">
                             <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center text-[10px] text-white uppercase">
+                                <div class="w-7 h-7 bg-gray-900 rounded-full flex items-center justify-center text-[10px] text-white uppercase">
                                     {{ substr(Auth::user()->name, 0, 2) }}
                                 </div>
                                 {{ Auth::user()->name }}
@@ -131,44 +138,43 @@
         <div class="pt-2 pb-3 space-y-1">
             {{-- MENU MOBILE MAHASISWA --}}
             @if(Auth::user()->role === 'mahasiswa')
-                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-gray-900 font-bold">
                     {{ __('Dashboard') }}
                 </x-responsive-nav-link>
 
-                <x-responsive-nav-link :href="route('attendance.index')" :active="request()->routeIs('attendance.index')">
+                <x-responsive-nav-link :href="route('attendance.index')" :active="request()->routeIs('attendance.index')" class="text-gray-900 font-bold">
                     {{ __('Presensi') }}
                 </x-responsive-nav-link>
 
-                <x-responsive-nav-link :href="route('logbook.index')" :active="request()->routeIs('logbook.index')">
+                <x-responsive-nav-link :href="route('logbook.index')" :active="request()->routeIs('logbook.index')" class="text-gray-900 font-bold">
                     {{ __('Logbook') }}
                 </x-responsive-nav-link>
 
-                <x-responsive-nav-link :href="route('laporan.index')" :active="request()->routeIs('laporan.*')" class="text-green-600 font-bold">
+                <x-responsive-nav-link :href="route('laporan.index')" :active="request()->routeIs('laporan.*')" class="text-gray-900 font-bold">
                     {{ __('Laporan') }}
                 </x-responsive-nav-link>
             @endif
 
             {{-- MENU MOBILE ADMIN --}}
             @if(Auth::user()->role === 'admin')
-                <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" class="text-blue-600 font-bold">
+                <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" class="text-gray-900 font-bold">
                     {{ __('Panel Admin') }}
                 </x-responsive-nav-link>
 
-                <x-responsive-nav-link :href="route('admin.students.index')" :active="request()->routeIs('admin.students.*')">
+                <x-responsive-nav-link :href="route('admin.students.index')" :active="request()->routeIs('admin.students.*')" class="text-gray-900 font-bold">
                     {{ __('Data Mahasiswa') }}
                 </x-responsive-nav-link>
 
                 {{-- MENU MOBILE MANAJEMEN ADMIN --}}
                 @if(Auth::user()->bidang === 'Administrator Sistem')
-                    <x-responsive-nav-link :href="route('admin.manage.index')" :active="request()->routeIs('admin.manage.*')" class="text-purple-600 font-bold">
+                    <x-responsive-nav-link :href="route('admin.manage.index')" :active="request()->routeIs('admin.manage.*')" class="text-gray-900 font-bold">
                         <span class="flex items-center gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                             {{ __('Data Admin') }}
                         </span>
                     </x-responsive-nav-link>
 
-                    {{-- MENU ABOUT (Hanya untuk Super Admin) --}}
-                    <x-responsive-nav-link :href="route('admin.about.index')" :active="request()->routeIs('admin.about.*')" class="font-bold">
+                    <x-responsive-nav-link :href="route('admin.about.index')" :active="request()->routeIs('admin.about.*')" class="font-bold text-gray-900">
                         <span class="flex items-center gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -183,7 +189,7 @@
 
         <div class="pt-4 pb-1 border-t border-gray-100 bg-gray-50/50">
             <div class="px-4 flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                <div class="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white font-bold">
                     {{ substr(Auth::user()->name, 0, 1) }}
                 </div>
                 <div>

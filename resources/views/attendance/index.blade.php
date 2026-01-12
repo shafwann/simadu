@@ -40,10 +40,55 @@
 
                         {{-- FORM PRESENSI --}}
                         @if(!$attendance)
+<<<<<<< HEAD
                         <div class="text-center space-y-4">
                             <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
                                 <p class="text-blue-800 font-bold">Halo, {{ Auth::user()->name }}!</p>
                                 <p class="text-sm text-blue-600">Silakan absen masuk untuk memulai kegiatan magang.</p>
+=======
+                            <div class="text-center space-y-4">
+                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                    <p class="text-blue-800 font-bold">Halo, {{ Auth::user()->name }}!</p>
+                                    <p class="text-sm text-blue-600">Silakan absen masuk untuk memulai kegiatan magang.</p>
+                                </div>
+
+                                <div id="location-info" class="hidden mb-4 p-3 bg-yellow-50 text-yellow-800 text-xs rounded-lg border border-yellow-200">
+                                    Sedang mendeteksi lokasi...
+                                </div>
+
+                                @if(Auth::user()->status === 'aktif')
+                                    @if(isset($schedule['error']))
+                                        <div class="p-4 bg-red-50 text-red-700 rounded-xl border text-sm text-center">
+                                            {{ $schedule['error'] }}
+                                        </div>
+
+                                    @elseif($checkinExpired)
+                                        <div class="p-4 bg-red-50 text-red-700 rounded-xl border text-sm text-center font-semibold">
+                                            ⛔ Waktu absen masuk telah berakhir<br>
+                                            <span class="text-xs">
+                                                ({{ $schedule['checkin_mulai'] }} – {{ $schedule['checkin_selesai'] }} WIB)
+                                            </span>
+                                        </div>
+
+                                        <button disabled
+                                            class="w-full py-4 bg-gray-300 text-gray-600 font-bold rounded-2xl cursor-not-allowed">
+                                            Absen Masuk Ditutup
+                                        </button>
+
+                                    @else
+                                        <form id="attendance-form" action="{{ route('attendance.checkin') }}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="location" id="location-input">
+
+                                            <button type="button" onclick="getLocation('checkin')" id="btn-checkin"
+                                                class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg">
+                                                Absen Masuk
+                                            </button>
+                                        </form>
+                                    @endif
+                                @endif
+
+>>>>>>> d31cc61b235ff7a1744ce459f41e367a7b53124a
                             </div>
 
                             <div id="location-info" class="hidden mb-4 p-3 bg-yellow-50 text-yellow-800 text-xs rounded-lg border border-yellow-200">
@@ -80,9 +125,44 @@
                                     </svg>
                                     TELAT (Lewat 08:00)
                                 </div>
+<<<<<<< HEAD
                                 @else
                                 <div class="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+=======
+
+                                @if(Auth::user()->status === 'aktif')
+                                    @if($checkoutExpired)
+                                        <button disabled
+                                            class="w-full py-4 bg-gray-300 text-gray-600 font-bold rounded-2xl cursor-not-allowed">
+                                            Absen Pulang Ditutup
+                                        </button>
+
+                                    @elseif(!$checkoutAvailable)
+                                        <div class="p-3 bg-yellow-50 text-yellow-700 rounded-xl border text-xs text-center">
+                                            ⏳ Absen pulang belum dibuka
+                                            ({{ $schedule['checkout_mulai'] }} WIB)
+                                        </div>
+
+                                    @else
+                                        <form id="attendance-form" action="{{ route('attendance.checkout') }}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="location" id="location-input">
+
+                                            <button type="button" onclick="getLocation('checkout')" id="btn-checkout"
+                                                class="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-2xl shadow-lg">
+                                                Absen Pulang
+                                            </button>
+                                        </form>
+                                    @endif
+                                @endif
+
+                            </div>
+                        @else
+                            <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200 text-center">
+                                <div class="inline-flex p-2 bg-green-100 text-green-600 rounded-full mb-4">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+>>>>>>> d31cc61b235ff7a1744ce459f41e367a7b53124a
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
                                     TEPAT WAKTU
