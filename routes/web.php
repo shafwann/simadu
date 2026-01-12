@@ -134,6 +134,11 @@ Route::middleware('auth')->group(function () {
             "Content-Disposition" => "attachment; filename=logbook-magang.csv"
         ]);
     })->name('logbook.export');
+
+    // EXPORT LOGBOOK (PDF pribadi)
+    Route::get('/logbook/pdf', [LogbookController::class, 'exportPdf'])
+        ->name('logbook.export.pdf');
+
 });
 
 
