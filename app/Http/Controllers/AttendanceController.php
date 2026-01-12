@@ -18,8 +18,36 @@ class AttendanceController extends Controller
             ->orderByDesc('id')
             ->first();
 
-        return view('attendance.index', compact('attendance'));
+        // ===== TAMBAHAN =====
+        $schedule = $this->getTodayAbsensiSchedule();
+
+        $checkinExpired = false;
+        $checkoutAvailable = false;
+        $checkoutExpired = false;
+
+        if (!isset($schedule['error'])) {
+            $now = Carbon::now('Asia/Jakarta');
+
+            $checkinStart = Carbon::createFromTimeString($schedule['checkin_mulai']);
+            $checkinEnd   = Carbon::createFromTimeString($schedule['checkin_selesai']);
+
+            $checkoutStart = Carbon::createFromTimeString($schedule['checkout_mulai']);
+            $checkoutEnd   = Carbon::createFromTimeString($schedule['checkout_selesai']);
+
+            $checkinExpired     = $now->gt($checkinEnd);
+            $checkoutAvailable  = $now->between($checkoutStart, $checkoutEnd);
+            $checkoutExpired    = $now->gt($checkoutEnd);
+        }
+
+        return view('attendance.index', compact(
+            'attendance',
+            'schedule',
+            'checkinExpired',
+            'checkoutAvailable',
+            'checkoutExpired'
+        ));
     }
+
 
     //--logika cek status mahasiswa
     public function store(Request $request)
