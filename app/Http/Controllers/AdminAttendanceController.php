@@ -7,27 +7,40 @@ use Illuminate\Http\Request;
 
 class AdminAttendanceController extends Controller
 {
+    // Helper untuk nama lokasi default
+    private function getDefaultLocationName($status) {
+        if ($status == 'Hadir' || $status == 'Telat') return 'KANTOR BAPPERIDA';
+        if ($status == 'Sakit') return 'SAKIT';
+        if ($status == 'Ijin') return 'IJIN';
+        if ($status == 'Cuti') return 'CUTI';
+        return 'LUAR KANTOR';
+    }
+
     // 1. SIMPAN ABSENSI MANUAL (Create)
     public function store(Request $request)
     {
         $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'tanggal' => 'required|date',
-            'status' => 'required|in:Hadir,Telat,Ijin,Sakit,Dinas Luar,Cuti,Tanpa Keterangan,Alpha',
-            'tipe_absensi' => 'nullable|in:check_in,check_out',
-            'jam' => 'nullable',
-            'location' => 'nullable|string|max:255',
+            'user_id'       => 'required|exists:users,id',
+            'tanggal'       => 'required|date',
+            'jam'           => 'required',
+            'status'        => 'required',
+            'location'      => 'nullable|string',
+            'location_name' => 'nullable|string', // Validasi nama lokasi
         ]);
 
-        // normalisasi status legacy
+        // Normalisasi status legacy
         $status = $request->status;
         if ($status === 'Alpha') {
-            $status = 'Tanpa Keterangan'; // legacy -> TK
+            $status = 'Tanpa Keterangan';
         }
 
-        // ===== kelompok TIDAK HADIR (I/S/DL/CT/TK) =====
+        // Tentukan Nama Lokasi (Input User atau Default)
+        $lokasiNama = $request->location_name ?? $this->getDefaultLocationName($status);
+
+        // ===== KELOMPOK TIDAK HADIR (I/S/DL/CT/TK) =====
         if (in_array($status, ['Tanpa Keterangan', 'Sakit', 'Ijin', 'Dinas Luar', 'Cuti'])) {
 
+            // Cek duplikasi harian
             $exists = Attendance::where('user_id', $request->user_id)
                 ->whereDate('tanggal', $request->tanggal)
                 ->exists();
@@ -37,19 +50,19 @@ class AdminAttendanceController extends Controller
             }
 
             Attendance::create([
-                'user_id' => $request->user_id,
-                'tanggal' => $request->tanggal,
-                'check_in' => null,
-                'check_out' => null,
-                'status' => $status,
-                'location' => null,
+                'user_id'       => $request->user_id,
+                'tanggal'       => $request->tanggal,
+                'check_in'      => null,
+                'check_out'     => null,
+                'status'        => $status,
+                'location'      => null,
+                'location_name' => $lokasiNama, // Simpan Nama Lokasi
             ]);
 
             return back()->with('success', 'Berhasil input keterangan: ' . $status);
         }
 
-        // ===== kelompok HADIR / TELAT =====
-        // wajib pilih tipe_absensi
+        // ===== KELOMPOK HADIR / TELAT =====
         if (!$request->tipe_absensi) {
             return back()->with('error', 'Jika status Hadir/Telat, mohon pilih Tipe Absensi.');
         }
@@ -61,47 +74,50 @@ class AdminAttendanceController extends Controller
             ->whereDate('tanggal', $request->tanggal)
             ->first();
 
-        // CHECK IN
+        // LOGIKA CHECK IN
         if ($request->tipe_absensi === 'check_in') {
             if ($attendance) {
                 return back()->with('error', 'Data Check-In sudah ada. Gunakan Edit.');
             }
 
             Attendance::create([
-                'user_id' => $request->user_id,
-                'tanggal' => $request->tanggal,
-                'check_in' => $jamMasuk,
-                'check_out' => null,
-                'status' => $status, // Hadir / Telat
-                'location' => $request->location,
+                'user_id'       => $request->user_id,
+                'tanggal'       => $request->tanggal,
+                'check_in'      => $jamMasuk,
+                'check_out'     => null,
+                'status'        => $status,
+                'location'      => $request->location,
+                'location_name' => $lokasiNama, // Simpan Nama Lokasi
             ]);
 
             return back()->with('success', 'Berhasil Check-In manual jam ' . $jamMasuk);
         }
 
-        // CHECK OUT
+        // LOGIKA CHECK OUT (Update record yang ada)
         if ($attendance) {
             $attendance->update([
-                'check_out' => $jamPulang,
-                'status' => $status,
-                'location' => $request->location ?? $attendance->location,
+                'check_out'     => $jamPulang,
+                'status'        => $status,
+                'location'      => $request->location ?? $attendance->location,
+                // Update lokasi nama jika diisi baru, kalau tidak pakai yg lama
+                'location_name' => $request->location_name ?? $attendance->location_name,
             ]);
             return back()->with('success', 'Berhasil update Check-Out jam ' . $jamPulang);
         }
 
-        // jika belum ada record, buat full day
+        // CHECK IN & OUT SEKALIGUS (Jika belum ada record sama sekali)
         Attendance::create([
-            'user_id' => $request->user_id,
-            'tanggal' => $request->tanggal,
-            'check_in' => $jamMasuk,
-            'check_out' => $jamPulang,
-            'status' => $status,
-            'location' => $request->location,
+            'user_id'       => $request->user_id,
+            'tanggal'       => $request->tanggal,
+            'check_in'      => $jamMasuk,
+            'check_out'     => $jamPulang,
+            'status'        => $status,
+            'location'      => $request->location,
+            'location_name' => $lokasiNama, // Simpan Nama Lokasi
         ]);
 
         return back()->with('success', 'Berhasil Check-In & Check-Out sekaligus.');
     }
-
 
     // 2. FORM EDIT ABSENSI
     public function edit($id)
@@ -116,11 +132,12 @@ class AdminAttendanceController extends Controller
         $attendance = Attendance::findOrFail($id);
 
         $request->validate([
-            'tanggal' => 'required|date',
-            'status' => 'required|in:Hadir,Telat,Ijin,Sakit,Dinas Luar,Cuti,Tanpa Keterangan,Alpha',
-            'check_in' => 'nullable',
-            'check_out' => 'nullable',
-            'location' => 'nullable|string|max:255',
+            'tanggal'       => 'required|date',
+            'status'        => 'required|in:Hadir,Telat,Ijin,Sakit,Dinas Luar,Cuti,Tanpa Keterangan,Alpha',
+            'check_in'      => 'nullable',
+            'check_out'     => 'nullable',
+            'location'      => 'nullable|string|max:255',
+            'location_name' => 'nullable|string|max:255', // ✅ Tambahkan validasi ini
         ]);
 
         $status = $request->status;
@@ -128,28 +145,33 @@ class AdminAttendanceController extends Controller
             $status = 'Tanpa Keterangan';
         }
 
-        // ===== kelompok TIDAK HADIR =====
+        // Tentukan nama lokasi (Ambil input, atau fallback ke default status)
+        $lokasiNama = $request->location_name ?? $this->getDefaultLocationName($status);
+
+        // ===== KELOMPOK TIDAK HADIR =====
         if (in_array($status, ['Tanpa Keterangan', 'Sakit', 'Ijin', 'Dinas Luar', 'Cuti'])) {
             $attendance->update([
-                'tanggal' => $request->tanggal,
-                'check_in' => null,
-                'check_out' => null,
-                'status' => $status,
-                'location' => null,
+                'tanggal'       => $request->tanggal,
+                'check_in'      => null,
+                'check_out'     => null,
+                'status'        => $status,
+                'location'      => null,
+                'location_name' => $lokasiNama, // Update nama lokasi
             ]);
-        } else {
-            // ===== kelompok HADIR / TELAT =====
-            // kalau hadir/telat, minimal check_in harus ada
+        }
+        // ===== KELOMPOK HADIR / TELAT =====
+        else {
             $request->validate([
                 'check_in' => 'required',
             ]);
 
             $attendance->update([
-                'tanggal' => $request->tanggal,
-                'check_in' => $request->check_in,
-                'check_out' => $request->check_out,
-                'status' => $status,
-                'location' => $request->location,
+                'tanggal'       => $request->tanggal,
+                'check_in'      => $request->check_in,
+                'check_out'     => $request->check_out,
+                'status'        => $status,
+                'location'      => $request->location,
+                'location_name' => $lokasiNama, // Update nama lokasi
             ]);
         }
 
@@ -157,7 +179,6 @@ class AdminAttendanceController extends Controller
             ->route('admin.students.show', $attendance->user_id)
             ->with('success', 'Data absensi berhasil diperbarui.');
     }
-
 
     // 4. HAPUS ABSENSI
     public function destroy($id)

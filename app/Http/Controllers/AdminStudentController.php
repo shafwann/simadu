@@ -107,27 +107,35 @@ class AdminStudentController extends Controller
 
     // 4. LIHAT DETAIL
     public function show($id)
-    {
-        // ✅ TAMBAHKAN relasi yang dibutuhkan view:
-        // - laporans (riwayat laporan)
-        // - assessment (penilaian terbaru) / atau assessments jika kamu butuh histori banyak
-        $student = User::with([
-                'attendances',
-                'logbooks',
+        {
+            // 1. Ambil Data Mahasiswa + Relasi Ringan (Laporan & Assessment)
+            // Kita HAPUS 'attendances' dan 'logbooks' dari sini karena akan di-query terpisah untuk pagination
+            $student = User::with([
                 'laporans' => function ($q) {
                     $q->latest();
                 },
-                'assessment', // latestOfMany('assessed_at') kalau relasi user->assessment sudah dibuat
+                'assessment'
             ])->findOrFail($id);
 
-        // Cek Hak Akses
-        $admin = Auth::user();
-        if ($admin->bidang !== 'Administrator Sistem' && $student->bidang !== $admin->bidang) {
-            abort(403, 'Akses Ditolak.');
-        }
+            // 2. Cek Hak Akses Admin Bidang
+            $admin = Auth::user();
+            if ($admin->bidang !== 'Administrator Sistem' && $student->bidang !== $admin->bidang) {
+                abort(403, 'Akses Ditolak. Anda tidak memiliki wewenang untuk mahasiswa ini.');
+            }
 
-        return view('admin.students.show', compact('student'));
-    }
+            // 3. Pagination Presensi (Limit 5, page name = 'presensi_page')
+            $attendances = $student->attendances()
+                ->orderBy('tanggal', 'desc')
+                ->paginate(5, ['*'], 'presensi_page');
+
+            // 4. Pagination Logbook (Limit 5, page name = 'logbook_page')
+            $logbooks = $student->logbooks()
+                ->orderBy('tanggal', 'desc')
+                ->paginate(5, ['*'], 'logbook_page');
+
+            // 5. Kirim ke View
+            return view('admin.students.show', compact('student', 'attendances', 'logbooks'));
+        }
 
     // 5. FORM EDIT MAHASISWA (INI YANG BARU DITAMBAHKAN)
     public function edit($id)

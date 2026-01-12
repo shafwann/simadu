@@ -113,6 +113,18 @@
                                 <p class="text-[10px] text-gray-400 mt-1">*Paste link 'Share' atau 'Embed' dari Google Maps di sini.</p>
                             </div>
 
+                            {{-- ✅ TAMBAHAN BARU: INPUT NAMA LOKASI --}}
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                    Nama Lokasi (Untuk Tampilan PDF)
+                                </label>
+                                <input type="text" name="location_name" placeholder="Contoh: KANTOR BAPPERIDA / DINAS LUAR / RUMAH"
+                                    class="w-full rounded-xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800 text-sm uppercase">
+                                <p class="text-[10px] text-gray-400 mt-1">
+                                    *Teks ini yang akan muncul di kolom "LOKASI" pada cetak PDF.
+                                </p>
+                            </div>
+
                             <button type="submit"
                                 class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-lg shadow-blue-200">
                                 Simpan Data Absen
@@ -238,9 +250,9 @@
                             </button>
                         </div>
 
-                        <div class="overflow-y-auto max-h-[400px]">
+                        <div class="overflow-x-auto"> {{-- Hapus max-h-[400px] agar tinggi menyesuaikan --}}
                             <table class="w-full text-sm text-left">
-                                <thead class="bg-gray-50 sticky top-0">
+                                <thead class="bg-gray-50">
                                     <tr>
                                         <th class="p-4 font-bold text-gray-500">Tanggal</th>
                                         <th class="p-4 font-bold text-gray-500">Jam</th>
@@ -250,29 +262,21 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-50">
-                                    @forelse($student->attendances()->orderBy('tanggal', 'desc')->get() as $a)
+                                    {{-- ✅ Ganti loop query langsung dengan variabel $attendances --}}
+                                    @forelse($attendances as $a)
                                     <tr class="hover:bg-blue-50/50 transition">
                                         <td class="p-4 font-medium">{{ \Carbon\Carbon::parse($a->tanggal)->format('d M Y') }}</td>
-                                        <td class="p-4 font-mono text-gray-600">{{ $a->check_in }}</td>
+                                        <td class="p-4 font-mono text-gray-600">{{ $a->check_in ?? '-' }}</td>
                                         <td class="p-4">
                                             @if($a->status == 'Hadir')
                                             <span class="px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-bold">Hadir</span>
                                             @elseif($a->status == 'Telat')
                                             <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md text-xs font-bold">Telat</span>
-                                            @elseif($a->status == 'Sakit')
-                                            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md text-xs font-bold">Sakit</span>
-                                            @elseif($a->status == 'Ijin' || $a->status == 'Izin')
-                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-bold">Ijin</span>
-                                            @elseif($a->status == 'Dinas Luar')
-                                            <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs font-bold">Dinas Luar</span>
-                                            @elseif($a->status == 'Cuti')
-                                            <span class="px-2 py-1 bg-pink-100 text-pink-700 rounded-md text-xs font-bold">Cuti</span>
-                                            @elseif($a->status == 'Tanpa Keterangan' || $a->status == 'Alpha')
-                                            <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">TK</span>
+                                            @elseif(in_array($a->status, ['Sakit', 'Ijin', 'Izin', 'Cuti', 'Dinas Luar']))
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-bold">{{ $a->status }}</span>
                                             @else
                                             <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">{{ $a->status }}</span>
                                             @endif
-
                                         </td>
 
                                         <td class="p-4 text-xs">
@@ -326,6 +330,11 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        {{-- ✅ TOMBOL PAGINATION PRESENSI --}}
+                        <div class="p-4 border-t border-gray-100">
+                            {{ $attendances->appends(['logbook_page' => request('logbook_page')])->links() }}
+                        </div>
                     </div>
 
                     {{-- Riwayat Logbook --}}
@@ -333,9 +342,9 @@
                         <div class="p-6 border-b border-gray-50 bg-gray-50/30">
                             <h3 class="font-bold text-lg text-gray-800">Riwayat Logbook</h3>
                         </div>
-                        <div class="overflow-y-auto max-h-[300px]">
+                        <div class="overflow-x-auto"> {{-- Hapus max-h-[300px] --}}
                             <table class="w-full text-sm">
-                                <thead class="bg-gray-50 sticky top-0">
+                                <thead class="bg-gray-50">
                                     <tr>
                                         <th class="p-4 font-bold text-gray-500">Tanggal</th>
                                         <th class="p-4 font-bold text-gray-500">Kegiatan</th>
@@ -343,7 +352,8 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-50">
-                                    @forelse($student->logbooks as $l)
+                                    {{-- ✅ Ganti loop query langsung dengan variabel $logbooks --}}
+                                    @forelse($logbooks as $l)
                                     <tr>
                                         <td class="p-4">{{ \Carbon\Carbon::parse($l->tanggal)->format('d M Y') }}</td>
                                         <td class="p-4">{{ $l->kegiatan }}</td>
@@ -362,6 +372,11 @@
                                     @endforelse
                                 </tbody>
                             </table>
+                        </div>
+
+                        {{-- ✅ TOMBOL PAGINATION LOGBOOK --}}
+                        <div class="p-4 border-t border-gray-100">
+                            {{ $logbooks->appends(['presensi_page' => request('presensi_page')])->links() }}
                         </div>
                     </div>
 

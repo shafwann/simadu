@@ -50,11 +50,33 @@ class AdminPresensiPdfController extends Controller
             if ($status === 'Izin')  $status = 'I';
 
             // checkin / checkout kolom sendiri
-            $checkin  = (!empty($a?->check_in))  ? $a->check_in  : '-';
-            $checkout = (!empty($a?->check_out)) ? $a->check_out : '-';
+            $checkin  = (!empty($a?->check_in))  ? Carbon::parse($a->check_in)->format('H:i')  : '-';
+            $checkout = (!empty($a?->check_out)) ? Carbon::parse($a->check_out)->format('H:i') : '-';
 
             // tanggal label seperti contoh
             $tanggalLabel = $date->translatedFormat('d M Y');
+
+            // --- LOGIKA BARU UNTUK PDF ---
+            $lokasiText = '-';
+            $lokasiUrl  = null;
+
+            if ($a) {
+                // 1. Tentukan TEKS yang tampil (Nama Lokasi)
+                if (!empty($a->location_name)) {
+                    $lokasiText = $a->location_name;
+                }
+                elseif (in_array($a->status, ['Hadir', 'Telat'])) {
+                    $lokasiText = 'KANTOR BAPPERIDA';
+                }
+                else {
+                    $lokasiText = strtoupper($a->status);
+                }
+
+                // 2. Tentukan URL LINK (Link Maps dari kolom location)
+                if (!empty($a->location) && (str_contains($a->location, 'http') || str_contains($a->location, 'maps'))) {
+                    $lokasiUrl = $a->location;
+                }
+            }
 
             $rows[] = [
                 'tanggal_label'  => $tanggalLabel,
@@ -62,7 +84,12 @@ class AdminPresensiPdfController extends Controller
                 'checkout_label' => $checkout,
                 'status'         => $status,
                 'status_label'   => $status,
-                'location'       => $a?->location ?: null,
+
+                // ✅ Update disini
+                'location_text'  => $lokasiText,
+                'location_url'   => $lokasiUrl,
+                'location'       => $lokasiText, // Fallback key
+
                 'isHoliday'      => $isHoliday,
             ];
         }
@@ -85,6 +112,7 @@ class AdminPresensiPdfController extends Controller
 
     private function getIndonesiaHolidaysRealtime(int $year): array
     {
+        // ... (kode sama, tidak berubah) ...
         $manual = require app_path('Support/IndonesianHolidays.php');
         if (isset($manual[$year])) return $manual[$year];
 

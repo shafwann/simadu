@@ -18,6 +18,7 @@ class AboutSetting extends Model
         'office_latitude',
         'office_longitude',
         'radius_meter',
+        'office_name',
 
         // Jam check-in per hari
         'senin_mulai',
