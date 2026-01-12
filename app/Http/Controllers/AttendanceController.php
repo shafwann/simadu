@@ -49,7 +49,6 @@ class AttendanceController extends Controller
         ));
     }
 
-<<<<<<< HEAD
     // ✅ RIWAYAT PRESENSI
     public function history()
     {
@@ -119,8 +118,6 @@ class AttendanceController extends Controller
 
         return $pdf->download("PRESENSI_{$student->name}_{$month}_{$year}.pdf");
     }
-=======
->>>>>>> d31cc61b235ff7a1744ce459f41e367a7b53124a
 
     //--logika cek status mahasiswa
     public function store(Request $request)
@@ -257,14 +254,11 @@ class AttendanceController extends Controller
 
         $request->validate(['location' => 'required']);
 
-<<<<<<< HEAD
         $jamMasukTelat = Carbon::createFromTime(8, 0, 0);
         $sekarang = Carbon::now();
-=======
         // Status telat (tetap sesuai kode lama)
         $status = 'Hadir';
         $pesan = 'Berhasil melakukan presensi masuk.';
->>>>>>> d31cc61b235ff7a1744ce459f41e367a7b53124a
 
 
         $officeLat = -7.594917597849972;

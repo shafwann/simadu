@@ -209,7 +209,7 @@
         text-decoration:none;
         color:#111;
         font-weight:700;
-    ">Link</a>
+    ">BAPPERIDA</a>
                     @else
                     <span class="loc-empty">Lokasi Kosong</span>
                     @endif
