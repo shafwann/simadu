@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use App\Models\Logbook;
+use App\Models\Student;
+use App\Models\AboutSetting;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -52,4 +55,41 @@ class LogbookController extends Controller
                 return redirect()->back()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
             }
         }
+
+        //export logbook pdf
+        public function exportPdf(Request $request)
+        {
+            $user = Auth::user();          // mahasiswa login
+            $about = AboutSetting::first(); // data instansi
+
+            // Filter bulan & tahun, default bulan ini & tahun ini
+            $bulan = $request->get('bulan', date('m'));
+            $tahun = $request->get('tahun', date('Y'));
+
+            $logbooks = Logbook::where('user_id', $user->id)
+                ->when($bulan, fn($q) => $q->whereMonth('tanggal', $bulan))
+                ->when($tahun, fn($q) => $q->whereYear('tanggal', $tahun))
+                ->orderBy('tanggal', 'asc')
+                ->get();
+
+            // Nama bulan dalam bahasa Indonesia
+            $bulanIndo = [
+                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+            ];
+            $bulanLabel = $bulanIndo[(int)$bulan] ?? '-';
+
+            $pdf = Pdf::loadView('logbook.pdf', [
+                'student'    => $user,
+                'about'      => $about,
+                'year'       => $tahun,
+                'bulanLabel' => $bulanLabel,
+                'logbooks'   => $logbooks,
+            ]);
+
+            return $pdf->download("LOGBOOK_{$user->name}_{$bulan}_{$tahun}.pdf");
+        }
+
+
 }

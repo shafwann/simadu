@@ -196,7 +196,7 @@
     // Jika data database kosong, fallback ke default (Bapperida)
     const officeLat = {{ $about->office_latitude ?? -7.594917597849972 }};
     const officeLng = {{ $about->office_longitude ?? 110.94065517764916 }};
-    const maxRadius = {{ $about->radius_meter ?? 20 }}; // Ambil radius dari DB
+    const maxRadius = {{ $about->radius_meter ?? 500 }}; // Ambil radius dari DB
 
     function getLocation(type) {
         const btnId = (type === 'checkin') ? 'btn-checkin' : 'btn-checkout';
