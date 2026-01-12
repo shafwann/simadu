@@ -95,13 +95,12 @@
                                 <select name="status"
                                     class="w-full rounded-xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800">
                                     <option value="Hadir">✅ Hadir</option>
-                                    <option value="Telat">⏰ Telat (dianggap Hadir)</option>
+                                    <option value="Telat">⏰ Telat</option>
                                     <option value="Ijin">✉️ Ijin (I)</option>
                                     <option value="Sakit">💊 Sakit (S)</option>
                                     <option value="Dinas Luar">🚗 Dinas Luar (DL)</option>
                                     <option value="Cuti">🏖️ Cuti (CT)</option>
                                     <option value="Tanpa Keterangan">❌ Tanpa Keterangan (TK)</option>
-                                    <option value="Alpha">❌ Alpha (legacy)</option>
                                 </select>
                             </div>
 

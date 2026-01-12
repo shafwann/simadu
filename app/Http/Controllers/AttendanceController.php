@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Models\Logbook;
 use App\Models\AboutSetting;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AttendanceController extends Controller
 {
@@ -48,13 +49,84 @@ class AttendanceController extends Controller
         ));
     }
 
+<<<<<<< HEAD
+    // ✅ RIWAYAT PRESENSI
+    public function history()
+    {
+        $attendances = Attendance::where('user_id', Auth::id())
+            ->orderBy('tanggal', 'desc')
+            ->get();
+
+        return view('attendance.history', compact('attendances'));
+    }
+
+    // ✅ DOWNLOAD PDF PRESENSI (TABEL SIMPLE)
+    public function presensiPdf(Request $request)
+    {
+        $student = Auth::user();
+        $about = AboutSetting::first();
+
+        $month = (int) ($request->month ?? now()->month);
+        $year  = (int) ($request->year ?? now()->year);
+
+        $start = Carbon::create($year, $month, 1, 0, 0, 0, 'Asia/Jakarta');
+        $end   = $start->copy()->endOfMonth();
+
+        $bulanLabel = $start->translatedFormat('F');
+
+        $attendances = Attendance::where('user_id', $student->id)
+            ->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()])
+            ->orderBy('tanggal', 'asc')
+            ->get()
+            ->keyBy(fn ($x) => Carbon::parse($x->tanggal)->format('Y-m-d'));
+
+        $rows = [];
+        for ($d = 1; $d <= $end->day; $d++) {
+            $date = Carbon::create($year, $month, $d, 0, 0, 0, 'Asia/Jakarta');
+            $key  = $date->format('Y-m-d');
+
+            $a = $attendances->get($key);
+
+            $isHoliday = $date->isWeekend(); // weekend merah (sesuai permintaan)
+
+            $status = $a?->status ?? '-';
+            $statusLabel = $status;
+
+            if (strtolower($status) === 'izin') $statusLabel = 'Ijin';
+            if (strtolower($status) === 'alpha') $statusLabel = 'Tanpa Keterangan';
+
+            $rows[] = [
+                'tanggal_label' => $date->translatedFormat('d M Y'),
+                'jam_label'     => $a?->check_in ?? '-',
+                'status'        => $statusLabel,
+                'status_label'  => $statusLabel,
+                'location'      => $a?->location ?: null,
+                'isHoliday'     => $isHoliday,
+            ];
+        }
+
+        // ✅ F4 = 210mm x 330mm (pakai points biar pasti kebaca dompdf)
+        $F4 = [0, 0, 595.28, 935.43];
+
+        $pdf = Pdf::loadView('admin.students.presensi_pdf', [
+            'student'    => $student,
+            'about'      => $about,
+            'month'      => $month,
+            'year'       => $year,
+            'bulanLabel' => $bulanLabel,
+            'rows'       => $rows,
+        ])->setPaper($F4, 'portrait');
+
+        return $pdf->download("PRESENSI_{$student->name}_{$month}_{$year}.pdf");
+    }
+=======
+>>>>>>> d31cc61b235ff7a1744ce459f41e367a7b53124a
 
     //--logika cek status mahasiswa
     public function store(Request $request)
     {
         $user = Auth::user();
 
-        // --- CEK STATUS AKTIF ---
         if ($user->status !== 'aktif') {
             return redirect()->back()->with('error', 'Akun Anda tidak aktif, tidak bisa mengisi logbook.');
         }
@@ -78,9 +150,6 @@ class AttendanceController extends Controller
         }
     }
 
-    /**
-     * Ambil jadwal absensi hari ini (check-in & check-out) dari AboutSetting.
-     */
     private function getTodayAbsensiSchedule(): array
     {
         $about = AboutSetting::first();
@@ -90,7 +159,7 @@ class AttendanceController extends Controller
         }
 
         $now = Carbon::now('Asia/Jakarta');
-        $dow = $now->dayOfWeekIso; // 1=Senin ... 5=Jumat ... 7=Minggu
+        $dow = $now->dayOfWeekIso;
 
         if ($dow >= 6) {
             return ['error' => 'Absensi tidak tersedia di hari Sabtu/Minggu.'];
@@ -158,7 +227,6 @@ class AttendanceController extends Controller
         if ($now->lt($start) || $now->gt($end)) {
             return "Absensi masuk hanya bisa dilakukan pada jam {$start->format('H:i')} - {$end->format('H:i')} WIB ({$today['label']}).";
         }
-
         return null;
     }
 
@@ -174,11 +242,9 @@ class AttendanceController extends Controller
         if ($now->lt($start) || $now->gt($end)) {
             return "Absensi pulang hanya bisa dilakukan pada jam {$start->format('H:i')} - {$end->format('H:i')} WIB ({$today['label']}).";
         }
-
         return null;
     }
 
-    // --- LOGIKA CHECK-IN (MASUK) ---
     public function checkIn(Request $request)
     {
         $user = Auth::user();
@@ -191,26 +257,26 @@ class AttendanceController extends Controller
 
         $request->validate(['location' => 'required']);
 
+<<<<<<< HEAD
+        $jamMasukTelat = Carbon::createFromTime(8, 0, 0);
+        $sekarang = Carbon::now();
+=======
         // Status telat (tetap sesuai kode lama)
         $status = 'Hadir';
         $pesan = 'Berhasil melakukan presensi masuk.';
+>>>>>>> d31cc61b235ff7a1744ce459f41e367a7b53124a
 
 
-        // Validasi jarak
         $officeLat = -7.594917597849972;
         $officeLng = 110.94065517764916;
         $maxRadius = 20;
 
-        // ============================
-        // TAMBAHAN: Ambil koordinat dari setting Super Admin (jika ada)
-        // ============================
         $about = AboutSetting::first();
         if ($about && $about->office_latitude && $about->office_longitude) {
             $officeLat = $about->office_latitude;
             $officeLng = $about->office_longitude;
             $maxRadius = $about->radius_meter ?? $maxRadius;
         }
-        // ============================
 
         $userLoc = explode(',', $request->location);
         $distance = $this->calculateDistance($officeLat, $officeLng, $userLoc[0], $userLoc[1]);
@@ -230,29 +296,28 @@ class AttendanceController extends Controller
         return back()->with('success', $pesan);
     }
 
-    // --- LOGIKA CHECK-OUT (PULANG) ---
     public function checkOut(Request $request)
     {
+        $user = Auth::user();
+        if ($user->status !== 'aktif') {
+            return back()->with('error', 'Akun Anda tidak aktif, tidak bisa melakukan presensi.');
+        }
+
         $request->validate(['location' => 'required']);
 
         $msg = $this->ensureWithinCheckOutWindow();
         if ($msg) return back()->with('error', $msg);
 
-        // Validasi jarak
         $officeLat = -7.594917597849972;
         $officeLng = 110.94065517764916;
         $maxRadius = 99999;
 
-        // ============================
-        // TAMBAHAN: Ambil koordinat dari setting Super Admin (jika ada)
-        // ============================
         $about = AboutSetting::first();
         if ($about && $about->office_latitude && $about->office_longitude) {
             $officeLat = $about->office_latitude;
             $officeLng = $about->office_longitude;
             $maxRadius = $about->radius_meter ?? $maxRadius;
         }
-        // ============================
 
         $userLoc = explode(',', $request->location);
         $distance = $this->calculateDistance($officeLat, $officeLng, $userLoc[0], $userLoc[1]);
@@ -277,10 +342,16 @@ class AttendanceController extends Controller
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
     {
         $earthRadius = 6371000;
-        $latFrom = deg2rad($lat1); $lonFrom = deg2rad($lon1);
-        $latTo = deg2rad($lat2); $lonTo = deg2rad($lon2);
-        $latDelta = $latTo - $latFrom; $lonDelta = $lonTo - $lonFrom;
-        $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) + cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
+        $latFrom = deg2rad($lat1);
+        $lonFrom = deg2rad($lon1);
+        $latTo = deg2rad($lat2);
+        $lonTo = deg2rad($lon2);
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+        $angle = 2 * asin(sqrt(
+            pow(sin($latDelta / 2), 2) +
+            cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)
+        ));
         return $angle * $earthRadius;
     }
 }

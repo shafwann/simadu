@@ -12,17 +12,25 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('attendances', function (Blueprint $table) {
-        $table->id();
-        // Menghubungkan ke ID di tabel users
-        $table->foreignId('user_id')->constrained()->onDelete('cascade');
-        $table->date('tanggal');
-        $table->time('check_in')->nullable();
-        $table->time('check_out')->nullable();
-        $table->enum('status', ['hadir', 'izin', 'alpha','sakit', 'telat'])->default('hadir');
-        $table->string('keterangan')->nullable(); // Untuk alasan jika izin
-        $table->string('location')->nullable();
-        $table->timestamps();
-    });
+            $table->id();
+            // Menghubungkan ke ID di tabel users
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->date('tanggal');
+            $table->time('check_in')->nullable();
+            $table->time('check_out')->nullable();
+            $table->enum('status', [
+                'Hadir',
+                'Telat',
+                'Ijin',
+                'Sakit',
+                'Dinas Luar',
+                'Cuti',
+                'Tanpa Keterangan'
+            ])->default('Hadir');
+            $table->string('keterangan')->nullable(); // Untuk alasan jika izin
+            $table->string('location')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**
