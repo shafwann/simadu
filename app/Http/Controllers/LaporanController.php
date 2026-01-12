@@ -15,6 +15,24 @@ class LaporanController extends Controller
         return view('laporan.index', compact('laporans'));
     }
 
+    public function validateLaporan($id)
+    {
+        if (auth()->user()->role !== 'admin') {
+            abort(403);
+        }
+
+        $laporan = Laporan::findOrFail($id);
+
+        if ($laporan->is_validated) {
+            return back()->with('error', 'Laporan sudah divalidasi.');
+        }
+
+        $laporan->update(['is_validated' => true]);
+
+        return back()->with('success', 'Laporan berhasil divalidasi.');
+    }
+
+
     public function upload(Request $request)
     {
         $user = auth()->user();
@@ -82,24 +100,18 @@ class LaporanController extends Controller
         $user = auth()->user();
 
         if ($user->id !== $laporan->user_id && $user->role !== 'admin') {
-            abort(403, "Akses ditolak");
+            abort(403);
         }
 
-        $filePath = storage_path('app/' . $laporan->file_path);
-
-        if (!file_exists($filePath)) {
-            abort(404, "File tidak ditemukan: " . $laporan->file_path);
+        if (!Storage::disk('private')->exists($laporan->file_path)) {
+            abort(404, 'File tidak ditemukan');
         }
 
-        // kalau file bukan pdf, sebaiknya download saja
-        $ext = strtolower(pathinfo($laporan->nama_file, PATHINFO_EXTENSION));
-        if ($ext !== 'pdf') {
-            return response()->download($filePath, $laporan->nama_file);
-        }
+        $filePath = Storage::disk('private')->path($laporan->file_path);
 
         return response()->file($filePath, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $laporan->nama_file . '"'
+            'Content-Disposition' => 'inline',
         ]);
     }
 

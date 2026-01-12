@@ -41,36 +41,95 @@
             <h3 class="font-bold text-lg mb-4">Daftar Laporan Saya</h3>
 
             @forelse($laporans as $lap)
-                <div class="bg-gray-50 p-3 rounded-lg border mb-4">
-                    <h4 class="font-semibold mb-2">{{ $lap->nama_file }}</h4>
-                    @if($lap->is_validated)
-                        <span class="text-green-600 text-sm font-semibold">✔ Sudah divalidasi admin</span>
-                    @else
-                        <span class="text-yellow-600 text-sm font-semibold">⏳ Menunggu validasi admin</span>
-                    @endif
+    <div class="border rounded-xl p-4 mb-4 bg-white">
 
-                    {{-- Preview PDF langsung --}}
-                    @if(Str::endsWith($lap->file_path, '.pdf'))
-                        <iframe 
-                            src="{{ route('laporan.preview', $lap->id) }}" 
-                            class="w-full h-96 rounded-lg border"
-                            frameborder="0">
-                        </iframe>
-                    @endif
+        <div class="flex items-start justify-between gap-4">
+            {{-- INFO FILE --}}
+            <div class="space-y-1">
+                <p class="font-semibold text-gray-800">
+                    {{ $lap->nama_file }}
+                </p>
+            </div>
 
-                        @if(!$lap->is_validated)
-                            <a href="{{ route('laporan.edit', $lap->id) }}"
-                            class="text-yellow-600 font-semibold">
-                                Edit
-                            </a>
-                        @endif
-                    </div>
+            {{-- AKSI --}}
+            <div class="flex items-center gap-3">
+                @if(Str::endsWith($lap->file_path, '.pdf'))
+                    <a href="{{ route('laporan.preview', $lap->id) }}"
+                    target="_blank"
+                    class="px-4 py-2 rounded-xl text-sm font-medium
+                            bg-blue-600 text-white
+                            hover:bg-blue-400
+                            active:bg-blue-200
+                            border border-blue-300
+                            shadow-sm
+                            transition-all duration-150">
+                        Preview
+</a>
 
-                </div>
-            @empty
-                <p class="text-gray-400 italic">Belum ada laporan</p>
-            @endforelse
+
+
+                @endif
+
+                @if(!$lap->is_validated)
+                    <a href="{{ route('laporan.edit', $lap->id) }}"
+                    class="px-4 py-2 rounded-xl text-sm font-semibold
+                            bg-amber-600 text-white
+                            hover:bg-amber-400
+                            active:bg-amber-200
+                            border border-amber-300
+                            shadow-sm
+                            transition-all duration-150">
+                        Edit
+                    </a>
+
+
+
+                @else
+                    <span class="px-4 py-2 text-sm text-gray-400 border rounded-xl cursor-not-allowed">
+                        Edit
+                    </span>
+                @endif
+            </div>
         </div>
+
+        {{-- PREVIEW PDF --}}
+        @if(Str::endsWith($lap->file_path, '.pdf'))
+            <iframe
+                src="{{ route('laporan.preview', $lap->id) }}"
+                class="w-full h-80 mt-4 rounded-lg border"
+                frameborder="0">
+            </iframe>
+        @endif
+
+        {{-- STATUS MENUNGGU VALIDASI --}}
+        @if(!$lap->is_validated)
+            <div class="mt-4 bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+                <h4 class="text-sm font-bold text-yellow-800 mb-1">
+                    Laporan sedang ditinjau
+                </h4>
+                <p class="text-xs text-yellow-700 leading-relaxed">
+                    Laporan yang telah diunggah tidak dapat diubah
+                    sampai proses validasi oleh admin selesai.
+                </p>
+            </div>
+        @else
+            <div class="mt-4 bg-green-50 p-4 rounded-xl border border-green-100">
+                <h4 class="text-sm font-bold text-green-800 mb-1">
+                    Laporan telah divalidasi
+                </h4>
+                <p class="text-xs text-green-700 leading-relaxed">
+                    Laporan Anda telah disetujui oleh admin dan
+                    tidak dapat diubah kembali.
+                </p>
+            </div>
+        @endif
+
+
+    </div>
+@empty
+    <p class="text-gray-400 italic">Belum ada laporan.</p>
+@endforelse
+ </div>
 
     </div>
 </x-app-layout>
