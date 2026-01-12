@@ -23,7 +23,7 @@ class AdminPresensiPdfController extends Controller
         $student = User::findOrFail($id);
         $about   = AboutSetting::first();
 
-        $start = Carbon::create($year, $month, 1);
+        $start = Carbon::create($year, $month, 1, 0, 0, 0, 'Asia/Jakarta');
         $daysInMonth = $start->daysInMonth;
 
         $attendances = Attendance::where('user_id', $student->id)
@@ -32,45 +32,54 @@ class AdminPresensiPdfController extends Controller
             ->get()
             ->keyBy(fn ($a) => Carbon::parse($a->tanggal)->format('Y-m-d'));
 
-        // 🔴 libur nasional + cuti bersama (manual lengkap, fallback API)
+        // libur nasional + cuti bersama (manual lengkap, fallback API)
         $holidays = $this->getIndonesiaHolidaysRealtime($year);
 
         $rows = [];
         for ($d = 1; $d <= $daysInMonth; $d++) {
-            $date = Carbon::create($year, $month, $d);
+            $date = Carbon::create($year, $month, $d, 0, 0, 0, 'Asia/Jakarta');
             $key  = $date->format('Y-m-d');
 
             $isHoliday = $date->isWeekend() || isset($holidays[$key]);
 
             $a = $attendances[$key] ?? null;
-            $status = $a?->status;
 
-            if ($status === 'Alpha') $status = 'Tanpa Keterangan';
-            if ($status === 'Izin')  $status = 'Ijin';
+            // status
+            $status = $a?->status ?? '-';
+            if ($status === 'Alpha') $status = 'TK';
+            if ($status === 'Izin')  $status = 'I';
+
+            // checkin / checkout kolom sendiri
+            $checkin  = (!empty($a?->check_in))  ? $a->check_in  : '-';
+            $checkout = (!empty($a?->check_out)) ? $a->check_out : '-';
+
+            // tanggal label seperti contoh
+            $tanggalLabel = $date->translatedFormat('d M Y');
 
             $rows[] = [
-                'day'       => str_pad($d, 2, '0', STR_PAD_LEFT),
-                'isHoliday' => $isHoliday,
-                'signed'    => $a && (in_array($status, ['Hadir','Telat']) || $a->check_in),
-                'mark' => [
-                    'I'  => $status === 'Ijin',
-                    'S'  => $status === 'Sakit',
-                    'DL' => $status === 'Dinas Luar',
-                    'CT' => $status === 'Cuti',
-                    'TK' => $status === 'Tanpa Keterangan',
-                ],
+                'tanggal_label'  => $tanggalLabel,
+                'checkin_label'  => $checkin,
+                'checkout_label' => $checkout,
+                'status'         => $status,
+                'status_label'   => $status,
+                'location'       => $a?->location ?: null,
+                'isHoliday'      => $isHoliday,
             ];
         }
 
+        // ✅ tetap left / right (agar 1 halaman, 31 hari jadi 16 + sisanya)
         $left  = array_slice($rows, 0, 16);
         $right = array_slice($rows, 16);
 
         $bulanLabel = $this->bulanIndo($month);
 
+        // ✅ F4 = 210mm x 330mm -> points: 595.28 x 935.43
+        $f4 = [0, 0, 595.28, 935.43];
+
         return Pdf::loadView('admin.students.presensi_pdf', compact(
             'student','about','year','bulanLabel','left','right'
         ))
-        ->setPaper('A4','portrait')
+        ->setPaper($f4, 'portrait')
         ->download("DAFTAR-HADIR-MAGANG-{$student->nim}-{$bulanLabel}-{$year}.pdf");
     }
 

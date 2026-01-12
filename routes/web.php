@@ -66,6 +66,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.checkin');
     Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkout');
 
+    // ✅ TAMBAHAN: MAHASISWA BISA LIHAT RIWAYAT PRESENSI (AKTIF / NONAKTIF TETAP BISA)
+    Route::get('/attendance/history', [AttendanceController::class, 'history'])
+        ->name('attendance.history');
+
+    // ✅ TAMBAHAN: MAHASISWA BISA DOWNLOAD PDF PRESENSI (TAMPILAN SAMA DENGAN ADMIN)
+    Route::get('/attendance/presensi-pdf', [AttendanceController::class, 'presensiPdf'])
+        ->name('attendance.presensi_pdf');
+
     // Logbook
     Route::get('/logbook', [LogbookController::class, 'index'])->name('logbook.index');
     Route::post('/logbook', [LogbookController::class, 'store'])->name('logbook.store');
