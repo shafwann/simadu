@@ -73,7 +73,7 @@
                             Gunakan tanda <span class="font-semibold">koma (,)</span> untuk memisahkan jam operasional
                             ke baris berikutnya.
                         </p>
-                        
+
 
                         <x-text-input
                             id="jam_operasional"
@@ -99,6 +99,23 @@
                         </h3>
                         <p class="text-sm text-gray-500 mt-1">
                             Digunakan untuk menentukan titik koordinat dan radius absensi mahasiswa.
+                        </p>
+                    </div>
+                    
+                    {{-- ✅ TAMBAHAN: NAMA LOKASI --}}
+                    <div class="mt-4">
+                        <x-input-label for="office_name" value="Nama Lokasi Kantor (Default Absensi)" />
+                        <x-text-input
+                            id="office_name"
+                            name="office_name"
+                            type="text"
+                            class="mt-1 block w-full uppercase"
+                            placeholder="Contoh: KANTOR BAPPERIDA"
+                            value="{{ old('office_name', $about->office_name) }}"
+                        />
+                        <x-input-error class="mt-2" :messages="$errors->get('office_name')" />
+                        <p class="mt-1 text-xs text-gray-400">
+                            Nama ini akan otomatis terisi di absensi mahasiswa jika mereka check-in di area kantor.
                         </p>
                     </div>
 

@@ -175,45 +175,24 @@
                 <span class="badge {{ $badge }}">{{ $label }}</span>
             </td>
 
-            <td class="col-lokasi">
-                @php
-                $locRaw = trim($r['location'] ?? '');
-                $loc = $locRaw;
+        <td class="col-lokasi">
+            {{-- Cek apakah ada Link Maps --}}
+            @if(!empty($r['location_url']))
+                <a href="{{ $r['location_url'] }}"
+                target="_blank"
+                style="color: #000; display: block; width: 100%; text-decoration: none;">
+                    <span style="font-weight: 700; text-transform: uppercase; font-size: 10px;">
+                        {{ $r['location_text'] }}
+                    </span>
+                </a>
+            @else
+                {{-- Jika tidak ada link --}}
+                <span style="font-weight: 700; text-transform: uppercase; font-size: 10px; color: #000;">
+                    {{ $r['location_text'] }}
+                </span>
+            @endif
+        </td>
 
-                // ambil src dari iframe
-                if ($loc && stripos($loc, '<iframe') !==false) {
-                    preg_match('/src="([^" ]+)"/i', $loc, $m);
-                    $loc=$m[1] ?? '' ;
-                    }
-
-                    // normalisasi
-                    $loc=trim($loc);
-
-                    // kalau masih kosong → kosong
-                    if ($loc==='' ) {
-                    $loc='' ;
-                    }
-                    // kalau ga ada http → tambahkan https
-                    elseif (!preg_match('/^https?:\/\//i', $loc)) {
-                    $loc='https://' . $loc;
-                    }
-                    @endphp
-
-                    @if(!empty($loc))
-                    <a href="{{ $loc }}" style="
-        display:inline-block;
-        max-width:100%;
-        white-space:nowrap;
-        overflow:hidden;
-        text-overflow:ellipsis;
-        text-decoration:none;
-        color:#111;
-        font-weight:700;
-    ">BAPPERIDA</a>
-                    @else
-                    <span class="loc-empty">Lokasi Kosong</span>
-                    @endif
-            </td>
 
         </tr>
         @endforeach

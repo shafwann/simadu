@@ -113,6 +113,18 @@
                                 <p class="text-[10px] text-gray-400 mt-1">*Paste link 'Share' atau 'Embed' dari Google Maps di sini.</p>
                             </div>
 
+                            {{-- ✅ TAMBAHAN BARU: INPUT NAMA LOKASI --}}
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                    Nama Lokasi (Untuk Tampilan PDF)
+                                </label>
+                                <input type="text" name="location_name" placeholder="Contoh: KANTOR BAPPERIDA / DINAS LUAR / RUMAH"
+                                    class="w-full rounded-xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800 text-sm uppercase">
+                                <p class="text-[10px] text-gray-400 mt-1">
+                                    *Teks ini yang akan muncul di kolom "LOKASI" pada cetak PDF.
+                                </p>
+                            </div>
+
                             <button type="submit"
                                 class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-lg shadow-blue-200">
                                 Simpan Data Absen
