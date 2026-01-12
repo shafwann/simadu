@@ -119,6 +119,6 @@
 
     {{-- COPYRIGHT --}}
     <div class="bg-gray-900 text-gray-400 py-3 text-center text-[10px]">
-        <p>© {{ date('Y') }} Sistem Magang Baperlitbang Kab. Karanganyar.</p>
+        <p>© {{ date('Y') }} Sistem Magang Bapperida Kab. Karanganyar.</p>
     </div>
 </footer>
