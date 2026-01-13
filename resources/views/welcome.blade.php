@@ -16,7 +16,7 @@
             <div class="flex items-center gap-4">
                 <img src="{{ asset('img/logobaperlitbang.png') }}" alt="Logo Baperlitbang" class="h-12 w-auto">
                 <div class="hidden sm:block">
-                    <h1 class="text-sm font-bold leading-none text-gray-800 uppercase tracking-wider">Baperlitbang</h1>
+                    <h1 class="text-sm font-bold leading-none text-gray-800 uppercase tracking-wider">Bapperida</h1>
                     <p class="text-[10px] text-gray-500 uppercase">Kabupaten Karanganyar</p>
                 </div>
             </div>
