@@ -74,12 +74,26 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="md:col-span-2">
-                            <x-input-label for="kegiatan" :value="__('Jenis Kegiatan')" />
-                            <select name="kegiatan" id="kegiatan" class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm focus:border-purple-500 focus:ring-purple-500">
-                                @foreach(['Magang Reguler', 'Praktik Kerja Lapangan (PKL)', 'Penelitian Skripsi', 'MBKM'] as $opt)
-                                    <option value="{{ $opt }}" {{ old('kegiatan', $student->kegiatan) == $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                                @endforeach
-                            </select>
+                           <x-input-label for="kegiatan" :value="__('Jenis Kegiatan')" />
+
+<input
+    type="text"
+    name="kegiatan"
+    id="kegiatan"
+    list="kegiatanList"
+    value="{{ old('kegiatan', $student->kegiatan ?? '') }}"
+    class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm focus:border-purple-500 focus:ring-purple-500"
+    placeholder="Ketik manual atau pilih dari daftar..."
+    required
+>
+
+<datalist id="kegiatanList">
+    <option value="Magang Reguler">
+    <option value="Praktik Kerja Lapangan (PKL)">
+    <option value="Penelitian Skripsi">
+    <option value="MBKM">
+</datalist>
+
                         </div>
 
                         <div>
@@ -124,17 +138,32 @@
                         </div>
 
                         {{-- Bidang --}}
-                        <div class="md:col-span-2 border-t pt-4 mt-2">
-                            <x-input-label for="bidang" :value="__('Divisi / Bidang Penempatan')" />
-                            <select name="bidang" id="bidang" class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50">
-                                @foreach($bidangOptions as $bidang)
-                                    <option value="{{ $bidang }}" {{ old('bidang', $student->bidang) == $bidang ? 'selected' : '' }}>
-                                        {{ $bidang }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <p class="text-xs text-gray-500 mt-1">Mengubah bidang akan memindahkan mahasiswa ke admin bidang tersebut.</p>
-                        </div>
+<div class="md:col-span-2 border-t pt-4 mt-2">
+    <x-input-label for="bidang" :value="__('Divisi / Bidang Penempatan')" />
+
+    <input
+        type="text"
+        name="bidang"
+        id="bidang"
+        list="bidangList"
+        value="{{ old('bidang', $student->bidang) }}"
+        class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm
+               focus:border-blue-500 focus:ring-blue-500 bg-gray-50"
+        placeholder="Ketik manual atau pilih dari daftar..."
+        required
+    >
+
+    <datalist id="bidangList">
+        @foreach($bidangOptions as $bidang)
+            <option value="{{ $bidang }}">
+        @endforeach
+    </datalist>
+
+    <p class="text-xs text-gray-500 mt-1">
+        Mengubah bidang akan memindahkan mahasiswa ke admin bidang tersebut.
+    </p>
+</div>
+
 
                         {{-- TAMBAHAN: Pembimbing Lapangan --}}
                         <div class="md:col-span-2 mt-4">

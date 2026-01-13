@@ -61,7 +61,7 @@ $rows = [
     overflow-wrap:break-word;
     word-break:break-word;
 ">
-    Telah melaksanakan Magang Kerja di Kantor
+    Telah melaksanakan {{ $student->kegiatan ?? 'Magang Kerja' }} di Kantor
     {{ $about->nama_instansi ?? '-' }} Kabupaten Karanganyar
     dengan nilai sebagai berikut:
   </div>

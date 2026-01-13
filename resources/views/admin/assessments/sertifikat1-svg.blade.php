@@ -83,9 +83,14 @@ if ($len <= 20) {
         <div class="sertifikat">
 
             {{-- MAGANG KERJA --}}
-            <div style="position:absolute; top:50mm; left:80mm;">
-                <div style="font-size:40px; font-weight:700;">Magang Kerja</div>
-            </div>
+<div style="position:absolute; top:50mm; left:80mm;">
+
+    {{-- ✅ TAMBAHAN BARU: judul dinamis dari input Jenis Kegiatan --}}
+    <div style="font-size:40px; font-weight:700;">
+        {{ $student->kegiatan ?? 'Magang Kerja' }}
+    </div>
+</div>
+
 
             {{-- NOMOR --}}
             <div style="position:absolute; top:64mm; left:80mm; font-size:21px;">
@@ -130,11 +135,12 @@ if ($len <= 20) {
 
             {{-- PARAGRAF (DINAMIS NAMA INSTANSI DARI ABOUT) --}}
             <div style="position:absolute; top:123mm; left:40mm; right:40mm; text-align:center; font-size:18px; line-height:1.30;">
-                Telah melaksanakan Magang Kerja di
-                {{ $about->nama_instansi ?? '-' }} Kabupaten Karanganyar 
-                dari {{ $mulai }} sampai {{ $selesai }} dengan hasil
-                <span style="font-weight:700; text-transform:uppercase;">{{ $hasilLabel }}</span>.
-            </div>
+    Telah melaksanakan {{ $student->kegiatan ?? 'Magang Kerja' }} di
+    {{ $about->nama_instansi ?? '-' }} Kabupaten Karanganyar
+    dari {{ $mulai }} sampai {{ $selesai }} dengan hasil
+    <span style="font-weight:700; text-transform:uppercase;">{{ $hasilLabel }}</span>.
+</div>
+
 
             {{-- TANGGAL --}}
             <div style="position:absolute; top:139mm; left:60mm; width:210mm; text-align:center; font-size: 18.5px; font-weight:700;">
