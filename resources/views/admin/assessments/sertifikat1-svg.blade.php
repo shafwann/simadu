@@ -23,6 +23,17 @@ if ($len <= 20) {
 
     /* Style string aman (1 line) */
     $instansiStyle='display:block;margin-top:2px;font-weight:700;line-height:1.15;white-space:nowrap;font-size:' .$instansiFont.'px;';
+
+    $nipRaw=preg_replace('/\s+/', '' , (string)($about->nip_kepala_instansi ?? ''));
+    $nipSertifikat = $nipRaw;
+
+    if (strlen($nipRaw) === 18) {
+    $nipSertifikat =
+    substr($nipRaw, 0, 8) . ' ' .
+    substr($nipRaw, 8, 6) . ' ' .
+    substr($nipRaw, 14, 1) . ' ' .
+    substr($nipRaw, 15, 3);
+    }
     @endphp
 
     <!DOCTYPE html>
@@ -121,7 +132,7 @@ if ($len <= 20) {
             {{-- PARAGRAF (DINAMIS NAMA INSTANSI DARI ABOUT) --}}
             <div style="position:absolute; top:123mm; left:40mm; right:40mm; text-align:center; font-size:18px; line-height:1.30;">
                 Telah melaksanakan Magang Kerja di
-                {{ $about->nama_instansi ?? '-' }} Kabupaten Karanganyar 
+                {{ $about->nama_instansi ?? '-' }} Kabupaten Karanganyar
                 dari {{ $mulai }} sampai {{ $selesai }} dengan hasil
                 <span style="font-weight:700; text-transform:uppercase;">{{ $hasilLabel }}</span>.
             </div>
@@ -145,8 +156,10 @@ if ($len <= 20) {
                     {{ $about->kepala_instansi ?? '-' }}
                 </div>
                 <div style="font-weight:700; line-height:1.30;">
-                    NIP. {{ $about->nip_kepala_instansi ?? '-' }}
+                    NIP. {{ $nipSertifikat ?: '-' }}
                 </div>
+
+
             </div>
 
 

@@ -1,12 +1,28 @@
+
 @php
 $rows = [
-[1,'Etika dan Kedisiplinan',$assessment->aspek_1],
-[2,'Kemampuan Berkomunikasi dan Bekerjasama',$assessment->aspek_2],
-[3,'Kemandirian',$assessment->aspek_3],
-[4,'Kreativitas',$assessment->aspek_4],
-[5,'Kemampuan menyelesaikan pekerjaan di bidangnya',$assessment->aspek_5],
-[6,'Kemampuan mengidentifikasi dan memecahkan masalah',$assessment->aspek_6],
+    [1,'Etika dan Kedisiplinan',$assessment->aspek_1],
+    [2,'Kemampuan Berkomunikasi dan Bekerjasama',$assessment->aspek_2],
+    [3,'Kemandirian',$assessment->aspek_3],
+    [4,'Kreativitas',$assessment->aspek_4],
+    [5,'Kemampuan menyelesaikan pekerjaan di bidangnya',$assessment->aspek_5],
+    [6,'Kemampuan mengidentifikasi dan memecahkan masalah',$assessment->aspek_6],
 ];
+
+// ===========================
+// ✅ FORMAT NIP (8-6-1-3) UNTUK HALAMAN FORM PENILAIAN
+// (kalau halaman ini dicetak terpisah, tetap benar)
+// ===========================
+$nipRaw2 = preg_replace('/\s+/', '', (string)($about->nip_kepala_instansi ?? ''));
+$nipFormatted2 = $nipRaw2;
+
+if (strlen($nipRaw2) === 18) {
+    $nipFormatted2 =
+        substr($nipRaw2, 0, 8) . ' ' .
+        substr($nipRaw2, 8, 6) . ' ' .
+        substr($nipRaw2, 14, 1) . ' ' .
+        substr($nipRaw2, 15, 3);
+}
 @endphp
 
 <div style="
@@ -52,10 +68,7 @@ $rows = [
     margin-top:2.5mm;
     font-size:17px;
     line-height:1.18;
-
-    /* DomPDF aman pakai mm */
     width:305mm;
-
     white-space:normal;
     word-wrap:break-word;
     overflow-wrap:break-word;
@@ -65,8 +78,6 @@ $rows = [
     {{ $about->nama_instansi ?? '-' }} Kabupaten Karanganyar
     dengan nilai sebagai berikut:
   </div>
-
-
 
   {{-- TABEL NILAI --}}
   <table style="
@@ -158,15 +169,13 @@ $rows = [
         <div style="margin-top:0; font-weight:700;">Karanganyar, {{ $hariIni }}</div>
 
         <div style="
-        /* bikin blok tengah dan boleh turun baris */
-        width:150mm;           /* sesuaikan kalau mau lebih lebar: 160/170mm */
-        margin:0 auto;
-
-        white-space:normal;
-        word-wrap:break-word;
-        overflow-wrap:break-word;
-        word-break:break-word;
-    ">
+          width:150mm;
+          margin:0 auto;
+          white-space:normal;
+          word-wrap:break-word;
+          overflow-wrap:break-word;
+          word-break:break-word;
+        ">
           Kepala {{ $about->nama_instansi ?? '-' }}<br>
           Kabupaten Karanganyar
         </div>
@@ -174,7 +183,9 @@ $rows = [
         <div style="height:26mm;"></div>
 
         <b style="font-size:16px;">{{ $about->kepala_instansi ?? '-' }}</b><br>
-        NIP. {{ $about->nip_kepala_instansi ?? '-' }}
+
+        {{-- ✅ NIP DIFORMAT (8-6-1-3) HANYA TAMPILAN --}}
+        NIP. {{ $nipFormatted2 ?: '-' }}
 
       </td>
 
