@@ -615,6 +615,26 @@
                             </div>
                         </div>
 
+                        {{-- ✅ TAMBAHAN BARU: TANGGAL SERTIFIKAT (DITAMBAHKAN SAJA, TIDAK MENGUBAH KODE LAIN) --}}
+                        <div class="rounded-2xl border border-gray-100 bg-white p-4 mt-0">
+                            <label class="block text-[11px] font-black text-gray-500 uppercase tracking-wide">
+                                Tanggal Sertifikat
+                            </label>
+
+                            <input
+                                id="inputTanggalSertifikat"
+                                type="date"
+                                name="certificate_date"
+                                required
+                                value="{{ old('certificate_date', optional(optional($student->assessment)->certificate_date)->format('Y-m-d')) }}"
+                                class="mt-2 w-full rounded-2xl border-gray-200 bg-gray-50
+                                       focus:ring-blue-500 focus:border-blue-500 font-black text-gray-900">
+
+                            <p class="mt-2 text-[11px] text-gray-400">
+                                *Tanggal ini akan dipakai di sertifikat.
+                            </p>
+                        </div>
+
                         {{-- Button --}}
                         <div class="sticky bottom-0 bg-white pt-3">
                             <button id="assessmentSubmitBtn"

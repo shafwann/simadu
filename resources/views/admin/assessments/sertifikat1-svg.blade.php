@@ -5,6 +5,16 @@ $mulai = Carbon::parse($student->tanggal_masuk)->translatedFormat('d F Y');
 $selesai = Carbon::parse($student->tanggal_selesai)->translatedFormat('d F Y');
 $hariIni = $today->translatedFormat('d F Y');
 
+// ✅ TAMBAHAN BARU: jika ada tanggal dari form (certificate_date), pakai itu untuk sertifikat
+if (!empty($assessment->certificate_date)) {
+    $hariIni = Carbon::parse($assessment->certificate_date)->translatedFormat('d F Y');
+}
+
+// ✅ TAMBAHAN BARU: jika certificate_date sudah berupa Carbon (casts), pakai langsung
+if (!empty($assessment->certificate_date) && method_exists($assessment->certificate_date, 'translatedFormat')) {
+    $hariIni = $assessment->certificate_date->translatedFormat('d F Y');
+}
+
 /* ==== INSTANSI: paksa 1 baris + auto kecilkan font ==== */
 $instansiText = trim((string) ($student->instansi ?? ''));
 $len = mb_strlen($instansiText, 'UTF-8');
