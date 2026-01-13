@@ -56,6 +56,16 @@ table.logbook th {
     font-weight: 800;
 }
 
+tr {
+    page-break-inside: auto;
+}
+
+td {
+    page-break-inside: auto;
+    word-break: break-word;
+}
+
+
 /* ===== FOOT ===== */
 table.foot {
     width: 100%;
@@ -67,31 +77,6 @@ table.foot td {
 }
 .sign .gap { height: 46px; }
 .sign .name { font-size: 12px; }
-
-/* ===== PAGE BREAK ===== */
-.page-break { page-break-after: always; }
-
-table {
-    page-break-inside: auto;
-}
-
-tr {
-    page-break-inside: avoid;
-    page-break-after: auto;
-}
-
-td {
-    page-break-inside: auto;
-}
-
-
-thead {
-    display: table-header-group;
-}
-
-tfoot {
-    display: table-footer-group;
-}
 
 </style>
 </head>
@@ -135,18 +120,9 @@ tfoot {
     <td class="colon">:</td>
     <td class="bulanValue">{{ strtoupper($bulanLabel) }}</td>
 </tr>
-
 </table>
 
-{{-- ===== LOGBOOK CHUNKED 36 BARIS PER HALAMAN ===== --}}
-@php
-    $perPage = 20;
-    $logbookChunks = $logbooks->chunk($perPage);
-@endphp
-
-
-@php $no = 1; @endphp
-@foreach($logbookChunks as $pageIndex => $logs)
+{{-- ===== LOGBOOK TANPA CHUNK ===== --}}
 <table class="logbook">
 <thead>
 <tr>
@@ -158,7 +134,8 @@ tfoot {
 </tr>
 </thead>
 <tbody>
-@foreach($logs as $i => $log)
+@php $no = 1; @endphp
+@foreach($logbooks as $log)
 <tr>
     <td align="center">{{ $no++ }}</td>
     <td align="center">
@@ -167,20 +144,14 @@ tfoot {
             ->translatedFormat('l, d F Y') }}
     </td>
     <td align="center">{{ $log->created_at?->format('H:i') ?? '-' }}</td>
-    <td style="word-wrap: break-word; white-space: pre-line;">  {!! nl2br(e($log->kegiatan)) !!}</td>
+    <td style="word-wrap: break-word; white-space: pre-line;">{!! nl2br(e($log->kegiatan)) !!}</td>
     <td align="center">{{ $log->is_validated ? 'Disetujui' : 'Belum Disetujui' }}</td>
 </tr>
 @endforeach
 </tbody>
 </table>
 
-{{-- Page break kecuali halaman terakhir --}}
-@if(!$loop->last)
-<div class="page-break"></div>
-@endif
-@endforeach
-
-{{-- ===== FOOTER TANDA TANGAN HANYA DI HALAMAN TERAKHIR ===== --}}
+{{-- ===== FOOTER TANDA TANGAN ===== --}}
 <table class="foot">
 <tr>
     <td width="55%"></td>
