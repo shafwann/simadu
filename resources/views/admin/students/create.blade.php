@@ -101,7 +101,7 @@
                                 class="block mt-1 w-full"
                                 type="text"
                                 name="nip_pembimbing"
-                                :value="old('nip_pembimbing', 'NIP. 19761026 200604 2 022')"
+                                :value="old('nip_pembimbing', '19761026 200604 2 022')"
                                 required
                             />
                             <x-input-error :messages="$errors->get('nip_pembimbing')" class="mt-2" />
