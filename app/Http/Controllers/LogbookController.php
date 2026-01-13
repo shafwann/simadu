@@ -21,7 +21,14 @@ class LogbookController extends Controller
                                         ->orderBy('tanggal', 'desc')
                                         ->get();
 
-            return view('logbook.index', compact('logbooks'));
+            // Ambil tahun unik dari logbook user
+            $tahunList = $logbooks->pluck('tanggal')
+                                ->map(fn($d) => Carbon::parse($d)->year)
+                                ->unique()
+                                ->sortDesc()
+                                ->values(); // supaya 2025,2026 urut
+
+            return view('logbook.index', compact('logbooks', 'tahunList'));
         }
 
         public function store(Request $request)
