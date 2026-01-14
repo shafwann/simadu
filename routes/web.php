@@ -18,15 +18,9 @@ use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminAboutController;
 use App\Http\Controllers\AdminPresensiPdfController;
-<<<<<<< HEAD
 use App\Http\Controllers\AdminLogbookController;
 use App\Http\Controllers\PembimbingPdfController;
-
-
-=======
 use App\Models\AboutSetting;
->>>>>>> 249866d8a6580ed8190ff2da43297b7798a6e52e
-
 use App\Models\User;
 
 /*
@@ -39,28 +33,15 @@ Route::get('/', function () {
     $total = User::where('role', 'mahasiswa')->count();
 
     $mahasiswa = User::where('role', 'mahasiswa')
-<<<<<<< HEAD
         ->select('name', 'instansi')
         ->latest()
         ->paginate(7);
-=======
-                    ->select('name', 'instansi')
-                    ->latest()
-                    ->paginate(10);
->>>>>>> 249866d8a6580ed8190ff2da43297b7798a6e52e
 
     $marquee = User::where('role', 'mahasiswa')
-<<<<<<< HEAD
         ->select('name', 'instansi')
         ->latest()
         ->take(100)
         ->get();
-=======
-                    ->select('name', 'instansi')
-                    ->latest()
-                    ->take(30)
-                    ->get();
->>>>>>> 249866d8a6580ed8190ff2da43297b7798a6e52e
 
     // Ambil branding
     $about = AboutSetting::first();
