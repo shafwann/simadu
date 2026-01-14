@@ -18,6 +18,10 @@ use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminAboutController;
 use App\Http\Controllers\AdminPresensiPdfController;
+use App\Http\Controllers\AdminLogbookController;
+use App\Http\Controllers\PembimbingPdfController;
+
+
 
 use App\Models\User;
 
@@ -33,16 +37,16 @@ Route::get('/', function () {
 
     // 2. Data Tabel (Paginate 10 per halaman)
     $mahasiswa = User::where('role', 'mahasiswa')
-                    ->select('name', 'instansi')
-                    ->latest()
-                    ->paginate(7);
+        ->select('name', 'instansi')
+        ->latest()
+        ->paginate(7);
 
     // 3. Data Marquee/Running Text (Ambil 30 terakhir biar animasi tetap panjang)
     $marquee = User::where('role', 'mahasiswa')
-                    ->select('name', 'instansi')
-                    ->latest()
-                    ->take(100)
-                    ->get();
+        ->select('name', 'instansi')
+        ->latest()
+        ->take(100)
+        ->get();
 
     return view('welcome', compact('total', 'mahasiswa', 'marquee'));
 });
@@ -154,7 +158,6 @@ Route::middleware('auth')->group(function () {
     // EXPORT LOGBOOK (PDF pribadi)
     Route::get('/logbook/pdf', [LogbookController::class, 'exportPdf'])
         ->name('logbook.export.pdf');
-
 });
 
 
@@ -230,11 +233,19 @@ Route::middleware(['auth', 'role:admin'])
             Route::delete('/{id}', [AdminManagementController::class, 'destroy'])->name('destroy');
         });
 
+        // ✅ ROUTE DOWNLOAD PDF LOGBOOK (ADMIN)
+        Route::get('/students/{student}/logbook/pdf', [AdminLogbookController::class, 'exportPdf'])
+            ->name('students.logbook.pdf');
+
         // ==========================================
         // ABOUT (SUPER ADMIN ONLY - Administrator Sistem)
         // ==========================================
         Route::get('/about', [AdminAboutController::class, 'index'])->name('about.index');
         Route::put('/about', [AdminAboutController::class, 'update'])->name('about.update');
+
+        // ✅ VALIDASI SEMUA LOGBOOK (sesuai bidang admin)
+        Route::post('/logbook/validate-all', [AdminController::class, 'validateAllLogbook'])
+            ->name('logbook.validateAll');
     });
 
 
@@ -258,7 +269,14 @@ Route::get('/export-mahasiswa', function () {
         fputcsv($file, [], ';');
 
         fputcsv($file, [
-            'NO', 'NAMA', 'NIM', 'JURUSAN', 'UNIVERSITAS', 'KETERANGAN', 'BIDANG', 'AKTIF'
+            'NO',
+            'NAMA',
+            'NIM',
+            'JURUSAN',
+            'UNIVERSITAS',
+            'KETERANGAN',
+            'BIDANG',
+            'AKTIF'
         ], ';');
 
         foreach ($mahasiswa as $index => $user) {
@@ -269,9 +287,18 @@ Route::get('/export-mahasiswa', function () {
                 $end = Carbon::parse($user->tanggal_selesai);
 
                 $bulanIndo = [
-                    1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-                    5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-                    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                    1 => 'Januari',
+                    2 => 'Februari',
+                    3 => 'Maret',
+                    4 => 'April',
+                    5 => 'Mei',
+                    6 => 'Juni',
+                    7 => 'Juli',
+                    8 => 'Agustus',
+                    9 => 'September',
+                    10 => 'Oktober',
+                    11 => 'November',
+                    12 => 'Desember'
                 ];
 
                 $strStart = $start->day . ' ' . $bulanIndo[$start->month] . ' ' . $start->year;
@@ -322,6 +349,15 @@ Route::middleware(['auth', 'role:pembimbing'])
 
         Route::get('/dashboard', [AdminDosenController::class, 'dashboard'])->name('dashboard');
         Route::get('/mahasiswa/{id}', [AdminDosenController::class, 'detailMahasiswa'])->name('mahasiswa.detail');
+
+        // ✅ DOWNLOAD PRESENSI PDF (PEMBIMBING)
+        Route::get('/mahasiswa/{id}/presensi-pdf', [PembimbingPdfController::class, 'presensiPdf'])
+            ->name('mahasiswa.presensi.pdf');
+
+        // ✅ DOWNLOAD LOGBOOK PDF (PEMBIMBING)  <-- TAMBAHKAN INI
+        Route::get('/mahasiswa/{id}/logbook-pdf', [PembimbingPdfController::class, 'logbookPdf'])
+            ->name('mahasiswa.logbook.pdf');
     });
+
 
 require __DIR__ . '/auth.php';

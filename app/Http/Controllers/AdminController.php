@@ -124,6 +124,39 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Logbook berhasil divalidasi!');
     }
 
+    // ✅ TAMBAHAN: VALIDASI SEMUA LOGBOOK (sesuai bidang admin & optional search)
+    public function validateAllLogbook(Request $request)
+    {
+        $user = Auth::user();
+
+        // Ambil search seperti di dashboard
+        $search = $request->input('search');
+
+        // Query logbook pending
+        $query = Logbook::where('is_validated', false)
+            ->whereHas('user', function ($q) use ($user, $search) {
+
+                // ✅ jika bukan Super Admin, batasi bidang
+                if ($user->bidang !== 'Administrator Sistem') {
+                    $q->where('bidang', $user->bidang);
+                }
+
+                // ✅ kalau ada search, batasi nama mahasiswa
+                if (!empty($search)) {
+                    $q->where('name', 'like', '%' . $search . '%');
+                }
+            });
+
+        $count = $query->count();
+
+        // Update massal
+        $query->update([
+            'is_validated' => true
+        ]);
+
+        return redirect()->back()->with('success', "Berhasil validasi semua logbook ({$count} data)!");
+    }
+
     public function validateLaporan($id)
     {
         $laporan = Laporan::findOrFail($id);
