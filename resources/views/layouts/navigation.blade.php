@@ -4,14 +4,35 @@
             <div class="flex">
                 {{-- LOGO --}}
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ Auth::user()->role === 'admin' ? route('admin.dashboard') : route('dashboard') }}" class="flex items-center gap-3 group">
-                        <img src="{{ asset('img/logobaperlitbang.png') }}" alt="Logo" class="h-12 w-auto transition-transform group-hover:scale-105">
-                        <div class="hidden md:block leading-tight">
-                            <span class="block text-sm font-black text-gray-900 uppercase tracking-wider">Bapperida</span>
-                            {{-- Ganti warna biru jadi hitam/abu gelap --}}
-                            <span class="block text-[10px] font-bold text-gray-900 uppercase tracking-tight">Kab. Karanganyar</span>
-                        </div>
-                    </a>
+                            <a href="{{ Auth::user()->role === 'admin' ? route('admin.dashboard') : route('dashboard') }}" class="flex items-center gap-3 group">
+
+                                {{-- LOGO DINAMIS --}}
+                                @if(isset($globalAbout) && $globalAbout->logo_path)
+                                    <img src="{{ asset('storage/' . $globalAbout->logo_path) }}" alt="Logo" class="h-12 w-auto transition-transform group-hover:scale-105">
+                                @else
+                                    {{-- Fallback jika logo belum diupload --}}
+                                    <img src="{{ asset('img/logobaperlitbang.png') }}" alt="Logo Default" class="h-12 w-auto transition-transform group-hover:scale-105">
+                                @endif
+
+                                <div class="hidden md:block leading-tight">
+                                    {{-- JUDUL UTAMA --}}
+                                    <span class="block text-sm font-black text-gray-900 uppercase tracking-wider">
+                                        {{ $globalAbout->app_name ?? 'Bapperida' }}
+                                    </span>
+
+                                    {{-- SUB JUDUL --}}
+                                    <span class="block text-[10px] font-bold text-gray-900 uppercase tracking-tight">
+                                        {{ $globalAbout->agency_name ?? 'Kab. Karanganyar' }}
+                                    </span>
+
+                                    {{-- DESKRIPSI SINGKAT (Baru) --}}
+                                    @if(!empty($globalAbout->app_description))
+                                        <span class="block text-[9px] font-medium text-gray-500 tracking-wide mt-0.5">
+                                            {{ $globalAbout->app_description }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </a>
                 </div>
 
                 {{-- MENU DESKTOP --}}

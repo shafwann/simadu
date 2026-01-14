@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Attendance;
 use App\Models\Logbook;
 use App\Models\Laporan;
 use Illuminate\Http\Request;
@@ -21,7 +20,6 @@ class AdminController extends Controller
         }
 
         // 2. Tentukan apakah dia Super Admin (Administrator Sistem) atau Admin Bidang
-        // Pastikan ejaannya sama persis dengan yang ada di Database/Migration
         $isSuperAdmin = $user->bidang === 'Administrator Sistem';
         $adminBidang  = $user->bidang;
 
@@ -34,7 +32,6 @@ class AdminController extends Controller
         $activeStudents = User::where('role', 'mahasiswa')
             ->where('status', 'aktif')
             ->when(!$isSuperAdmin, function ($q) use ($adminBidang) {
-                // Jika bukan super admin, filter berdasarkan bidang admin tersebut
                 return $q->where('bidang', $adminBidang);
             })
             ->count();
@@ -50,28 +47,26 @@ class AdminController extends Controller
             ->count();
 
         // =========================================
-        // QUERY 3: Logbook Pending
+        // QUERY 3: Logbook Pending (DENGAN PAGINATION)
         // =========================================
-        // Kita pakai whereHas('user') karena logbook milik user.
-        // Kita harus cek bidang si user (mahasiswa) tersebut.
+        // Menggunakan paginate(5) dengan nama halaman 'logbook_page'
         $pendingLogbooks = Logbook::with('user')
             ->where('is_validated', false)
             ->whereHas('user', function ($q) use ($isSuperAdmin, $adminBidang, $search) {
-                // Filter Bidang
                 if (!$isSuperAdmin) {
                     $q->where('bidang', $adminBidang);
                 }
-                // Filter Pencarian Nama
                 if ($search) {
                     $q->where('name', 'like', '%' . $search . '%');
                 }
             })
             ->orderBy('tanggal', 'desc')
-            ->get();
+            ->paginate(5, ['*'], 'logbook_page'); // ✅ Ganti get() jadi paginate()
 
         // =========================================
-        // QUERY 4: Laporan Pending
+        // QUERY 4: Laporan Pending (DENGAN PAGINATION)
         // =========================================
+        // Menggunakan paginate(5) dengan nama halaman 'laporan_page'
         $pendingLaporans = Laporan::with('user')
             ->where('is_validated', false)
             ->whereHas('user', function ($q) use ($isSuperAdmin, $adminBidang) {
@@ -80,12 +75,11 @@ class AdminController extends Controller
                 }
             })
             ->latest()
-            ->get();
+            ->paginate(5, ['*'], 'laporan_page'); // ✅ Ganti get() jadi paginate()
 
         // =========================================
-        // QUERY 5: Daftar Mahasiswa (Tabel Bawah)
+        // QUERY 5: Daftar Mahasiswa (Tabel Bawah - Opsional)
         // =========================================
-        // Menampilkan mahasiswa nonaktif (alumni) atau semua jika perlu
         $students = User::with('laporans')
             ->where('role', 'mahasiswa')
             ->where('status', '!=', 'aktif')
@@ -111,10 +105,8 @@ class AdminController extends Controller
     public function validateLogbook($id)
     {
         $logbook = Logbook::findOrFail($id);
-
-        // Opsional: Validasi keamanan ekstra
-        // (Pastikan admin bidang tidak memvalidasi logbook bidang lain via URL hack)
         $user = Auth::user();
+
         if ($user->bidang !== 'Administrator Sistem' && $logbook->user->bidang !== $user->bidang) {
             return back()->with('error', 'Anda tidak berhak memvalidasi mahasiswa dari bidang lain.');
         }
@@ -127,9 +119,8 @@ class AdminController extends Controller
     public function validateLaporan($id)
     {
         $laporan = Laporan::findOrFail($id);
-
-        // Opsional: Validasi keamanan ekstra
         $user = Auth::user();
+
         if ($user->bidang !== 'Administrator Sistem' && $laporan->user->bidang !== $user->bidang) {
             return back()->with('error', 'Anda tidak berhak memvalidasi laporan dari bidang lain.');
         }

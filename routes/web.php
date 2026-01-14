@@ -18,6 +18,7 @@ use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminAboutController;
 use App\Http\Controllers\AdminPresensiPdfController;
+use App\Models\AboutSetting;
 
 use App\Models\User;
 
@@ -28,7 +29,23 @@ use App\Models\User;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    $total = User::where('role', 'mahasiswa')->count();
+
+    $mahasiswa = User::where('role', 'mahasiswa')
+                    ->select('name', 'instansi')
+                    ->latest()
+                    ->paginate(10);
+
+    $marquee = User::where('role', 'mahasiswa')
+                    ->select('name', 'instansi')
+                    ->latest()
+                    ->take(30)
+                    ->get();
+
+    // Ambil branding
+    $about = AboutSetting::first();
+
+    return view('welcome', compact('total', 'mahasiswa', 'marquee', 'about'));
 });
 
 /**
@@ -66,7 +83,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.checkin');
     Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkout');
 
-    // ✅ TAMBAHAN: MAHASISWA BISA LIHAT RIWAYAT PRESENSI (AKTIF / NONAKTIF TETAP BISA)     
+    // ✅ TAMBAHAN: MAHASISWA BISA LIHAT RIWAYAT PRESENSI (AKTIF / NONAKTIF TETAP BISA)
     Route::get('/attendance/history', [AttendanceController::class, 'history'])
         ->name('attendance.history');
 
