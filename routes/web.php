@@ -28,7 +28,23 @@ use App\Models\User;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    // 1. Hitung Total Mahasiswa
+    $total = User::where('role', 'mahasiswa')->count();
+
+    // 2. Data Tabel (Paginate 10 per halaman)
+    $mahasiswa = User::where('role', 'mahasiswa')
+                    ->select('name', 'instansi')
+                    ->latest()
+                    ->paginate(7);
+
+    // 3. Data Marquee/Running Text (Ambil 30 terakhir biar animasi tetap panjang)
+    $marquee = User::where('role', 'mahasiswa')
+                    ->select('name', 'instansi')
+                    ->latest()
+                    ->take(100)
+                    ->get();
+
+    return view('welcome', compact('total', 'mahasiswa', 'marquee'));
 });
 
 /**
@@ -66,7 +82,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.checkin');
     Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkout');
 
-    // ✅ TAMBAHAN: MAHASISWA BISA LIHAT RIWAYAT PRESENSI (AKTIF / NONAKTIF TETAP BISA)     
+    // ✅ TAMBAHAN: MAHASISWA BISA LIHAT RIWAYAT PRESENSI (AKTIF / NONAKTIF TETAP BISA)
     Route::get('/attendance/history', [AttendanceController::class, 'history'])
         ->name('attendance.history');
 
