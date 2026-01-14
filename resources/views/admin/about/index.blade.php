@@ -18,9 +18,46 @@
             @endif
 
             <div class="bg-white shadow-sm sm:rounded-2xl p-6">
-                <form method="POST" action="{{ route('admin.about.update') }}" class="space-y-5">
+                <form method="POST" action="{{ route('admin.about.update') }}" class="space-y-5" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
+
+                    {{-- ✅ BRANDING APLIKASI (JUDUL & LOGO) --}}
+                    <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 mb-6">
+                        <h3 class="font-bold text-lg text-blue-800 mb-4">Branding Aplikasi (Navbar & Judul)</h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <x-input-label for="app_name" value="Nama Aplikasi (Judul Utama)" />
+                                <x-text-input id="app_name" name="app_name" type="text" class="mt-1 block w-full font-bold"
+                                    value="{{ old('app_name', $about->app_name) }}" placeholder="Bapperida" />
+                            </div>
+
+                            <div>
+                                <x-input-label for="agency_name" value="Nama Instansi (Sub Judul)" />
+                                <x-text-input id="agency_name" name="agency_name" type="text" class="mt-1 block w-full"
+                                    value="{{ old('agency_name', $about->agency_name) }}" placeholder="Kab. Karanganyar" />
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <x-input-label for="app_description" value="Deskripsi Singkat (Muncul di bawah judul)" />
+                                <x-text-input id="app_description" name="app_description" type="text" class="mt-1 block w-full text-sm"
+                                    value="{{ old('app_description', $about->app_description) }}" placeholder="Sistem Monitoring Magang" />
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <x-input-label for="logo" value="Logo Aplikasi (Format PNG/JPG, Transparan lebih baik)" />
+                                <div class="flex items-center gap-4 mt-2">
+                                    @if($about->logo_path)
+                                        <div class="p-2 bg-white rounded border">
+                                            <img src="{{ asset('storage/' . $about->logo_path) }}" class="h-12 w-auto">
+                                        </div>
+                                    @endif
+                                    <input type="file" name="logo" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     {{-- NAMA INSTANSI --}}
                     <div class="mb-6">
@@ -101,7 +138,7 @@
                             Digunakan untuk menentukan titik koordinat dan radius absensi mahasiswa.
                         </p>
                     </div>
-                    
+
                     {{-- ✅ TAMBAHAN: NAMA LOKASI --}}
                     <div class="mt-4">
                         <x-input-label for="office_name" value="Nama Lokasi Kantor (Default Absensi)" />

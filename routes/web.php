@@ -18,6 +18,7 @@ use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminAboutController;
 use App\Http\Controllers\AdminPresensiPdfController;
+use App\Models\AboutSetting;
 
 use App\Models\User;
 
@@ -28,23 +29,23 @@ use App\Models\User;
 */
 
 Route::get('/', function () {
-    // 1. Hitung Total Mahasiswa
     $total = User::where('role', 'mahasiswa')->count();
 
-    // 2. Data Tabel (Paginate 10 per halaman)
     $mahasiswa = User::where('role', 'mahasiswa')
                     ->select('name', 'instansi')
                     ->latest()
-                    ->paginate(7);
+                    ->paginate(10);
 
-    // 3. Data Marquee/Running Text (Ambil 30 terakhir biar animasi tetap panjang)
     $marquee = User::where('role', 'mahasiswa')
                     ->select('name', 'instansi')
                     ->latest()
-                    ->take(100)
+                    ->take(30)
                     ->get();
 
-    return view('welcome', compact('total', 'mahasiswa', 'marquee'));
+    // Ambil branding
+    $about = AboutSetting::first();
+
+    return view('welcome', compact('total', 'mahasiswa', 'marquee', 'about'));
 });
 
 /**

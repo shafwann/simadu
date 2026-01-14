@@ -51,5 +51,12 @@ class AboutSetting extends Model
 
         'jumat_checkout_mulai',
         'jumat_checkout_selesai',
+
+
+        // ✅ Tambahkan Branding Baru
+        'app_name',
+        'agency_name',
+        'app_description',
+        'logo_path',
     ];
 }
