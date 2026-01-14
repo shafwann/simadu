@@ -9,11 +9,16 @@ use Illuminate\Support\Facades\Storage;
 class LaporanController extends Controller
 {
     // Mahasiswa lihat list & upload
-    public function index()
-    {
-        $laporans = auth()->user()->laporans()->latest()->get();
-        return view('laporan.index', compact('laporans'));
-    }
+public function index()
+{
+    $laporans = auth()->user()->laporans()->latest()->get();
+
+    // ✅ TAMBAHAN (untuk dropdown bidang/divisi)
+    $bidangOptions = config('bidang.options');
+
+    return view('laporan.index', compact('laporans', 'bidangOptions'));
+}
+
 
     public function validateLaporan($id)
     {

@@ -11,7 +11,7 @@ use Illuminate\Validation\Rule; // Penting untuk validasi Enum/Pilihan
 
 class AdminStudentController extends Controller
 {
-// 1. TAMPILKAN DAFTAR MAHASISWA
+    // 1. TAMPILKAN DAFTAR MAHASISWA
     public function index(Request $request)
     {
         $admin = Auth::user();
@@ -28,10 +28,10 @@ class AdminStudentController extends Controller
             })
             // Filter Pencarian
             ->when($search, function ($query, $search) {
-                return $query->where(function($q) use ($search) {
+                return $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', '%' . $search . '%')
-                      ->orWhere('nim', 'like', '%' . $search . '%')
-                      ->orWhere('instansi', 'like', '%' . $search . '%');
+                        ->orWhere('nim', 'like', '%' . $search . '%')
+                        ->orWhere('instansi', 'like', '%' . $search . '%');
                 });
             })
             // 2. FILTER STATUS (BARU)
@@ -68,8 +68,9 @@ class AdminStudentController extends Controller
             'tanggal_masuk' => ['required', 'date'],
             'tanggal_selesai' => ['required', 'date', 'after:tanggal_masuk'],
 
-            // Validasi Bidang (Pakai Array agar koma aman)
-            'bidang' => ['required', Rule::in([
+            // ✅ Bidang DIBUAT OPTIONAL (karena di form create mau dihapus)
+            // Kalau suatu saat masih terkirim dari request, tetap divalidasi agar aman.
+            'bidang' => ['nullable', Rule::in([
                 'Ekonomi',
                 'Sekretariat',
                 'Sosial & Budaya',
@@ -87,7 +88,10 @@ class AdminStudentController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => 'mahasiswa',
-            'bidang' => $request->bidang, // Simpan sesuai input form
+
+            // ✅ Bidang tidak diinput di create, jadi default null (mahasiswa isi sendiri)
+            'bidang' => null,
+
             'status' => 'aktif',
             'nim' => $request->nim,
             'prodi' => $request->prodi,
@@ -107,35 +111,35 @@ class AdminStudentController extends Controller
 
     // 4. LIHAT DETAIL
     public function show($id)
-        {
-            // 1. Ambil Data Mahasiswa + Relasi Ringan (Laporan & Assessment)
-            // Kita HAPUS 'attendances' dan 'logbooks' dari sini karena akan di-query terpisah untuk pagination
-            $student = User::with([
-                'laporans' => function ($q) {
-                    $q->latest();
-                },
-                'assessment'
-            ])->findOrFail($id);
+    {
+        // 1. Ambil Data Mahasiswa + Relasi Ringan (Laporan & Assessment)
+        // Kita HAPUS 'attendances' dan 'logbooks' dari sini karena akan di-query terpisah untuk pagination
+        $student = User::with([
+            'laporans' => function ($q) {
+                $q->latest();
+            },
+            'assessment'
+        ])->findOrFail($id);
 
-            // 2. Cek Hak Akses Admin Bidang
-            $admin = Auth::user();
-            if ($admin->bidang !== 'Administrator Sistem' && $student->bidang !== $admin->bidang) {
-                abort(403, 'Akses Ditolak. Anda tidak memiliki wewenang untuk mahasiswa ini.');
-            }
-
-            // 3. Pagination Presensi (Limit 5, page name = 'presensi_page')
-            $attendances = $student->attendances()
-                ->orderBy('tanggal', 'desc')
-                ->paginate(5, ['*'], 'presensi_page');
-
-            // 4. Pagination Logbook (Limit 5, page name = 'logbook_page')
-            $logbooks = $student->logbooks()
-                ->orderBy('tanggal', 'desc')
-                ->paginate(5, ['*'], 'logbook_page');
-
-            // 5. Kirim ke View
-            return view('admin.students.show', compact('student', 'attendances', 'logbooks'));
+        // 2. Cek Hak Akses Admin Bidang
+        $admin = Auth::user();
+        if ($admin->bidang !== 'Administrator Sistem' && $student->bidang !== $admin->bidang) {
+            abort(403, 'Akses Ditolak. Anda tidak memiliki wewenang untuk mahasiswa ini.');
         }
+
+        // 3. Pagination Presensi (Limit 5, page name = 'presensi_page')
+        $attendances = $student->attendances()
+            ->orderBy('tanggal', 'desc')
+            ->paginate(5, ['*'], 'presensi_page');
+
+        // 4. Pagination Logbook (Limit 5, page name = 'logbook_page')
+        $logbooks = $student->logbooks()
+            ->orderBy('tanggal', 'desc')
+            ->paginate(5, ['*'], 'logbook_page');
+
+        // 5. Kirim ke View
+        return view('admin.students.show', compact('student', 'attendances', 'logbooks'));
+    }
 
     // 5. FORM EDIT MAHASISWA (INI YANG BARU DITAMBAHKAN)
     public function edit($id)
@@ -148,13 +152,7 @@ class AdminStudentController extends Controller
             abort(403, 'Anda tidak berhak mengedit data mahasiswa dari bidang lain.');
         }
 
-        $bidangOptions = [
-            'Ekonomi',
-            'Sekretariat',
-            'Sosial & Budaya',
-            'Fisik & Prasarana',
-            'Penelitian, Pengembangan & Penyusunan Program',
-        ];
+        $bidangOptions = config('bidang.options');
 
         return view('admin.students.edit', compact('student', 'bidangOptions'));
     }

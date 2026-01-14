@@ -21,7 +21,7 @@
 
                 <label class="block">
                     <span class="text-gray-700 font-medium">Pilih File (max 20MB)</span>
-                    <input type="file" name="file" accept=".pdf,.doc,.docx" 
+                    <input type="file" name="file" accept=".pdf,.doc,.docx"
                         class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
                                file:rounded-xl file:border-0
                                file:text-sm file:font-semibold

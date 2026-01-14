@@ -18,7 +18,14 @@ use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminAboutController;
 use App\Http\Controllers\AdminPresensiPdfController;
+<<<<<<< HEAD
+use App\Http\Controllers\AdminLogbookController;
+use App\Http\Controllers\PembimbingPdfController;
+
+
+=======
 use App\Models\AboutSetting;
+>>>>>>> 249866d8a6580ed8190ff2da43297b7798a6e52e
 
 use App\Models\User;
 
@@ -32,15 +39,28 @@ Route::get('/', function () {
     $total = User::where('role', 'mahasiswa')->count();
 
     $mahasiswa = User::where('role', 'mahasiswa')
+<<<<<<< HEAD
+        ->select('name', 'instansi')
+        ->latest()
+        ->paginate(7);
+=======
                     ->select('name', 'instansi')
                     ->latest()
                     ->paginate(10);
+>>>>>>> 249866d8a6580ed8190ff2da43297b7798a6e52e
 
     $marquee = User::where('role', 'mahasiswa')
+<<<<<<< HEAD
+        ->select('name', 'instansi')
+        ->latest()
+        ->take(100)
+        ->get();
+=======
                     ->select('name', 'instansi')
                     ->latest()
                     ->take(30)
                     ->get();
+>>>>>>> 249866d8a6580ed8190ff2da43297b7798a6e52e
 
     // Ambil branding
     $about = AboutSetting::first();
@@ -155,7 +175,6 @@ Route::middleware('auth')->group(function () {
     // EXPORT LOGBOOK (PDF pribadi)
     Route::get('/logbook/pdf', [LogbookController::class, 'exportPdf'])
         ->name('logbook.export.pdf');
-
 });
 
 
@@ -165,6 +184,14 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:mahasiswa'])->group(function () {
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
     Route::post('/laporan/upload', [LaporanController::class, 'upload'])->name('laporan.upload');
+
+    // ✅ HALAMAN BIDANG/DIVISI (SENDIRI)
+    Route::get('/bidang-divisi', [ProfileController::class, 'showBidang'])
+        ->name('mahasiswa.bidang.show');
+
+    // ✅ SIMPAN BIDANG/DIVISI
+    Route::patch('/mahasiswa/bidang', [ProfileController::class, 'updateBidang'])
+        ->name('mahasiswa.bidang.update');
 });
 
 
@@ -231,11 +258,19 @@ Route::middleware(['auth', 'role:admin'])
             Route::delete('/{id}', [AdminManagementController::class, 'destroy'])->name('destroy');
         });
 
+        // ✅ ROUTE DOWNLOAD PDF LOGBOOK (ADMIN)
+        Route::get('/students/{student}/logbook/pdf', [AdminLogbookController::class, 'exportPdf'])
+            ->name('students.logbook.pdf');
+
         // ==========================================
         // ABOUT (SUPER ADMIN ONLY - Administrator Sistem)
         // ==========================================
         Route::get('/about', [AdminAboutController::class, 'index'])->name('about.index');
         Route::put('/about', [AdminAboutController::class, 'update'])->name('about.update');
+
+        // ✅ VALIDASI SEMUA LOGBOOK (sesuai bidang admin)
+        Route::post('/logbook/validate-all', [AdminController::class, 'validateAllLogbook'])
+            ->name('logbook.validateAll');
     });
 
 
@@ -259,7 +294,14 @@ Route::get('/export-mahasiswa', function () {
         fputcsv($file, [], ';');
 
         fputcsv($file, [
-            'NO', 'NAMA', 'NIM', 'JURUSAN', 'UNIVERSITAS', 'KETERANGAN', 'BIDANG', 'AKTIF'
+            'NO',
+            'NAMA',
+            'NIM',
+            'JURUSAN',
+            'UNIVERSITAS',
+            'KETERANGAN',
+            'BIDANG',
+            'AKTIF'
         ], ';');
 
         foreach ($mahasiswa as $index => $user) {
@@ -270,9 +312,18 @@ Route::get('/export-mahasiswa', function () {
                 $end = Carbon::parse($user->tanggal_selesai);
 
                 $bulanIndo = [
-                    1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-                    5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-                    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                    1 => 'Januari',
+                    2 => 'Februari',
+                    3 => 'Maret',
+                    4 => 'April',
+                    5 => 'Mei',
+                    6 => 'Juni',
+                    7 => 'Juli',
+                    8 => 'Agustus',
+                    9 => 'September',
+                    10 => 'Oktober',
+                    11 => 'November',
+                    12 => 'Desember'
                 ];
 
                 $strStart = $start->day . ' ' . $bulanIndo[$start->month] . ' ' . $start->year;
@@ -323,6 +374,15 @@ Route::middleware(['auth', 'role:pembimbing'])
 
         Route::get('/dashboard', [AdminDosenController::class, 'dashboard'])->name('dashboard');
         Route::get('/mahasiswa/{id}', [AdminDosenController::class, 'detailMahasiswa'])->name('mahasiswa.detail');
+
+        // ✅ DOWNLOAD PRESENSI PDF (PEMBIMBING)
+        Route::get('/mahasiswa/{id}/presensi-pdf', [PembimbingPdfController::class, 'presensiPdf'])
+            ->name('mahasiswa.presensi.pdf');
+
+        // ✅ DOWNLOAD LOGBOOK PDF (PEMBIMBING)  <-- TAMBAHKAN INI
+        Route::get('/mahasiswa/{id}/logbook-pdf', [PembimbingPdfController::class, 'logbookPdf'])
+            ->name('mahasiswa.logbook.pdf');
     });
+
 
 require __DIR__ . '/auth.php';

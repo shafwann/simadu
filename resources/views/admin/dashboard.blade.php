@@ -1,13 +1,13 @@
 <x-app-layout>
     {{-- LOGIKA JUDUL BIDANG --}}
     @php
-        $userBidang = Auth::user()->bidang;
-        $isSuperAdmin = $userBidang === 'Administrator Sistem';
+    $userBidang = Auth::user()->bidang;
+    $isSuperAdmin = $userBidang === 'Administrator Sistem';
 
-        // Label untuk ditampilkan di kartu
-        // Jika Super Admin -> "Semua Bidang"
-        // Jika Admin Ekonomi -> "Ekonomi"
-        $labelBidang = $isSuperAdmin ? 'Semua Bidang' : $userBidang;
+    // Label untuk ditampilkan di kartu
+    // Jika Super Admin -> "Semua Bidang"
+    // Jika Admin Ekonomi -> "Ekonomi"
+    $labelBidang = $isSuperAdmin ? 'Semua Bidang' : $userBidang;
     @endphp
 
     <x-slot name="header">
@@ -47,7 +47,7 @@
 
             <div class="flex justify-end mb-6">
                 <a href="{{ route('admin.export.mahasiswa') }}"
-                class="px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-bold text-sm rounded-xl shadow-md transition">
+                    class="px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-bold text-sm rounded-xl shadow-md transition">
                     Download CSV Mahasiswa
                 </a>
             </div>
@@ -58,7 +58,9 @@
                 <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-xl shadow-blue-50/50 flex flex-col justify-between group hover:border-blue-200 transition">
                     <div class="flex justify-between items-start mb-4">
                         <div class="p-3 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition duration-300">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
                         </div>
                         <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide">Aktif</span>
                     </div>
@@ -75,7 +77,9 @@
                 <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-xl shadow-gray-100/50 flex flex-col justify-between group hover:border-gray-300 transition">
                     <div class="flex justify-between items-start mb-4">
                         <div class="p-3 bg-gray-50 text-gray-500 rounded-2xl group-hover:bg-gray-800 group-hover:text-white transition duration-300">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
                         </div>
                         <span class="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide">Selesai</span>
                     </div>
@@ -92,7 +96,9 @@
                 <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-xl shadow-amber-50/50 flex flex-col justify-between group hover:border-amber-200 transition">
                     <div class="flex justify-between items-start mb-4">
                         <div class="p-3 bg-amber-50 text-amber-600 rounded-2xl group-hover:bg-amber-500 group-hover:text-white transition duration-300">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
                         </div>
                         <span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide">Pending</span>
                     </div>
@@ -109,7 +115,9 @@
                 <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-xl shadow-blue-50/50 flex flex-col justify-between group hover:border-blue-200 transition">
                     <div class="flex justify-between items-start mb-4">
                         <div class="p-3 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition duration-300">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 4H7a2 2 0 01-2-2V6a2 2 0 012-2h5l5 5v9a2 2 0 01-2 2z" /></svg>
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 4H7a2 2 0 01-2-2V6a2 2 0 012-2h5l5 5v9a2 2 0 01-2 2z" />
+                            </svg>
                         </div>
                         <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide">Pending</span>
                     </div>
@@ -132,14 +140,30 @@
                         <p class="text-sm text-gray-400">Validasi kegiatan harian mahasiswa {{ $isSuperAdmin ? '' : $labelBidang }}.</p>
                     </div>
 
-                    <form action="{{ route('admin.dashboard') }}" method="GET" class="flex w-full md:w-auto gap-2">
-                        <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Cari mahasiswa..."
-                            class="w-full md:w-64 px-4 py-2 rounded-xl border border-gray-200 text-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50">
-                        <button type="submit" class="px-5 py-2 bg-gray-900 text-white rounded-xl hover:bg-black transition text-sm font-bold shadow-lg">
-                            Cari
-                        </button>
-                    </form>
+                    <div class="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                       {{-- SEARCH (tetap) --}}
+                        <form action="{{ route('admin.dashboard') }}" method="GET" class="flex w-full md:w-auto gap-2">
+                            <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Cari mahasiswa..."
+                                class="w-full md:w-64 px-4 py-2 rounded-xl border border-gray-200 text-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50">
+                            <button type="submit" class="px-5 py-2 bg-gray-900 text-white rounded-xl hover:bg-black transition text-sm font-bold shadow-lg">
+                                Cari
+                            </button>
+                        </form>
+
+                    {{-- ✅ BUTTON VALIDASI SEMUA --}}
+                        @if($pendingLogbooks->count() > 0)
+                        <form action="{{ route('admin.logbook.validateAll') }}" method="POST"
+                            onsubmit="return confirm('Validasi semua logbook yang pending?');">
+                            @csrf
+                            <button type="submit"
+                                class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition text-sm font-bold shadow-lg">
+                                Validasi Semua
+                            </button>
+                        </form>
+                        @endif
+                    </div>
                 </div>
+
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
@@ -220,7 +244,7 @@
                                 {{-- File --}}
                                 <td class="px-6 py-4">
                                     <a href="{{ route('admin.laporan.download', $laporan->id) }}"
-                                    class="text-blue-600 font-semibold text-sm hover:underline truncate max-w-xs inline-block">
+                                        class="text-blue-600 font-semibold text-sm hover:underline truncate max-w-xs inline-block">
                                         {{ $laporan->nama_file }}
                                     </a>
                                 </td>
@@ -241,8 +265,8 @@
                                 <td class="px-6 py-4 text-center flex justify-center gap-2">
                                     {{-- Preview --}}
                                     <a href="{{ route('laporan.preview', $laporan->id) }}"
-                                    target="_blank"
-                                    class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold rounded-lg transition">
+                                        target="_blank"
+                                        class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold rounded-lg transition">
                                         Preview
                                     </a>
 
