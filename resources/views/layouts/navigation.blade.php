@@ -35,6 +35,11 @@
                         <x-nav-link :href="route('laporan.index')" :active="request()->routeIs('laporan.*')" class="font-bold text-gray-900">
                             {{ __('Laporan') }}
                         </x-nav-link>
+
+                        <x-nav-link :href="route('mahasiswa.bidang.show')" :active="request()->routeIs('mahasiswa.bidang.show')" class="font-bold text-gray-900">
+                            {{ __('Bidang/Divisi') }}
+                        </x-nav-link>
+
                     @endif
 
                     {{-- 2. MENU ADMIN --}}
@@ -153,6 +158,11 @@
                 <x-responsive-nav-link :href="route('laporan.index')" :active="request()->routeIs('laporan.*')" class="text-gray-900 font-bold">
                     {{ __('Laporan') }}
                 </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('mahasiswa.bidang.show')" :active="request()->routeIs('mahasiswa.bidang.show')" class="text-gray-900 font-bold">
+                    {{ __('Bidang/Divisi') }}
+                </x-responsive-nav-link>
+
             @endif
 
             {{-- MENU MOBILE ADMIN --}}

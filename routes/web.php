@@ -148,6 +148,14 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:mahasiswa'])->group(function () {
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
     Route::post('/laporan/upload', [LaporanController::class, 'upload'])->name('laporan.upload');
+
+    // ✅ HALAMAN BIDANG/DIVISI (SENDIRI)
+    Route::get('/bidang-divisi', [ProfileController::class, 'showBidang'])
+        ->name('mahasiswa.bidang.show');
+
+    // ✅ SIMPAN BIDANG/DIVISI
+    Route::patch('/mahasiswa/bidang', [ProfileController::class, 'updateBidang'])
+        ->name('mahasiswa.bidang.update');
 });
 
 
