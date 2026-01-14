@@ -114,15 +114,30 @@
                 <div class="p-8 bg-white border border-gray-200 rounded-[2rem] shadow-sm">
                     <h3 class="text-lg font-bold text-gray-800 mb-6 border-b pb-2">2. Data Akademik & Instansi</h3>
 
+                    {{-- ✅ INI YANG KURANG TADI: GRID WRAPPER --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
                         <div class="md:col-span-2">
                             <x-input-label for="kegiatan" :value="__('Jenis Kegiatan')" />
-                            <select name="kegiatan" id="kegiatan" class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="Magang Reguler">Magang Reguler (Mahasiswa)</option>
-                                <option value="Praktik Kerja Lapangan (PKL)">Praktik Kerja Lapangan (PKL - SMK)</option>
-                                <option value="Penelitian Skripsi">Penelitian / Skripsi</option>
-                                <option value="MBKM">Program MBKM</option>
-                            </select>
+
+                            <input
+                                type="text"
+                                name="kegiatan"
+                                id="kegiatan"
+                                list="kegiatanList"
+                                value="{{ old('kegiatan') }}"
+                                placeholder="Silahkan Isi"
+                                class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm
+                                    focus:border-blue-500 focus:ring-blue-500"
+                                required
+                            >
+
+                            <datalist id="kegiatanList">
+                                <option value="Magang Reguler (Mahasiswa)">
+                                <option value="Praktik Kerja Lapangan (PKL - SMK)">
+                                <option value="Penelitian / Skripsi">
+                                <option value="Program MBKM">
+                            </datalist>
                         </div>
 
                         <div>
@@ -144,6 +159,7 @@
                             <x-input-label for="nim" :value="__('NIM / NISN')" />
                             <x-text-input id="nim" class="block mt-1 w-full" type="text" name="nim" :value="old('nim')" required />
                         </div>
+
                     </div>
                 </div>
 

@@ -51,6 +51,10 @@ class AssessmentController extends Controller
     {
         $validated = $request->validate([
             'certificate_no' => ['required', 'string', 'max:100'],
+
+            // ✅ TAMBAHAN SAJA: tanggal sertifikat
+            'certificate_date' => ['required', 'date'],
+
             'aspek_1' => ['required', 'integer', 'min:0', 'max:100'],
             'aspek_2' => ['required', 'integer', 'min:0', 'max:100'],
             'aspek_3' => ['required', 'integer', 'min:0', 'max:100'],
@@ -65,6 +69,10 @@ class AssessmentController extends Controller
             ['user_id' => $user->id],
             [
                 'certificate_no' => $validated['certificate_no'],
+
+                // ✅ TAMBAHAN SAJA: simpan tanggal sertifikat
+                'certificate_date' => $validated['certificate_date'],
+
                 'aspek_1' => (int)$validated['aspek_1'],
                 'aspek_2' => (int)$validated['aspek_2'],
                 'aspek_3' => (int)$validated['aspek_3'],
@@ -88,6 +96,10 @@ class AssessmentController extends Controller
     {
         $validated = $request->validate([
             'certificate_no' => ['required', 'string', 'max:100'],
+
+            // ✅ TAMBAHAN SAJA: tanggal sertifikat
+            'certificate_date' => ['required', 'date'],
+
             'aspek_1' => ['required', 'integer', 'min:0', 'max:100'],
             'aspek_2' => ['required', 'integer', 'min:0', 'max:100'],
             'aspek_3' => ['required', 'integer', 'min:0', 'max:100'],
@@ -100,6 +112,10 @@ class AssessmentController extends Controller
 
         $assessment->update([
             'certificate_no' => $validated['certificate_no'],
+
+            // ✅ TAMBAHAN SAJA: update tanggal sertifikat
+            'certificate_date' => $validated['certificate_date'],
+
             'aspek_1' => (int)$validated['aspek_1'],
             'aspek_2' => (int)$validated['aspek_2'],
             'aspek_3' => (int)$validated['aspek_3'],
