@@ -32,7 +32,16 @@
                 <h1 class="text-3xl font-black text-gray-900 tracking-tight">Ringkasan Aktivitas</h1>
                 <p class="text-gray-500 mt-2">
                     Pantau perkembangan mahasiswa magang di
-                    <span class="font-bold text-gray-800">{{ $isSuperAdmin ? 'Seluruh Lingkungan BAPPERIDA' : 'Bidang ' . $userBidang }}</span>.
+                    <span class="font-bold text-gray-800 uppercase">
+                        {{-- ✅ LOGIKA DINAMIS: --}}
+                        {{-- Jika Super Admin -> Tampilkan "Seluruh Lingkungan [NAMA APP]" --}}
+                        {{-- Jika Admin Bidang -> Tampilkan "Bidang [NAMA BIDANG]" --}}
+                        @if($isSuperAdmin)
+                            Seluruh Lingkungan {{ $globalAbout->app_name ?? 'BAPPERIDA' }}
+                        @else
+                            Bidang {{ $userBidang }}
+                        @endif
+                    </span>.
                 </p>
             </div>
 

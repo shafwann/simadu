@@ -18,10 +18,14 @@ use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminAboutController;
 use App\Http\Controllers\AdminPresensiPdfController;
+<<<<<<< HEAD
 use App\Http\Controllers\AdminLogbookController;
 use App\Http\Controllers\PembimbingPdfController;
 
 
+=======
+use App\Models\AboutSetting;
+>>>>>>> 249866d8a6580ed8190ff2da43297b7798a6e52e
 
 use App\Models\User;
 
@@ -32,23 +36,36 @@ use App\Models\User;
 */
 
 Route::get('/', function () {
-    // 1. Hitung Total Mahasiswa
     $total = User::where('role', 'mahasiswa')->count();
 
-    // 2. Data Tabel (Paginate 10 per halaman)
     $mahasiswa = User::where('role', 'mahasiswa')
+<<<<<<< HEAD
         ->select('name', 'instansi')
         ->latest()
         ->paginate(7);
+=======
+                    ->select('name', 'instansi')
+                    ->latest()
+                    ->paginate(10);
+>>>>>>> 249866d8a6580ed8190ff2da43297b7798a6e52e
 
-    // 3. Data Marquee/Running Text (Ambil 30 terakhir biar animasi tetap panjang)
     $marquee = User::where('role', 'mahasiswa')
+<<<<<<< HEAD
         ->select('name', 'instansi')
         ->latest()
         ->take(100)
         ->get();
+=======
+                    ->select('name', 'instansi')
+                    ->latest()
+                    ->take(30)
+                    ->get();
+>>>>>>> 249866d8a6580ed8190ff2da43297b7798a6e52e
 
-    return view('welcome', compact('total', 'mahasiswa', 'marquee'));
+    // Ambil branding
+    $about = AboutSetting::first();
+
+    return view('welcome', compact('total', 'mahasiswa', 'marquee', 'about'));
 });
 
 /**
@@ -167,6 +184,14 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:mahasiswa'])->group(function () {
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
     Route::post('/laporan/upload', [LaporanController::class, 'upload'])->name('laporan.upload');
+
+    // ✅ HALAMAN BIDANG/DIVISI (SENDIRI)
+    Route::get('/bidang-divisi', [ProfileController::class, 'showBidang'])
+        ->name('mahasiswa.bidang.show');
+
+    // ✅ SIMPAN BIDANG/DIVISI
+    Route::patch('/mahasiswa/bidang', [ProfileController::class, 'updateBidang'])
+        ->name('mahasiswa.bidang.update');
 });
 
 

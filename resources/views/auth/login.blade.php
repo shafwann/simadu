@@ -1,16 +1,31 @@
 <x-guest-layout>
     <div class="mb-8 text-center">
-<div class="mb-8"> <a href="https://baperlitbang.karanganyarkab.go.id">
+        <div class="mb-8">
+            <a href="/">
+                {{-- LOGO DINAMIS --}}
+                @if(isset($globalAbout) && $globalAbout->logo_path)
+                    <img src="{{ asset('storage/' . $globalAbout->logo_path) }}"
+                         alt="Logo Aplikasi"
+                         class="h-24 w-auto mx-auto hover:opacity-90 transition" />
+                @else
+                    {{-- Fallback Logo Default --}}
                     <img src="{{ asset('img/logobaperlitbang.png') }}"
                          alt="Logo Baperlitbang Karanganyar"
                          class="h-24 w-auto mx-auto hover:opacity-90 transition" />
-                </a>
-            </div>
+                @endif
+            </a>
+        </div>
 
         <h1 class="text-2xl font-black text-gray-900 leading-tight">
-            Website Absensi Magang <br>
-            <span class="text-blue-600">BAPPERIDA</span>
+            {{-- DESKRIPSI (Baris 1) --}}
+            {{ $globalAbout->app_description ?? 'Website Absensi Magang' }} <br>
+
+            {{-- NAMA APP (Baris 2 - Warna Biru) --}}
+            <span class="text-blue-600 uppercase">
+                {{ $globalAbout->app_name ?? 'BAPPERIDA' }}
+            </span>
         </h1>
+
         <p class="text-sm text-gray-400 mt-2 font-medium">
             Silakan masuk menggunakan akun yang telah diberikan oleh Admin.
         </p>
@@ -59,7 +74,7 @@
         <div class="mt-8 pt-6 border-t border-gray-100 text-center">
             <p class="text-xs text-gray-400">
                 Belum memiliki akun? <br>
-                Silakan hubungi <span class="font-bold text-gray-600">Admin BAPPERIDA</span> untuk pendaftaran.
+                Silakan hubungi <span class="font-bold text-gray-600">Admin {{ $globalAbout->app_name ?? 'Bapperida' }}</span> untuk pendaftaran.
             </p>
         </div>
     </form>

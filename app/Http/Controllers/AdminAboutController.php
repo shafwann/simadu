@@ -36,6 +36,11 @@ class AdminAboutController extends Controller
             'nip_kepala_instansi' => ['required', 'string', 'max:50'],
             'jam_operasional' => ['required', 'string', 'max:255'],
 
+            'app_name' => ['nullable', 'string', 'max:50'],
+            'agency_name' => ['nullable', 'string', 'max:50'],
+            'app_description' => ['nullable', 'string', 'max:100'],
+            'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
+
             // ======================
             // LOKASI KANTOR (ABSENSI GPS)
             // ======================
@@ -117,6 +122,21 @@ class AdminAboutController extends Controller
         }
 
         $about = AboutSetting::firstOrFail();
+        if ($request->hasFile('logo')) {
+            // Hapus logo lama jika ada (opsional, perlu import Storage)
+            // if ($about->logo_path && \Storage::exists('public/' . $about->logo_path)) {
+            //     \Storage::delete('public/' . $about->logo_path);
+            // }
+
+            // Simpan logo baru di folder public/uploads/logo
+            $path = $request->file('logo')->store('uploads/logo', 'public');
+            $data['logo_path'] = $path;
+        }
+
+        // Update data (sisa logika sama seperti sebelumnya)
+        // Hapus key 'logo' dari array data karena kolom di DB namanya 'logo_path'
+        unset($data['logo']);
+
         $about->update($data);
 
         return back()->with('success', 'Data About berhasil diperbarui.');

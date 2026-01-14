@@ -38,6 +38,32 @@ class ProfileController extends Controller
     }
 
     /**
+     * ✅ TAMBAHAN: Mahasiswa update Bidang/Divisi sendiri
+     */
+    public function updateBidang(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'bidang' => ['required', 'string', 'max:255'],
+        ]);
+
+        $request->user()->update([
+            'bidang' => $request->bidang,
+        ]);
+
+        return Redirect::back()->with('success', 'Bidang/Divisi berhasil disimpan.');
+    }
+
+    /**
+     * ✅ TAMBAHAN: Halaman Bidang/Divisi (halaman sendiri)
+     */
+    public function showBidang(): View
+    {
+        $bidangOptions = config('bidang.options');
+
+        return view('mahasiswaa.bidang-divisi', compact('bidangOptions'));
+    }
+
+    /**
      * Delete the user's account.
      */
     public function destroy(Request $request): RedirectResponse
