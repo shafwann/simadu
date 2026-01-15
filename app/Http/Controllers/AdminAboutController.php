@@ -17,13 +17,23 @@ class AdminAboutController extends Controller
     }
 
     public function index()
-    {
-        $this->checkSuperAdmin();
+{
+    $this->checkSuperAdmin();
 
-        $about = AboutSetting::firstOrFail();
+    $about = AboutSetting::firstOrFail();
 
-        return view('admin.about.index', compact('about'));
+    // ✅ TAMBAHAN: tampilkan bidang_options JSON jadi text per baris
+    $bidangOptionsText = '';
+    if (!empty($about->bidang_options)) {
+        $arr = json_decode($about->bidang_options, true);
+        if (is_array($arr)) {
+            $bidangOptionsText = implode("\n", $arr);
+        }
     }
+
+    return view('admin.about.index', compact('about', 'bidangOptionsText'));
+}
+
 
 
     public function update(Request $request)
@@ -40,6 +50,9 @@ class AdminAboutController extends Controller
             'agency_name' => ['nullable', 'string', 'max:50'],
             'app_description' => ['nullable', 'string', 'max:100'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
+
+            // ✅ TAMBAHAN: daftar bidang/divisi (1 baris = 1 opsi)
+            'bidang_options' => ['nullable', 'string'],
 
             // ======================
             // LOKASI KANTOR (ABSENSI GPS)
@@ -85,6 +98,20 @@ class AdminAboutController extends Controller
             'jumat_checkout_mulai' => ['required', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
             'jumat_checkout_selesai' => ['required', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
         ]);
+
+        // ✅ TAMBAHAN: proses bidang_options jadi JSON (1 baris = 1 opsi)
+        // disimpan ke kolom about_settings.bidang_options
+        if (array_key_exists('bidang_options', $data)) {
+            $raw = $data['bidang_options'];
+
+            $arr = collect(preg_split("/\r\n|\n|\r/", (string) $raw))
+                ->map(fn ($x) => trim($x))
+                ->filter()
+                ->values()
+                ->all();
+
+            $data['bidang_options'] = json_encode($arr, JSON_UNESCAPED_UNICODE);
+        }
 
         // ======================
         // NORMALISASI TIME
