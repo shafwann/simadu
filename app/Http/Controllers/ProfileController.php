@@ -16,8 +16,11 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        $bidangOptions = config('bidang.options');
+
         return view('profile.edit', [
             'user' => $request->user(),
+            'bidangOptions' => $bidangOptions,
         ]);
     }
 
@@ -57,11 +60,11 @@ class ProfileController extends Controller
      * ✅ TAMBAHAN: Halaman Bidang/Divisi (halaman sendiri)
      */
     public function showBidang(): View
-    {
-        $bidangOptions = config('bidang.options');
+{
+    $bidangOptions = \App\Models\AboutSetting::bidangOptions();
 
-        return view('mahasiswa.bidang-divisi', compact('bidangOptions'));
-    }
+    return view('mahasiswaa.bidang-divisi', compact('bidangOptions'));
+}
 
     /**
      * Delete the user's account.

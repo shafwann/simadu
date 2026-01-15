@@ -30,13 +30,16 @@ use App\Models\User;
 */
 
 Route::get('/', function () {
+    // 1. Hitung Total Mahasiswa
     $total = User::where('role', 'mahasiswa')->count();
 
+    // 2. Data Tabel (Paginate 7 per halaman)
     $mahasiswa = User::where('role', 'mahasiswa')
         ->select('name', 'instansi')
         ->latest()
         ->paginate(7);
 
+    // 3. Data Marquee/Running Text (Ambil 100 terakhir biar animasi tetap panjang)
     $marquee = User::where('role', 'mahasiswa')
         ->select('name', 'instansi')
         ->latest()
@@ -84,11 +87,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.checkin');
     Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkout');
 
-    // ✅ TAMBAHAN: MAHASISWA BISA LIHAT RIWAYAT PRESENSI (AKTIF / NONAKTIF TETAP BISA)
+    // ✅ MAHASISWA BISA LIHAT RIWAYAT PRESENSI
     Route::get('/attendance/history', [AttendanceController::class, 'history'])
         ->name('attendance.history');
 
-    // ✅ TAMBAHAN: MAHASISWA BISA DOWNLOAD PDF PRESENSI (TAMPILAN SAMA DENGAN ADMIN)
+    // ✅ MAHASISWA DOWNLOAD PDF PRESENSI
     Route::get('/attendance/presensi-pdf', [AttendanceController::class, 'presensiPdf'])
         ->name('attendance.presensi_pdf');
 
@@ -199,6 +202,10 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/logbook/{id}/validate', [AdminController::class, 'validateLogbook'])->name('logbook.validate');
         Route::post('/laporan/{id}/validate', [LaporanController::class, 'validateLaporan'])->name('laporan.validate');
 
+        // ✅ VALIDASI SEMUA LOGBOOK (sesuai bidang admin)
+        Route::post('/logbook/validate-all', [AdminController::class, 'validateAllLogbook'])
+            ->name('logbook.validateAll');
+
         // admin lihat semua laporan
         Route::get('/laporan-list', [LaporanController::class, 'adminIndex'])->name('laporan.index');
 
@@ -209,9 +216,13 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('students', AdminStudentController::class);
         Route::patch('/students/{user}/status', [AdminStudentController::class, 'updateStatus'])->name('students.updateStatus');
 
-        // ✅ ROUTE DOWNLOAD PDF PRESENSI (TARUH DI DALAM GROUP ADMIN)
+        // ✅ ROUTE DOWNLOAD PDF PRESENSI (ADMIN)
         Route::get('/students/{id}/presensi-pdf', [AdminPresensiPdfController::class, 'download'])
             ->name('students.presensi.pdf');
+
+        // ✅ ROUTE DOWNLOAD PDF LOGBOOK (ADMIN)
+        Route::get('/students/{student}/logbook/pdf', [AdminLogbookController::class, 'exportPdf'])
+            ->name('students.logbook.pdf');
 
 
         // ===== DOSEN & ASSIGN MAHASISWA =====
@@ -254,19 +265,11 @@ Route::middleware(['auth', 'role:admin'])
             Route::delete('/{id}', [AdminManagementController::class, 'destroy'])->name('destroy');
         });
 
-        // ✅ ROUTE DOWNLOAD PDF LOGBOOK (ADMIN)
-        Route::get('/students/{student}/logbook/pdf', [AdminLogbookController::class, 'exportPdf'])
-            ->name('students.logbook.pdf');
-
         // ==========================================
         // ABOUT (SUPER ADMIN ONLY - Administrator Sistem)
         // ==========================================
         Route::get('/about', [AdminAboutController::class, 'index'])->name('about.index');
         Route::put('/about', [AdminAboutController::class, 'update'])->name('about.update');
-
-        // ✅ VALIDASI SEMUA LOGBOOK (sesuai bidang admin)
-        Route::post('/logbook/validate-all', [AdminController::class, 'validateAllLogbook'])
-            ->name('logbook.validateAll');
     });
 
 
@@ -375,10 +378,9 @@ Route::middleware(['auth', 'role:pembimbing'])
         Route::get('/mahasiswa/{id}/presensi-pdf', [PembimbingPdfController::class, 'presensiPdf'])
             ->name('mahasiswa.presensi.pdf');
 
-        // ✅ DOWNLOAD LOGBOOK PDF (PEMBIMBING)  <-- TAMBAHKAN INI
+        // ✅ DOWNLOAD LOGBOOK PDF (PEMBIMBING)
         Route::get('/mahasiswa/{id}/logbook-pdf', [PembimbingPdfController::class, 'logbookPdf'])
             ->name('mahasiswa.logbook.pdf');
     });
-
 
 require __DIR__ . '/auth.php';
