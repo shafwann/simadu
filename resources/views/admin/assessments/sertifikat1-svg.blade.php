@@ -5,16 +5,6 @@ $mulai = Carbon::parse($student->tanggal_masuk)->translatedFormat('d F Y');
 $selesai = Carbon::parse($student->tanggal_selesai)->translatedFormat('d F Y');
 $hariIni = $today->translatedFormat('d F Y');
 
-// ✅ TAMBAHAN BARU: jika ada tanggal dari form (certificate_date), pakai itu untuk sertifikat
-if (!empty($assessment->certificate_date)) {
-    $hariIni = Carbon::parse($assessment->certificate_date)->translatedFormat('d F Y');
-}
-
-// ✅ TAMBAHAN BARU: jika certificate_date sudah berupa Carbon (casts), pakai langsung
-if (!empty($assessment->certificate_date) && method_exists($assessment->certificate_date, 'translatedFormat')) {
-    $hariIni = $assessment->certificate_date->translatedFormat('d F Y');
-}
-
 /* ==== INSTANSI: paksa 1 baris + auto kecilkan font ==== */
 $instansiText = trim((string) ($student->instansi ?? ''));
 $len = mb_strlen($instansiText, 'UTF-8');
@@ -33,6 +23,17 @@ if ($len <= 20) {
 
     /* Style string aman (1 line) */
     $instansiStyle='display:block;margin-top:2px;font-weight:700;line-height:1.15;white-space:nowrap;font-size:' .$instansiFont.'px;';
+
+    $nipRaw=preg_replace('/\s+/', '' , (string)($about->nip_kepala_instansi ?? ''));
+    $nipSertifikat = $nipRaw;
+
+    if (strlen($nipRaw) === 18) {
+    $nipSertifikat =
+    substr($nipRaw, 0, 8) . ' ' .
+    substr($nipRaw, 8, 6) . ' ' .
+    substr($nipRaw, 14, 1) . ' ' .
+    substr($nipRaw, 15, 3);
+    }
     @endphp
 
     <!DOCTYPE html>
@@ -83,14 +84,9 @@ if ($len <= 20) {
         <div class="sertifikat">
 
             {{-- MAGANG KERJA --}}
-<div style="position:absolute; top:50mm; left:80mm;">
-
-    {{-- ✅ TAMBAHAN BARU: judul dinamis dari input Jenis Kegiatan --}}
-    <div style="font-size:40px; font-weight:700;">
-        {{ $student->kegiatan ?? 'Magang Kerja' }}
-    </div>
-</div>
-
+            <div style="position:absolute; top:50mm; left:80mm;">
+                <div style="font-size:40px; font-weight:700;">Magang Kerja</div>
+            </div>
 
             {{-- NOMOR --}}
             <div style="position:absolute; top:64mm; left:80mm; font-size:21px;">
@@ -135,12 +131,11 @@ if ($len <= 20) {
 
             {{-- PARAGRAF (DINAMIS NAMA INSTANSI DARI ABOUT) --}}
             <div style="position:absolute; top:123mm; left:40mm; right:40mm; text-align:center; font-size:18px; line-height:1.30;">
-    Telah melaksanakan {{ $student->kegiatan ?? 'Magang Kerja' }} di
-    {{ $about->nama_instansi ?? '-' }} Kabupaten Karanganyar
-    dari {{ $mulai }} sampai {{ $selesai }} dengan hasil
-    <span style="font-weight:700; text-transform:uppercase;">{{ $hasilLabel }}</span>.
-</div>
-
+                Telah melaksanakan Magang Kerja di
+                {{ $about->nama_instansi ?? '-' }} Kabupaten Karanganyar
+                dari {{ $mulai }} sampai {{ $selesai }} dengan hasil
+                <span style="font-weight:700; text-transform:uppercase;">{{ $hasilLabel }}</span>.
+            </div>
 
             {{-- TANGGAL --}}
             <div style="position:absolute; top:139mm; left:60mm; width:210mm; text-align:center; font-size: 18.5px; font-weight:700;">
@@ -161,8 +156,10 @@ if ($len <= 20) {
                     {{ $about->kepala_instansi ?? '-' }}
                 </div>
                 <div style="font-weight:700; line-height:1.30;">
-                    NIP. {{ $about->nip_kepala_instansi ?? '-' }}
+                    NIP. {{ $nipSertifikat ?: '-' }}
                 </div>
+
+
             </div>
 
 

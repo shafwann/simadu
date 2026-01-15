@@ -92,7 +92,7 @@
                         <div class="relative">
                             <div class="flex -space-x-3">
                                 <div class="relative group">
-                                    <div class="w-12 h-12 rounded-full border-3 border-white bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center text-sm font-bold shadow-lg hover:shadow-xl transition-shadow duration-200">
+                                    <div class="w-12 h-12 rounded-full  border-3 border-white bg-gradient-to-br from-blue-500 to-blue-700 text-black flex items-center justify-center text-sm font-bold shadow-lg hover:shadow-xl transition-shadow duration-200">
                                         {{ $total > 99 ? '99+' : $total }}
                                     </div>
                                     @if($total > 99)
@@ -105,7 +105,7 @@
                             </div>
                         </div>
                         <div class="text-left">
-                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">
+                            <p class="text-xs font-bold text-black-400 uppercase tracking-wide">
                                 Peserta Magang Telah Bergabung
                             </p>
                             <p class="text-xs text-gray-500 mt-0.5">
