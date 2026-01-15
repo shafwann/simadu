@@ -18,8 +18,8 @@ use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminAboutController;
 use App\Http\Controllers\AdminPresensiPdfController;
-use App\Http\Controllers\AdminLogbookController;
-use App\Http\Controllers\PembimbingPdfController;
+use App\Http\Controllers\DosenRequestController;
+
 use App\Models\AboutSetting;
 use App\Models\User;
 
@@ -173,6 +173,15 @@ Route::middleware(['auth', 'role:mahasiswa'])->group(function () {
     // ✅ SIMPAN BIDANG/DIVISI
     Route::patch('/mahasiswa/bidang', [ProfileController::class, 'updateBidang'])
         ->name('mahasiswa.bidang.update');
+
+    // AJUKAN DOSEN PEMBIMBING
+
+        Route::get('/pembimbing/request', [DosenRequestController::class, 'create'])
+            ->name('mahasiswa.pembimbing.request.create');
+
+        Route::post('/pembimbing/request', [DosenRequestController::class, 'store'])
+            ->name('mahasiswa.pembimbing.request.store');
+
 });
 
 
@@ -204,18 +213,24 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/students/{id}/presensi-pdf', [AdminPresensiPdfController::class, 'download'])
             ->name('students.presensi.pdf');
 
+
         // ===== DOSEN & ASSIGN MAHASISWA =====
-        Route::get('dosen', [AdminDosenController::class, 'index'])->name('dosen.index');
-        Route::get('dosen/create', [AdminDosenController::class, 'create'])->name('dosen.create');
-        Route::post('dosen/store', [AdminDosenController::class, 'store'])->name('dosen.store');
-        Route::delete('dosen/{dosen}', [AdminDosenController::class, 'destroy'])->name('dosen.destroy');
+        // LIST DOSEN (AKTIF + PENDING)
+        Route::get('/pembimbing-requests', [DosenRequestController::class, 'index'])->name('pembimbing-requests.requests');
+        Route::post('/pembimbing-requests/{id}/approve', [DosenRequestController::class, 'approve'])->name('pembimbing-requests.approve');
+        Route::post('/pembimbing-requests/{id}/reject', [DosenRequestController::class, 'reject'])->name('pembimbing-requests.reject');;
+
+        // DOSEN AKTIF (CRUD LANJUTAN TETAP ADA)
+        
+        Route::get('/dosen', [AdminDosenController::class, 'index'])->name('dosen.index');
+        Route::get('/dosen/create', [AdminDosenController::class, 'create'])->name('dosen.create');
+        Route::post('/dosen', [AdminDosenController::class, 'store'])->name('dosen.store');
         Route::get('/dosen/{id}/edit', [AdminDosenController::class, 'edit'])->name('dosen.edit');
         Route::put('/dosen/{id}', [AdminDosenController::class, 'update'])->name('dosen.update');
-        Route::get('dosen/{dosen}/mahasiswa', [AdminDosenController::class, 'showMahasiswa'])->name('dosen.mahasiswa');
-        Route::get('/mahasiswa/{id}', [AdminStudentController::class, 'show'])->name('mahasiswa.show');
+        Route::delete('/dosen/{dosen}', [AdminDosenController::class, 'destroy'])->name('dosen.destroy');
 
-        Route::get('dosen/{dosen}/assign', [AdminDosenController::class, 'showAssignForm'])->name('dosen.assign.form');
-        Route::post('dosen/{dosen}/assign', [AdminDosenController::class, 'assignMahasiswa'])->name('dosen.assign.submit');
+        Route::get('/dosen/{dosen}/mahasiswa', [AdminDosenController::class, 'showMahasiswa'])
+            ->name('dosen.mahasiswa');
 
         // absensi manual
         Route::post('/attendance/store', [AdminAttendanceController::class, 'store'])->name('attendance.store');

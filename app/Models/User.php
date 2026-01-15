@@ -23,6 +23,7 @@ class User extends Authenticatable
         'password',
         'role',
         'nim',
+        'nidn',
         'prodi',
         'instansi',
         'bidang',

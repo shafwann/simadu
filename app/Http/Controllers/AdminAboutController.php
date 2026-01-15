@@ -47,7 +47,7 @@ class AdminAboutController extends Controller
             'office_latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'office_longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'office_name' => ['nullable', 'string', 'max:255'],
-            'radius_meter' => ['required', 'integer', 'min:10', 'max:1000'],
+            'radius_meter' => ['required', 'integer', 'min:10', 'max:100000'],
 
             // ======================
             // CHECK-IN
