@@ -20,10 +20,8 @@ use App\Http\Controllers\AdminAboutController;
 use App\Http\Controllers\AdminPresensiPdfController;
 use App\Http\Controllers\AdminLogbookController;
 use App\Http\Controllers\PembimbingPdfController;
-
-// Models
-use App\Models\User;
 use App\Models\AboutSetting;
+use App\Models\User;
 
 /*
 |--------------------------------------------------------------------------

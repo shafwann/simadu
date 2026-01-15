@@ -13,8 +13,7 @@ public function index()
 {
     $laporans = auth()->user()->laporans()->latest()->get();
 
-    // ✅ TAMBAHAN (untuk dropdown bidang/divisi)
-    $bidangOptions = config('bidang.options');
+    $bidangOptions = \App\Models\AboutSetting::bidangOptions();
 
     return view('laporan.index', compact('laporans', 'bidangOptions'));
 }
