@@ -60,7 +60,7 @@ class ProfileController extends Controller
     {
         $bidangOptions = config('bidang.options');
 
-        return view('mahasiswaa.bidang-divisi', compact('bidangOptions'));
+        return view('mahasiswa.bidang-divisi', compact('bidangOptions'));
     }
 
     /**
