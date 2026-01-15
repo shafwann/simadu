@@ -56,11 +56,6 @@
                         <x-nav-link :href="route('laporan.index')" :active="request()->routeIs('laporan.*')" class="font-bold text-gray-900">
                             {{ __('Laporan') }}
                         </x-nav-link>
-
-                        <x-nav-link :href="route('mahasiswa.bidang.show')" :active="request()->routeIs('mahasiswa.bidang.show')" class="font-bold text-gray-900">
-                            {{ __('Bidang/Divisi') }}
-                        </x-nav-link>
-
                     @endif
 
                     {{-- 2. MENU ADMIN --}}

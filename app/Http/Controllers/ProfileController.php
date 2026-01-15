@@ -16,8 +16,11 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        $bidangOptions = config('bidang.options');
+
         return view('profile.edit', [
             'user' => $request->user(),
+            'bidangOptions' => $bidangOptions,
         ]);
     }
 
