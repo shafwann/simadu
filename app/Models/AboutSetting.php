@@ -58,5 +58,33 @@ class AboutSetting extends Model
         'agency_name',
         'app_description',
         'logo_path',
+
+        // ✅ TAMBAHAN: simpan opsi bidang/divisi dari menu About (format JSON)
+        'bidang_options',
     ];
+
+    /**
+     * ✅ TAMBAHAN: Ambil opsi Bidang/Divisi dari DB (fallback ke default jika kosong)
+     */
+    public static function bidangOptions(): array
+    {
+        $about = self::first();
+
+        $arr = null;
+        if ($about && $about->bidang_options) {
+            $arr = json_decode($about->bidang_options, true);
+        }
+
+        if (is_array($arr) && count($arr) > 0) {
+            return $arr;
+        }
+
+        return [
+            'Ekonomi',
+            'Sekretariat',
+            'Sosial & Budaya',
+            'Fisik & Prasarana',
+            'Penelitian, Pengembangan & Penyusunan Program',
+        ];
+    }
 }

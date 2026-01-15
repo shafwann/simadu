@@ -59,6 +59,105 @@
                         </div>
                     </div>
 
+                    {{-- ✅ BIDANG/DIVISI (Dropdown Mahasiswa) --}}
+                   {{-- ✅ BIDANG/DIVISI (Dropdown Mahasiswa) --}}
+<div class="bg-white p-6 rounded-2xl border shadow-sm"
+     x-data="bidangDivisiForm()"
+     x-init="init()"
+>
+    <h3 class="font-bold text-lg text-gray-800 mb-2">Daftar Bidang/Divisi (Dropdown Mahasiswa)</h3>
+    <p class="text-sm text-gray-500 mb-4">
+        1 opsi = 1 kotak. Klik tombol <span class="font-bold">+</span> untuk menambah opsi.
+    </p>
+
+    {{-- sumber awal (aman dari quote/newline) --}}
+    <textarea x-ref="seed" class="hidden">{{ old('bidang_options', $bidangOptionsText ?? '') }}</textarea>
+
+    {{-- Hidden input yang dikirim ke server (multiline) --}}
+    <input type="hidden" name="bidang_options" :value="serialized">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <template x-for="(item, index) in items" :key="index">
+            <div class="relative">
+                <input
+                    type="text"
+                    class="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 pr-10"
+                    placeholder="Contoh: Ekonomi"
+                    x-model="items[index]"
+                    @input="sync()"
+                />
+
+                <button
+                    type="button"
+                    x-show="items.length > 1"
+                    @click="remove(index)"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50"
+                    title="Hapus"
+                >
+                    ×
+                </button>
+            </div>
+        </template>
+    </div>
+
+    <x-input-error class="mt-2" :messages="$errors->get('bidang_options')" />
+
+    <div class="mt-4 flex justify-end">
+        <button
+            type="button"
+            @click="add()"
+            class="w-11 h-11 rounded-xl bg-blue-600 text-white text-2xl leading-none hover:bg-blue-700 transition flex items-center justify-center"
+            title="Tambah opsi"
+        >
+            +
+        </button>
+    </div>
+</div>
+
+<script>
+    function bidangDivisiForm() {
+        return {
+            items: [],
+            serialized: '',
+
+            init() {
+                // ambil text dari textarea seed
+                const raw = (this.$refs.seed?.value || '').toString();
+
+                const parsed = raw
+                    .split(/\r\n|\n|\r/)
+                    .map(s => (s || '').trim())
+                    .filter(Boolean);
+
+                this.items = parsed;
+
+                // default 4 kotak
+                while (this.items.length < 4) this.items.push('');
+
+                this.sync();
+            },
+
+            sync() {
+                const cleaned = this.items
+                    .map(s => (s || '').trim())
+                    .filter(Boolean);
+
+                this.serialized = cleaned.join("\n");
+            },
+
+            add() {
+                this.items.push('');
+                this.$nextTick(() => this.sync());
+            },
+
+            remove(index) {
+                this.items.splice(index, 1);
+                this.$nextTick(() => this.sync());
+            },
+        }
+    }
+</script>
+
                     {{-- NAMA INSTANSI --}}
                     <div class="mb-6">
                         <x-input-label for="nama_instansi" value="Nama Instansi" />

@@ -57,11 +57,12 @@ class ProfileController extends Controller
      * ✅ TAMBAHAN: Halaman Bidang/Divisi (halaman sendiri)
      */
     public function showBidang(): View
-    {
-        $bidangOptions = config('bidang.options');
+{
+    $bidangOptions = \App\Models\AboutSetting::bidangOptions();
 
-        return view('mahasiswaa.bidang-divisi', compact('bidangOptions'));
-    }
+    return view('mahasiswaa.bidang-divisi', compact('bidangOptions'));
+}
+
 
     /**
      * Delete the user's account.

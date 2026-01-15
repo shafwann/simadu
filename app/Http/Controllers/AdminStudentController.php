@@ -152,9 +152,10 @@ class AdminStudentController extends Controller
             abort(403, 'Anda tidak berhak mengedit data mahasiswa dari bidang lain.');
         }
 
-        $bidangOptions = config('bidang.options');
+       $bidangOptions = \App\Models\AboutSetting::bidangOptions();
 
-        return view('admin.students.edit', compact('student', 'bidangOptions'));
+return view('admin.students.edit', compact('student', 'bidangOptions'));
+
     }
 
     // 6. PROSES UPDATE MAHASISWA (INI YANG BARU DITAMBAHKAN)
