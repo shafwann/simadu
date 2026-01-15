@@ -174,34 +174,6 @@
                 </div>
             </div>
 
-            {{-- MARQUEE RUNNING TEXT --}}
-            {{-- <div class="w-full bg-gray-50 border-y border-gray-200 py-8 overflow-hidden mt-10">
-                <div class="max-w-7xl mx-auto px-6 mb-4">
-                    <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest text-center">Jejak Peserta Magang</h3>
-                </div>
-
-                <div class="relative w-full overflow-hidden">
-                    <div class="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-gray-50 to-transparent z-10"></div>
-                    <div class="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-gray-50 to-transparent z-10"></div>
-
-                    <div class="animate-marquee flex gap-6 px-6">
-                        @for ($i = 0; $i < 2; $i++)
-                            @foreach($marquee as $m)
-                            <div class="flex-shrink-0 w-64 bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
-                                <p class="font-bold text-gray-800 text-sm truncate">{{ Str::upper($m->name) }}</p>
-                                <div class="flex items-center gap-1 mt-1">
-                                    <svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                                    <p class="text-[10px] text-gray-500 font-medium truncate uppercase max-w-full">
-                                        {{ $m->instansi }}
-                                    </p>
-                                </div>
-                            </div>
-                            @endforeach
-                        @endfor
-                    </div>
-                </div>
-            </div> --}}
-
         </main>
 
         {{-- FOOTER --}}
