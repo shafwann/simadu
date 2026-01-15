@@ -5,18 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+
 use App\Models\Attendance;
 use App\Models\Logbook;
 use App\Models\Laporan;
-use App\Models\Assessment; // ✅ TAMBAH INI
+use App\Models\Assessment;
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $fillable = [
         'name',
         'email',
@@ -32,9 +30,6 @@ class User extends Authenticatable
         'kegiatan',
         'tanggal_masuk',
         'tanggal_selesai',
-        'jabatan_pembimbing',
-        'nama_pembimbing',
-        'nip_pembimbing'
     ];
 
     protected $hidden = [
@@ -42,13 +37,10 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
 
     public function attendances()
     {
@@ -60,25 +52,26 @@ class User extends Authenticatable
         return $this->hasMany(Logbook::class);
     }
 
-    // ✅ TAMBAH: kalau mau histori penilaian (hasMany)
+    public function laporans()
+    {
+        return $this->hasMany(Laporan::class);
+    }
+
+    // semua penilaian
     public function assessments()
     {
         return $this->hasMany(Assessment::class);
     }
 
-    // ✅ BENAHIN: ambil penilaian TERBARU untuk tampil di "Riwayat Penilaian" & download
+    // penilaian TERBARU
     public function assessment()
     {
-        return $this->hasOne(Assessment::class)->latestOfMany('assessed_at');
+        return $this->hasOne(Assessment::class)->orderByDesc('created_at');
     }
 
-    public function laporans()
-    {
-        return $this->hasMany(Laporan::class);
-    }
-        // dosen → banyak mahasiswa
+    // dosen → mahasiswa
     public function mahasiswaBimbingan()
-    {   
+    {
         return $this->belongsToMany(
             User::class,
             'dosen_mahasiswa',
@@ -87,7 +80,7 @@ class User extends Authenticatable
         );
     }
 
-    // mahasiswa → banyak dosen
+    // mahasiswa → dosen
     public function dosenPembimbing()
     {
         return $this->belongsToMany(
