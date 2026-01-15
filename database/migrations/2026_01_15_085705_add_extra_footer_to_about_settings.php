@@ -6,17 +6,22 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::table('about_settings', function (Blueprint $table) {
-            $table->longText('bidang_options')->nullable()->after('logo_path');
+            $table->string('social_youtube')->nullable();
+            $table->string('social_x')->nullable();
+            $table->longText('custom_links')->nullable(); // Menyimpan JSON Link Terkait
         });
     }
 
     public function down(): void
     {
         Schema::table('about_settings', function (Blueprint $table) {
-            $table->dropColumn('bidang_options');
+            $table->dropColumn(['social_youtube', 'social_x', 'custom_links']);
         });
     }
 };

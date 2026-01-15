@@ -61,6 +61,22 @@ class AboutSetting extends Model
 
         // ✅ TAMBAHAN: simpan opsi bidang/divisi dari menu About (format JSON)
         'bidang_options',
+
+
+        // ✅ TAMBAHAN: Footer & Kontak
+        'office_address',
+        'office_phone',
+        'office_email',
+        'social_instagram',
+        'social_facebook',
+        'google_maps_embed',
+        // 'whatsapp_number',
+        // 'link_website',
+        // 'link_ppid',
+        // 'link_opendata',
+        'social_youtube',
+        'social_x',
+        'custom_links',
     ];
 
     /**

@@ -1,473 +1,428 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-black text-xl text-gray-800 leading-tight">
-            About Instansi
-        </h2>
-        <p class="text-sm text-gray-500 mt-1">
-            Data ini hanya bisa diubah oleh <span class="font-semibold">Super Admin (Administrator Sistem)</span>.
-        </p>
+        <h2 class="font-black text-xl text-gray-800 leading-tight">About Instansi</h2>
+        <p class="text-sm text-gray-500 mt-1">Hanya Super Admin yang bisa mengubah data ini.</p>
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-8">
 
+            {{-- Flash Message --}}
             @if(session('success'))
-                <div class="mb-4 p-4 rounded-xl bg-green-50 text-green-700 font-semibold">
+                <div class="p-4 rounded-xl bg-green-50 text-green-700 font-bold border border-green-100 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                     {{ session('success') }}
                 </div>
             @endif
 
-            <div class="bg-white shadow-sm sm:rounded-2xl p-6">
-                <form method="POST" action="{{ route('admin.about.update') }}" class="space-y-5" enctype="multipart/form-data">
-                    @csrf
-                    @method('PUT')
+            @if(session('error'))
+                <div class="p-4 rounded-xl bg-red-50 text-red-700 font-bold border border-red-100">
+                    {{ session('error') }}
+                </div>
+            @endif
 
-                    {{-- ✅ BRANDING APLIKASI (JUDUL & LOGO) --}}
-                    <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 mb-6">
-                        <h3 class="font-bold text-lg text-blue-800 mb-4">Branding Aplikasi (Navbar & Judul)</h3>
+            {{-- ================= FORM 1: BRANDING ================= --}}
+            <form method="POST" action="{{ route('admin.about.update') }}" enctype="multipart/form-data"
+                  class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100">
+                @csrf @method('PUT')
+                <input type="hidden" name="section" value="branding">
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {{-- Header --}}
+                <div class="mb-6 border-b pb-4">
+                    <h3 class="font-bold text-lg text-blue-800">1. Branding Aplikasi</h3>
+                    <p class="text-xs text-gray-400 mt-1">Mengatur nama, deskripsi, dan logo yang tampil di Navbar/Login.</p>
+                </div>
+
+                {{-- Inputs --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <x-input-label for="app_name" value="Nama Aplikasi" />
+                        <x-text-input id="app_name" name="app_name" type="text" class="mt-1 block w-full font-bold" value="{{ old('app_name', $about->app_name) }}" placeholder="Bapperida" />
+                    </div>
+                    <div>
+                        <x-input-label for="agency_name" value="Sub Judul (Instansi)" />
+                        <x-text-input id="agency_name" name="agency_name" type="text" class="mt-1 block w-full" value="{{ old('agency_name', $about->agency_name) }}" placeholder="Kab. Karanganyar" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <x-input-label for="app_description" value="Deskripsi Singkat" />
+                        <x-text-input id="app_description" name="app_description" type="text" class="mt-1 block w-full text-sm" value="{{ old('app_description', $about->app_description) }}" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <x-input-label for="logo" value="Logo Aplikasi" />
+                        <div class="flex items-center gap-4 mt-2">
+                            @if($about->logo_path)
+                                <img src="{{ asset('storage/' . $about->logo_path) }}" class="h-12 w-auto border p-1 rounded">
+                            @endif
+                            <input type="file" name="logo" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Button Bawah Kiri --}}
+                <div class="mt-6 pt-4 border-t border-gray-100 flex justify-start">
+                    <x-primary-button>Simpan Branding</x-primary-button>
+                </div>
+            </form>
+
+            {{-- ================= FORM 2: BIDANG / DIVISI ================= --}}
+            <form method="POST" action="{{ route('admin.about.update') }}"
+                  class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100"
+                  x-data="bidangDivisiForm()" x-init="init()">
+                @csrf @method('PUT')
+                <input type="hidden" name="section" value="bidang">
+
+                <div class="mb-6 border-b pb-4">
+                    <h3 class="font-bold text-lg text-gray-800">2. Daftar Bidang/Divisi</h3>
+                    <p class="text-xs text-gray-400 mt-1">Digunakan untuk dropdown registrasi mahasiswa.</p>
+                </div>
+
+                {{-- Logic AlpineJS --}}
+                <textarea x-ref="seed" class="hidden">{{ old('bidang_options', $bidangOptionsText ?? '') }}</textarea>
+                <input type="hidden" name="bidang_options" :value="serialized">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                    <template x-for="(item, index) in items" :key="index">
+                        <div class="relative">
+                            <input type="text" class="w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                                   x-model="items[index]" @input="sync()" placeholder="Nama Bidang">
+                            <button type="button" x-show="items.length > 1" @click="remove(index)"
+                                    class="absolute right-2 top-2 text-gray-400 hover:text-red-500 font-bold px-2">
+                                &times;
+                            </button>
+                        </div>
+                    </template>
+                </div>
+                <button type="button" @click="add()" class="text-sm text-blue-600 font-bold hover:underline flex items-center gap-1">
+                    <span>+</span> Tambah Baris Baru
+                </button>
+
+                {{-- Button Bawah Kiri --}}
+                <div class="mt-6 pt-4 border-t border-gray-100 flex justify-start">
+                    <x-primary-button>Simpan Bidang</x-primary-button>
+                </div>
+            </form>
+
+            {{-- ================= FORM 3: INFO INSTANSI ================= --}}
+            <form method="POST" action="{{ route('admin.about.update') }}" class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100">
+                @csrf @method('PUT')
+                <input type="hidden" name="section" value="instansi">
+
+                <div class="mb-6 border-b pb-4">
+                    <h3 class="font-bold text-lg text-gray-800">3. Identitas Instansi</h3>
+                    <p class="text-xs text-gray-400 mt-1">Data resmi untuk kop surat laporan/PDF.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <x-input-label value="Nama Instansi Resmi" />
+                        <x-text-input name="nama_instansi" class="mt-1 block w-full" value="{{ old('nama_instansi', $about->nama_instansi) }}" required />
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <x-input-label value="Kepala Instansi" />
+                            <x-text-input name="kepala_instansi" class="mt-1 block w-full" value="{{ old('kepala_instansi', $about->kepala_instansi) }}" required />
+                        </div>
+                        <div>
+                            <x-input-label value="NIP Kepala" />
+                            <x-text-input name="nip_kepala_instansi" class="mt-1 block w-full" value="{{ old('nip_kepala_instansi', $about->nip_kepala_instansi) }}" required />
+                        </div>
+                    </div>
+                    <div>
+                        <x-input-label value="Jam Operasional (Footer)" />
+                        <x-text-input name="jam_operasional" class="mt-1 block w-full" value="{{ old('jam_operasional', $about->jam_operasional) }}" required />
+                        <p class="text-xs text-gray-400 mt-1">Pisahkan dengan koma (,) untuk baris baru.</p>
+                    </div>
+                </div>
+
+                {{-- Button Bawah Kiri --}}
+                <div class="mt-6 pt-4 border-t border-gray-100 flex justify-start">
+                    <x-primary-button>Simpan Identitas</x-primary-button>
+                </div>
+            </form>
+
+            {{-- ================= FORM 4: LOKASI GPS ================= --}}
+            <form method="POST" action="{{ route('admin.about.update') }}" class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100">
+                @csrf @method('PUT')
+                <input type="hidden" name="section" value="lokasi">
+
+                <div class="mb-6 border-b pb-4">
+                    <h3 class="font-bold text-lg text-gray-800">4. Lokasi Kantor (GPS)</h3>
+                    <p class="text-xs text-gray-400 mt-1">Menentukan titik pusat absensi mahasiswa.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <x-input-label value="Nama Lokasi (Label Absen)" />
+                        <x-text-input name="office_name" class="mt-1 block w-full uppercase" value="{{ old('office_name', $about->office_name) }}" />
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <x-input-label value="Latitude" />
+                            <x-text-input name="office_latitude" class="mt-1 block w-full" value="{{ old('office_latitude', $about->office_latitude) }}" />
+                        </div>
+                        <div>
+                            <x-input-label value="Longitude" />
+                            <x-text-input name="office_longitude" class="mt-1 block w-full" value="{{ old('office_longitude', $about->office_longitude) }}" />
+                        </div>
+                        <div>
+                            <x-input-label value="Radius (Meter)" />
+                            <x-text-input name="radius_meter" type="number" class="mt-1 block w-full" value="{{ old('radius_meter', $about->radius_meter) }}" required />
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Button Bawah Kiri --}}
+                <div class="mt-6 pt-4 border-t border-gray-100 flex justify-start">
+                    <x-primary-button>Simpan Lokasi</x-primary-button>
+                </div>
+            </form>
+
+            {{-- ================= FORM 5: JADWAL ABSENSI ================= --}}
+            <form method="POST" action="{{ route('admin.about.update') }}" class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100">
+                @csrf @method('PUT')
+                <input type="hidden" name="section" value="jadwal">
+
+                <div class="mb-6 border-b pb-4">
+                    <h3 class="font-bold text-lg text-gray-800">5. Jadwal Absensi</h3>
+                    <p class="text-xs text-gray-400 mt-1">Mengatur jam buka tutup tombol absen masuk & pulang.</p>
+                </div>
+
+                <div class="space-y-6">
+                    {{-- Check IN --}}
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-500 uppercase mb-3 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-green-500 rounded-full"></span> Check-IN (Masuk)
+                        </h4>
+                        <div class="grid grid-cols-1 gap-3">
+                            @foreach(['senin', 'selasa', 'rabu', 'kamis', 'jumat'] as $day)
+                            <div class="grid grid-cols-12 gap-2 items-center">
+                                <div class="col-span-2 text-sm font-bold capitalize">{{ $day }}</div>
+                                <div class="col-span-5">
+                                    <x-text-input name="{{ $day }}_mulai" type="time" class="w-full text-xs" value="{{ old($day.'_mulai', $about->{$day.'_mulai'}) }}" required />
+                                </div>
+                                <div class="col-span-5">
+                                    <x-text-input name="{{ $day }}_selesai" type="time" class="w-full text-xs" value="{{ old($day.'_selesai', $about->{$day.'_selesai'}) }}" required />
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    {{-- Check OUT --}}
+                    <div class="border-t pt-4">
+                        <h4 class="font-bold text-sm text-gray-500 uppercase mb-3 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-orange-500 rounded-full"></span> Check-OUT (Pulang)
+                        </h4>
+                        <div class="grid grid-cols-1 gap-3">
+                            @foreach(['senin', 'selasa', 'rabu', 'kamis', 'jumat'] as $day)
+                            <div class="grid grid-cols-12 gap-2 items-center">
+                                <div class="col-span-2 text-sm font-bold capitalize">{{ $day }}</div>
+                                <div class="col-span-5">
+                                    <x-text-input name="{{ $day }}_checkout_mulai" type="time" class="w-full text-xs" value="{{ old($day.'_checkout_mulai', $about->{$day.'_checkout_mulai'}) }}" required />
+                                </div>
+                                <div class="col-span-5">
+                                    <x-text-input name="{{ $day }}_checkout_selesai" type="time" class="w-full text-xs" value="{{ old($day.'_checkout_selesai', $about->{$day.'_checkout_selesai'}) }}" required />
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Button Bawah Kiri --}}
+                <div class="mt-6 pt-4 border-t border-gray-100 flex justify-start">
+                    <x-primary-button>Simpan Jadwal</x-primary-button>
+                </div>
+            </form>
+
+            {{-- ================= FORM 6: PENGATURAN FOOTER ================= --}}
+            <form method="POST" action="{{ route('admin.about.update') }}"
+                  class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100"
+                  x-data="dynamicLinksForm()" x-init="init()">
+                @csrf @method('PUT')
+                <input type="hidden" name="section" value="footer">
+
+                <div class="mb-6 border-b pb-4">
+                    <h3 class="font-bold text-lg text-gray-800">6. Pengaturan Footer</h3>
+                    <p class="text-xs text-gray-400 mt-1">Mengatur alamat, peta, sosmed, dan link terkait.</p>
+                </div>
+
+                <div class="space-y-6">
+                    {{-- Kontak --}}
+                    <div>
+                        <h4 class="font-bold text-sm text-blue-600 uppercase mb-3">Kontak & Alamat</h4>
+                        <div class="grid grid-cols-1 gap-4">
                             <div>
-                                <x-input-label for="app_name" value="Nama Aplikasi (Judul Utama)" />
-                                <x-text-input id="app_name" name="app_name" type="text" class="mt-1 block w-full font-bold"
-                                    value="{{ old('app_name', $about->app_name) }}" placeholder="Bapperida" />
+                                <x-input-label value="Alamat Kantor" />
+                                <textarea name="office_address" class="w-full rounded-xl border-gray-200 text-sm" rows="2">{{ old('office_address', $about->office_address) }}</textarea>
                             </div>
-
-                            <div>
-                                <x-input-label for="agency_name" value="Nama Instansi (Sub Judul)" />
-                                <x-text-input id="agency_name" name="agency_name" type="text" class="mt-1 block w-full"
-                                    value="{{ old('agency_name', $about->agency_name) }}" placeholder="Kab. Karanganyar" />
-                            </div>
-
-                            <div class="md:col-span-2">
-                                <x-input-label for="app_description" value="Deskripsi Singkat (Muncul di bawah judul)" />
-                                <x-text-input id="app_description" name="app_description" type="text" class="mt-1 block w-full text-sm"
-                                    value="{{ old('app_description', $about->app_description) }}" placeholder="Sistem Monitoring Magang" />
-                            </div>
-
-                            <div class="md:col-span-2">
-                                <x-input-label for="logo" value="Logo Aplikasi (Format PNG/JPG, Transparan lebih baik)" />
-                                <div class="flex items-center gap-4 mt-2">
-                                    @if($about->logo_path)
-                                        <div class="p-2 bg-white rounded border">
-                                            <img src="{{ asset('storage/' . $about->logo_path) }}" class="h-12 w-auto">
-                                        </div>
-                                    @endif
-                                    <input type="file" name="logo" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <x-input-label value="No. Telepon" />
+                                    <x-text-input name="office_phone" class="w-full" value="{{ old('office_phone', $about->office_phone) }}" />
+                                </div>
+                                <div>
+                                    <x-input-label value="Email" />
+                                    <x-text-input name="office_email" class="w-full" value="{{ old('office_email', $about->office_email) }}" />
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- ✅ BIDANG/DIVISI (Dropdown Mahasiswa) --}}
-                   {{-- ✅ BIDANG/DIVISI (Dropdown Mahasiswa) --}}
-<div class="bg-white p-6 rounded-2xl border shadow-sm"
-     x-data="bidangDivisiForm()"
-     x-init="init()"
->
-    <h3 class="font-bold text-lg text-gray-800 mb-2">Daftar Bidang/Divisi (Dropdown Mahasiswa)</h3>
-    <p class="text-sm text-gray-500 mb-4">
-        1 opsi = 1 kotak. Klik tombol <span class="font-bold">+</span> untuk menambah opsi.
-    </p>
-
-    {{-- sumber awal (aman dari quote/newline) --}}
-    <textarea x-ref="seed" class="hidden">{{ old('bidang_options', $bidangOptionsText ?? '') }}</textarea>
-
-    {{-- Hidden input yang dikirim ke server (multiline) --}}
-    <input type="hidden" name="bidang_options" :value="serialized">
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <template x-for="(item, index) in items" :key="index">
-            <div class="relative">
-                <input
-                    type="text"
-                    class="w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 pr-10"
-                    placeholder="Contoh: Ekonomi"
-                    x-model="items[index]"
-                    @input="sync()"
-                />
-
-                <button
-                    type="button"
-                    x-show="items.length > 1"
-                    @click="remove(index)"
-                    class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50"
-                    title="Hapus"
-                >
-                    ×
-                </button>
-            </div>
-        </template>
-    </div>
-
-    <x-input-error class="mt-2" :messages="$errors->get('bidang_options')" />
-
-    <div class="mt-4 flex justify-end">
-        <button
-            type="button"
-            @click="add()"
-            class="w-11 h-11 rounded-xl bg-blue-600 text-white text-2xl leading-none hover:bg-blue-700 transition flex items-center justify-center"
-            title="Tambah opsi"
-        >
-            +
-        </button>
-    </div>
-</div>
-
-<script>
-    function bidangDivisiForm() {
-        return {
-            items: [],
-            serialized: '',
-
-            init() {
-                // ambil text dari textarea seed
-                const raw = (this.$refs.seed?.value || '').toString();
-
-                const parsed = raw
-                    .split(/\r\n|\n|\r/)
-                    .map(s => (s || '').trim())
-                    .filter(Boolean);
-
-                this.items = parsed;
-
-                // default 4 kotak
-                while (this.items.length < 4) this.items.push('');
-
-                this.sync();
-            },
-
-            sync() {
-                const cleaned = this.items
-                    .map(s => (s || '').trim())
-                    .filter(Boolean);
-
-                this.serialized = cleaned.join("\n");
-            },
-
-            add() {
-                this.items.push('');
-                this.$nextTick(() => this.sync());
-            },
-
-            remove(index) {
-                this.items.splice(index, 1);
-                this.$nextTick(() => this.sync());
-            },
-        }
-    }
-</script>
-
-                    {{-- NAMA INSTANSI --}}
-                    <div class="mb-6">
-                        <x-input-label for="nama_instansi" value="Nama Instansi" />
-                        <x-text-input
-                            id="nama_instansi"
-                            name="nama_instansi"
-                            type="text"
-                            class="mt-1 block w-full"
-                            value="{{ old('nama_instansi', $about->nama_instansi) }}"
-                            required
-                        />
-                        <x-input-error class="mt-2" :messages="$errors->get('nama_instansi')" />
-                    </div>
-
-                    {{-- KEPALA INSTANSI --}}
-                    <div class="mb-6">
-                        <x-input-label for="kepala_instansi" value="Kepala Instansi" />
-                        <x-text-input
-                            id="kepala_instansi"
-                            name="kepala_instansi"
-                            type="text"
-                            class="mt-1 block w-full"
-                            value="{{ old('kepala_instansi', $about->kepala_instansi) }}"
-                            required
-                        />
-                        <x-input-error class="mt-2" :messages="$errors->get('kepala_instansi')" />
-                    </div>
-
-                    {{-- NIP --}}
-                    <div class="mb-6">
-                        <x-input-label for="nip_kepala_instansi" value="NIP Kepala Instansi" />
-                        <x-text-input
-                            id="nip_kepala_instansi"
-                            name="nip_kepala_instansi"
-                            type="text"
-                            class="mt-1 block w-full"
-                            value="{{ old('nip_kepala_instansi', $about->nip_kepala_instansi) }}"
-                            required
-                        />
-                        <x-input-error class="mt-2" :messages="$errors->get('nip_kepala_instansi')" />
-                    </div>
-
-                    {{-- JAM OPERASIONAL (DESKRIPSI) --}}
-                    <div>
-                        <x-input-label for="jam_operasional" value="Jam Operasional" />
-                        <p class="mt-1 text-sm text-gray-500">
-                            Digunakan untuk mengatur <span class="font-semibold">jam operasional instansi</span> yang akan
-                            ditampilkan pada <span class="font-semibold">footer aplikasi</span>.
-                            Gunakan tanda <span class="font-semibold">koma (,)</span> untuk memisahkan jam operasional
-                            ke baris berikutnya.
-                        </p>
-
-
-                        <x-text-input
-                            id="jam_operasional"
-                            name="jam_operasional"
-                            type="text"
-                            class="mt-1 block w-full"
-                            placeholder="Contoh: Senin–Jumat 08.00–16.00"
-                            value="{{ old('jam_operasional', $about->jam_operasional) }}"
-                            required
-                        />
-                        <x-input-error class="mt-2" :messages="$errors->get('jam_operasional')" />
-
-                        <p class="mt-1 text-xs text-gray-400">
-                            Contoh: Senin–Kamis 08.00–16.00, Jumat 08.00–11.30
-                        </p>
-
-                    </div>
-
-                    {{-- ================= LOKASI KANTOR (ABSENSI GPS) ================= --}}
-                    <div class="pt-6 border-t">
-                        <h3 class="font-black text-lg text-gray-800">
-                            Lokasi Kantor (Absensi GPS)
-                        </h3>
-                        <p class="text-sm text-gray-500 mt-1">
-                            Digunakan untuk menentukan titik koordinat dan radius absensi mahasiswa.
-                        </p>
-                    </div>
-
-                    {{-- ✅ TAMBAHAN: NAMA LOKASI --}}
-                    <div class="mt-4">
-                        <x-input-label for="office_name" value="Nama Lokasi Kantor (Default Absensi)" />
-                        <x-text-input
-                            id="office_name"
-                            name="office_name"
-                            type="text"
-                            class="mt-1 block w-full uppercase"
-                            placeholder="Contoh: KANTOR BAPPERIDA"
-                            value="{{ old('office_name', $about->office_name) }}"
-                        />
-                        <x-input-error class="mt-2" :messages="$errors->get('office_name')" />
-                        <p class="mt-1 text-xs text-gray-400">
-                            Nama ini akan otomatis terisi di absensi mahasiswa jika mereka check-in di area kantor.
-                        </p>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <x-input-label value="Latitude Kantor" />
-                            <x-text-input
-                                name="office_latitude"
-                                type="text"
-                                class="mt-1 block w-full"
-                                placeholder="-7.5949176"
-                                value="{{ old('office_latitude', $about->office_latitude) }}"
-                            />
-                            <x-input-error class="mt-2" :messages="$errors->get('office_latitude')" />
-                        </div>
-
-                        <div>
-                            <x-input-label value="Longitude Kantor" />
-                            <x-text-input
-                                name="office_longitude"
-                                type="text"
-                                class="mt-1 block w-full"
-                                placeholder="110.9406551"
-                                value="{{ old('office_longitude', $about->office_longitude) }}"
-                            />
-                            <x-input-error class="mt-2" :messages="$errors->get('office_longitude')" />
-                        </div>
-
-                        <div>
-                            <x-input-label value="Radius Absensi (meter)" />
-                            <x-text-input
-                                name="radius_meter"
-                                type="number"
-                                min="10"
-                                class="mt-1 block w-full"
-                                value="{{ old('radius_meter', $about->radius_meter ?? 100) }}"
-                                required
-                            />
-                            <x-input-error class="mt-2" :messages="$errors->get('radius_meter')" />
+                    {{-- Sosmed --}}
+                    <div class="border-t pt-4">
+                        <h4 class="font-bold text-sm text-blue-600 uppercase mb-3">Media Sosial (URL Lengkap)</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                            <div>
+                                <x-input-label value="Instagram" />
+                                <x-text-input name="social_instagram" class="w-full" value="{{ old('social_instagram', $about->social_instagram) }}" placeholder="https://instagram.com/..." />
+                            </div>
+                            <div>
+                                <x-input-label value="Facebook" />
+                                <x-text-input name="social_facebook" class="w-full" value="{{ old('social_facebook', $about->social_facebook) }}" placeholder="https://facebook.com/..." />
+                            </div>
+                            <div>
+                                <x-input-label value="YouTube" />
+                                <x-text-input name="social_youtube" class="w-full" value="{{ old('social_youtube', $about->social_youtube) }}" placeholder="https://youtube.com/@..." />
+                            </div>
+                            <div>
+                                <x-input-label value="X (Twitter)" />
+                                <x-text-input name="social_x" class="w-full" value="{{ old('social_x', $about->social_x) }}" placeholder="https://x.com/..." />
+                            </div>
                         </div>
                     </div>
 
-                    {{-- ================= JAM CHECK-IN ================= --}}
-                    <div class="pt-6 border-t">
-                        <h3 class="font-black text-lg text-gray-800">
-                            Jam Check-in Mahasiswa (Per Hari)
-                        </h3>
-                        <p class="text-sm text-gray-500 mt-1">
-                            Digunakan untuk membatasi waktu absen masuk mahasiswa.
-                        </p>
+                    {{-- Link Terkait (DINAMIS) --}}
+                    <div class="border-t pt-4">
+                        <h4 class="font-bold text-sm text-blue-600 uppercase mb-3">Link Terkait (Dinamis)</h4>
+                        <p class="text-xs text-gray-400 mb-3">Tambahkan link eksternal untuk ditampilkan di footer (misal: Website Utama, PPID, dll).</p>
+
+                        <div id="existing-links" data-links="{{ $about->custom_links ?? '[]' }}" class="hidden"></div>
+
+                        <div class="space-y-3">
+                            <template x-for="(row, index) in rows" :key="index">
+                                <div class="flex gap-3 items-center">
+                                    <div class="w-1/3">
+                                        <input type="text" name="links_label[]" x-model="row.label"
+                                            class="w-full rounded-xl border-gray-200 text-sm" placeholder="Nama Link">
+                                    </div>
+                                    <div class="w-2/3">
+                                        <input type="url" name="links_url[]" x-model="row.url"
+                                            class="w-full rounded-xl border-gray-200 text-sm" placeholder="URL (https://...)">
+                                    </div>
+                                    <button type="button" @click="remove(index)" class="text-red-500 hover:text-red-700 font-bold px-2">
+                                        &times;
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+
+                        <button type="button" @click="add()" class="mt-3 text-sm text-blue-600 font-bold hover:underline flex items-center gap-1">
+                            <span>+</span> Tambah Link
+                        </button>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {{-- SENIN --}}
+                    {{-- Peta --}}
+                    <div class="border-t pt-4">
+                        <h4 class="font-bold text-sm text-blue-600 uppercase mb-3">Peta Lokasi</h4>
                         <div>
-                            <x-input-label value="Senin (Mulai)" />
-                            <x-text-input name="senin_mulai" type="time" class="mt-1 block w-full"
-                                value="{{ old('senin_mulai', $about->senin_mulai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('senin_mulai')" />
-                        </div>
-                        <div>
-                            <x-input-label value="Senin (Selesai)" />
-                            <x-text-input name="senin_selesai" type="time" class="mt-1 block w-full"
-                                value="{{ old('senin_selesai', $about->senin_selesai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('senin_selesai')" />
-                        </div>
-
-                        {{-- SELASA --}}
-                        <div>
-                            <x-input-label value="Selasa (Mulai)" />
-                            <x-text-input name="selasa_mulai" type="time" class="mt-1 block w-full"
-                                value="{{ old('selasa_mulai', $about->selasa_mulai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('selasa_mulai')" />
-                        </div>
-                        <div>
-                            <x-input-label value="Selasa (Selesai)" />
-                            <x-text-input name="selasa_selesai" type="time" class="mt-1 block w-full"
-                                value="{{ old('selasa_selesai', $about->selasa_selesai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('selasa_selesai')" />
-                        </div>
-
-                        {{-- RABU --}}
-                        <div>
-                            <x-input-label value="Rabu (Mulai)" />
-                            <x-text-input name="rabu_mulai" type="time" class="mt-1 block w-full"
-                                value="{{ old('rabu_mulai', $about->rabu_mulai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('rabu_mulai')" />
-                        </div>
-                        <div>
-                            <x-input-label value="Rabu (Selesai)" />
-                            <x-text-input name="rabu_selesai" type="time" class="mt-1 block w-full"
-                                value="{{ old('rabu_selesai', $about->rabu_selesai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('rabu_selesai')" />
-                        </div>
-
-                        {{-- KAMIS --}}
-                        <div>
-                            <x-input-label value="Kamis (Mulai)" />
-                            <x-text-input name="kamis_mulai" type="time" class="mt-1 block w-full"
-                                value="{{ old('kamis_mulai', $about->kamis_mulai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('kamis_mulai')" />
-                        </div>
-                        <div>
-                            <x-input-label value="Kamis (Selesai)" />
-                            <x-text-input name="kamis_selesai" type="time" class="mt-1 block w-full"
-                                value="{{ old('kamis_selesai', $about->kamis_selesai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('kamis_selesai')" />
-                        </div>
-
-                        {{-- JUMAT --}}
-                        <div>
-                            <x-input-label value="Jumat (Mulai)" />
-                            <x-text-input name="jumat_mulai" type="time" class="mt-1 block w-full"
-                                value="{{ old('jumat_mulai', $about->jumat_mulai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('jumat_mulai')" />
-                        </div>
-                        <div>
-                            <x-input-label value="Jumat (Selesai)" />
-                            <x-text-input name="jumat_selesai" type="time" class="mt-1 block w-full"
-                                value="{{ old('jumat_selesai', $about->jumat_selesai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('jumat_selesai')" />
+                            <x-input-label value="Link Embed Google Maps (Src)" />
+                            <x-text-input name="google_maps_embed" class="w-full" value="{{ old('google_maps_embed', $about->google_maps_embed) }}" />
+                            <p class="text-[10px] text-gray-400 mt-1">
+                                Copy URL dari menu "Embed a map" di Google Maps (hanya bagian dalam tanda kutip <code>src="..."</code>).
+                            </p>
                         </div>
                     </div>
+                </div>
 
-                    {{-- ================= JAM CHECK-OUT ================= --}}
-                    <div class="pt-6 border-t">
-                        <h3 class="font-black text-lg text-gray-800">
-                            Jam Check-out Mahasiswa (Per Hari)
-                        </h3>
-                        <p class="text-sm text-gray-500 mt-1">
-                            Digunakan untuk membatasi waktu absen pulang mahasiswa.
-                        </p>
-                    </div>
+                {{-- Button Bawah Kiri --}}
+                <div class="mt-6 pt-4 border-t border-gray-100 flex justify-start">
+                    <x-primary-button>Simpan Footer</x-primary-button>
+                </div>
+            </form>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {{-- SENIN --}}
-                        <div>
-                            <x-input-label value="Senin (Mulai Check-out)" />
-                            <x-text-input name="senin_checkout_mulai" type="time" class="mt-1 block w-full"
-                                value="{{ old('senin_checkout_mulai', $about->senin_checkout_mulai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('senin_checkout_mulai')" />
-                        </div>
-                        <div>
-                            <x-input-label value="Senin (Selesai Check-out)" />
-                            <x-text-input name="senin_checkout_selesai" type="time" class="mt-1 block w-full"
-                                value="{{ old('senin_checkout_selesai', $about->senin_checkout_selesai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('senin_checkout_selesai')" />
-                        </div>
+            <script>
+                function dynamicLinksForm() {
+                    return {
+                        rows: [],
+                        init() {
+                            const raw = document.getElementById('existing-links').getAttribute('data-links');
+                            try {
+                                const parsed = JSON.parse(raw);
+                                if (Array.isArray(parsed) && parsed.length > 0) {
+                                    this.rows = parsed;
+                                } else {
+                                    this.rows = [{ label: '', url: '' }];
+                                }
+                            } catch (e) {
+                                this.rows = [{ label: '', url: '' }];
+                            }
+                        },
+                        add() { this.rows.push({ label: '', url: '' }); },
+                        remove(index) {
+                            if (this.rows.length > 1) this.rows.splice(index, 1);
+                            else { this.rows[0].label = ''; this.rows[0].url = ''; }
+                        }
+                    }
+                }
+            </script>
 
-                        {{-- SELASA --}}
-                        <div>
-                            <x-input-label value="Selasa (Mulai Check-out)" />
-                            <x-text-input name="selasa_checkout_mulai" type="time" class="mt-1 block w-full"
-                                value="{{ old('selasa_checkout_mulai', $about->selasa_checkout_mulai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('selasa_checkout_mulai')" />
-                        </div>
-                        <div>
-                            <x-input-label value="Selasa (Selesai Check-out)" />
-                            <x-text-input name="selasa_checkout_selesai" type="time" class="mt-1 block w-full"
-                                value="{{ old('selasa_checkout_selesai', $about->selasa_checkout_selesai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('selasa_checkout_selesai')" />
-                        </div>
-
-                        {{-- RABU --}}
-                        <div>
-                            <x-input-label value="Rabu (Mulai Check-out)" />
-                            <x-text-input name="rabu_checkout_mulai" type="time" class="mt-1 block w-full"
-                                value="{{ old('rabu_checkout_mulai', $about->rabu_checkout_mulai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('rabu_checkout_mulai')" />
-                        </div>
-                        <div>
-                            <x-input-label value="Rabu (Selesai Check-out)" />
-                            <x-text-input name="rabu_checkout_selesai" type="time" class="mt-1 block w-full"
-                                value="{{ old('rabu_checkout_selesai', $about->rabu_checkout_selesai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('rabu_checkout_selesai')" />
-                        </div>
-
-                        {{-- KAMIS --}}
-                        <div>
-                            <x-input-label value="Kamis (Mulai Check-out)" />
-                            <x-text-input name="kamis_checkout_mulai" type="time" class="mt-1 block w-full"
-                                value="{{ old('kamis_checkout_mulai', $about->kamis_checkout_mulai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('kamis_checkout_mulai')" />
-                        </div>
-                        <div>
-                            <x-input-label value="Kamis (Selesai Check-out)" />
-                            <x-text-input name="kamis_checkout_selesai" type="time" class="mt-1 block w-full"
-                                value="{{ old('kamis_checkout_selesai', $about->kamis_checkout_selesai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('kamis_checkout_selesai')" />
-                        </div>
-
-                        {{-- JUMAT --}}
-                        <div>
-                            <x-input-label value="Jumat (Mulai Check-out)" />
-                            <x-text-input name="jumat_checkout_mulai" type="time" class="mt-1 block w-full"
-                                value="{{ old('jumat_checkout_mulai', $about->jumat_checkout_mulai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('jumat_checkout_mulai')" />
-                        </div>
-                        <div>
-                            <x-input-label value="Jumat (Selesai Check-out)" />
-                            <x-text-input name="jumat_checkout_selesai" type="time" class="mt-1 block w-full"
-                                value="{{ old('jumat_checkout_selesai', $about->jumat_checkout_selesai) }}" required />
-                            <x-input-error class="mt-2" :messages="$errors->get('jumat_checkout_selesai')" />
-                        </div>
-                    </div>
-
-                    {{-- SUBMIT --}}
-                    <div class="pt-4">
-                        <x-primary-button class="rounded-xl">
-                            Simpan
-                        </x-primary-button>
-                    </div>
-
-                </form>
-            </div>
+            {{-- Script Alpine untuk Link Dinamis --}}
+            <script>
+                function dynamicLinksForm() {
+                    return {
+                        rows: [],
+                        init() {
+                            // Ambil data dari atribut data-links
+                            const raw = document.getElementById('existing-links').getAttribute('data-links');
+                            try {
+                                const parsed = JSON.parse(raw);
+                                if (Array.isArray(parsed) && parsed.length > 0) {
+                                    this.rows = parsed;
+                                } else {
+                                    this.rows = [{ label: '', url: '' }]; // Default 1 baris kosong
+                                }
+                            } catch (e) {
+                                this.rows = [{ label: '', url: '' }];
+                            }
+                        },
+                        add() {
+                            this.rows.push({ label: '', url: '' });
+                        },
+                        remove(index) {
+                            if (this.rows.length > 1) {
+                                this.rows.splice(index, 1);
+                            } else {
+                                // Jika sisa 1, kosongkan saja jangan dihapus
+                                this.rows[0].label = '';
+                                this.rows[0].url = '';
+                            }
+                        }
+                    }
+                }
+            </script>
 
         </div>
     </div>
+
+    {{-- SCRIPT ALPINE UNTUK BIDANG --}}
+    <script>
+        function bidangDivisiForm() {
+            return {
+                items: [],
+                serialized: '',
+                init() {
+                    const raw = (this.$refs.seed?.value || '').toString();
+                    this.items = raw.split(/\r\n|\n|\r/).map(s => (s || '').trim()).filter(Boolean);
+                    if(this.items.length === 0) this.items.push('');
+                    this.sync();
+                },
+                sync() {
+                    this.serialized = this.items.map(s => (s || '').trim()).filter(Boolean).join("\n");
+                },
+                add() { this.items.push(''); this.$nextTick(() => this.sync()); },
+                remove(index) { this.items.splice(index, 1); this.$nextTick(() => this.sync()); },
+            }
+        }
+    </script>
 </x-app-layout>
