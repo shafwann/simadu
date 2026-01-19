@@ -113,8 +113,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AdminBidangSeeder::class,
             AboutSettingSeeder::class,//seeder tambahan
+            MasterAdminSeeder::class,
         ]);
 
-        
+
     }
 }

@@ -262,7 +262,7 @@ Route::middleware(['auth', 'role:pembimbing'])
 
 
 // ==========================================
-// 7. GROUP: MASTER ADMIN ONLY (Super User)
+// GROUP: MASTER ADMIN ONLY
 // ==========================================
 Route::middleware(['auth', 'role:master'])
     ->prefix('master')
@@ -271,6 +271,11 @@ Route::middleware(['auth', 'role:master'])
         Route::get('/agencies', [MasterAgencyController::class, 'index'])->name('agencies.index');
         Route::get('/agencies/create', [MasterAgencyController::class, 'create'])->name('agencies.create');
         Route::post('/agencies', [MasterAgencyController::class, 'store'])->name('agencies.store');
+
+        // ✅ TAMBAHAN: Route Edit & Update
+        Route::get('/agencies/{id}/edit', [MasterAgencyController::class, 'edit'])->name('agencies.edit');
+        Route::put('/agencies/{id}', [MasterAgencyController::class, 'update'])->name('agencies.update');
+
         Route::delete('/agencies/{id}', [MasterAgencyController::class, 'destroy'])->name('agencies.destroy');
     });
 

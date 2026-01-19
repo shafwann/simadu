@@ -20,13 +20,13 @@ class AdminBidangSeeder extends Seeder
             'Penelitian, Pengembangan & Penyusunan Program'
         ];
 
+        // ✅ Tentukan nama instansi untuk admin-admin ini
+        $kategoriDefault = 'BAPPERIDA';
+
         foreach ($bidangs as $bidang) {
             $slug = Str::slug($bidang);
 
             // Logic Email:
-            // 1. Jika Administrator Sistem -> superadmin@bapperlitbang.com
-            // 2. Jika Lainnya -> admin.namabidang@bapperlitbang.com
-
             if ($bidang === 'Administrator Sistem') {
                 $email = 'superadmin@bapperlitbang.com';
                 $name = 'Super Admin BAPPERIDA';
@@ -40,10 +40,14 @@ class AdminBidangSeeder extends Seeder
                 [
                     'name' => $name,
                     'password' => Hash::make('12345678'),
-                    'role' => 'admin',     // Role tetap admin (hak akses penuh)
-                    'bidang' => $bidang,   // Bidang sesuai divisi
+                    'role' => 'admin',    // Role admin instansi
+                    'bidang' => $bidang,  // Bidang sesuai divisi
                     'email_verified_at' => now(),
-                    'status' => 'aktif',   // Pastikan status aktif
+                    'status' => 'aktif',
+
+                    // ✅ TAMBAHAN: KATEGORI INSTANSI
+                    // Wajib diisi agar admin ini bisa login dan melihat data 'BAPPERIDA'
+                    'kategori_instansi' => $kategoriDefault,
                 ]
             );
         }

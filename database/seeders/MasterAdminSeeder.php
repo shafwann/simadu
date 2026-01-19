@@ -13,7 +13,7 @@ class MasterAdminSeeder extends Seeder
         User::create([
             'name' => 'Master Super Admin',
             'email' => 'master@system.com',
-            'password' => Hash::make('password'), // Ganti password yang kuat
+            'password' => Hash::make('12345678'), // Ganti password yang kuat
             'role' => 'master',
             'kategori_instansi' => null, // Master tidak punya kategori
             'bidang' => 'System Owner',

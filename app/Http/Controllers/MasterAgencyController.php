@@ -7,64 +7,51 @@ use App\Models\AboutSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class MasterAgencyController extends Controller
 {
-    /**
-     * Menampilkan daftar Admin Instansi yang ada.
-     */
     public function index()
     {
-        // Ambil user yang rolenya 'admin' (Admin Instansi)
-        // Master Admin bisa melihat semua karena Scope di-bypass untuk role 'master'
+        // ✅ FILTER: Hanya ambil 'Administrator Sistem' (Super Admin) dari setiap instansi
         $agencies = User::where('role', 'admin')
+            ->where('bidang', 'Administrator Sistem') // Agar admin divisi tidak muncul
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
         return view('master.agencies.index', compact('agencies'));
     }
 
-    /**
-     * Form tambah instansi baru.
-     */
     public function create()
     {
         return view('master.agencies.create');
     }
 
-    /**
-     * Proses pembuatan Instansi & Admin Baru.
-     */
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255', // Nama Admin
+            'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'kategori_instansi' => 'required|string|unique:users,kategori_instansi', // Kategori harus unik agar tidak double admin
+            'kategori_instansi' => 'required|string|unique:users,kategori_instansi',
             'password' => 'required|min:8',
         ]);
 
-        // Gunakan Transaction agar jika salah satu gagal, semua batal
         DB::transaction(function () use ($request) {
+            $kategoriUpper = strtoupper($request->kategori_instansi);
 
-            $kategoriUpper = strtoupper($request->kategori_instansi); // Diseragamkan HURUF BESAR
-
-            // 1. Buat Akun Admin Instansi
             User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'role' => 'admin', // Ini adalah Super Admin-nya Instansi
-                'kategori_instansi' => $kategoriUpper, // KUNCI UTAMA ISOLASI
-                'bidang' => 'Administrator Sistem',
+                'role' => 'admin',
+                'kategori_instansi' => $kategoriUpper,
+                'bidang' => 'Administrator Sistem', // Menandakan dia Super Admin
                 'status' => 'aktif',
             ]);
 
-            // 2. Buat Default AboutSetting untuk Instansi tersebut
-            // Ini PENTING supaya dashboard admin baru tidak error saat load logo/judul
             AboutSetting::create([
                 'kategori_instansi' => $kategoriUpper,
-                'app_name' => $kategoriUpper, // Default nama aplikasi = nama instansi
+                'app_name' => $kategoriUpper,
                 'agency_name' => 'Pemerintah Kab. Karanganyar',
                 'app_description' => 'Sistem Manajemen Magang ' . $kategoriUpper,
                 'nama_instansi' => 'Dinas ' . $kategoriUpper,
@@ -73,29 +60,56 @@ class MasterAgencyController extends Controller
                 'jam_operasional' => 'Senin-Jumat: 08.00-16.00',
                 'radius_meter' => 50,
             ]);
-
         });
 
         return redirect()->route('master.agencies.index')
-            ->with('success', 'Instansi & Admin berhasil dibuat! Kategori: ' . strtoupper($request->kategori_instansi));
+            ->with('success', 'Instansi & Super Admin berhasil dibuat!');
     }
 
-    /**
-     * Hapus Instansi (Hapus Adminnya).
-     * Hati-hati: User mahasiswa dengan kategori sama mungkin akan yatim piatu (tidak punya admin),
-     * tapi datanya tetap aman di database.
-     */
+    // ✅ METHOD EDIT
+    public function edit($id)
+    {
+        $agency = User::findOrFail($id);
+        return view('master.agencies.edit', compact('agency'));
+    }
+
+    // ✅ METHOD UPDATE
+    public function update(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
+            'password' => 'nullable|min:8', // Password opsional saat edit
+        ]);
+
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+        ];
+
+        // Jika password diisi, update. Jika kosong, biarkan lama.
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        $user->update($data);
+
+        return redirect()->route('master.agencies.index')
+            ->with('success', 'Data Super Admin berhasil diperbarui.');
+    }
+
     public function destroy($id)
     {
         $user = User::findOrFail($id);
 
-        // Hapus juga setting-nya
         if ($user->kategori_instansi) {
             AboutSetting::where('kategori_instansi', $user->kategori_instansi)->delete();
         }
 
         $user->delete();
 
-        return back()->with('success', 'Admin Instansi berhasil dihapus.');
+        return back()->with('success', 'Instansi berhasil dihapus.');
     }
 }
