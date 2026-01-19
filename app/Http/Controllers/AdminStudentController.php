@@ -22,7 +22,11 @@ class AdminStudentController extends Controller
         $status = $request->input('status'); // <--- 1. Ambil input status
 
         $students = User::where('role', 'mahasiswa')
-            // Filter Bidang (Kecuali Super Admin)
+            //  FILTER INSTANSI SISTEM
+            ->when($admin->kategori_instansi, function ($query) use ($admin) {
+                return $query->where('kategori_instansi', $admin->kategori_instansi);
+            })
+            //  LOGIKA LAMA TETAP (bidang)
             ->when(!$isSuperAdmin, function ($query) use ($admin) {
                 return $query->where('bidang', $admin->bidang);
             })
@@ -89,6 +93,7 @@ class AdminStudentController extends Controller
             'password' => Hash::make($request->password),
             'role' => 'mahasiswa',
 
+            'kategori_instansi' => Auth::user()->kategori_instansi,
             // ✅ Bidang tidak diinput di create, jadi default null (mahasiswa isi sendiri)
             'bidang' => null,
 
@@ -112,58 +117,74 @@ class AdminStudentController extends Controller
     // 4. LIHAT DETAIL
     public function show($id)
     {
-        // 1. Ambil Data Mahasiswa + Relasi Ringan (Laporan & Assessment)
-        // Kita HAPUS 'attendances' dan 'logbooks' dari sini karena akan di-query terpisah untuk pagination
         $student = User::with([
-            'laporans' => function ($q) {
-                $q->latest();
-            },
+            'laporans' => fn ($q) => $q->latest(),
             'assessment'
         ])->findOrFail($id);
 
-        // 2. Cek Hak Akses Admin Bidang
-        $admin = Auth::user();
-        if ($admin->bidang !== 'Administrator Sistem' && $student->bidang !== $admin->bidang) {
-            abort(403, 'Akses Ditolak. Anda tidak memiliki wewenang untuk mahasiswa ini.');
+        // 🔒 CEK INSTANSI
+        if (
+            Auth::user()->kategori_instansi &&
+            $student->kategori_instansi !== Auth::user()->kategori_instansi
+        ) {
+            abort(403, 'Akses Ditolak. Beda instansi.');
         }
 
-        // 3. Pagination Presensi (Limit 5, page name = 'presensi_page')
+        // 🔒 CEK BIDANG (LOGIKA LAMA)
+        $admin = Auth::user();
+        if ($admin->bidang !== 'Administrator Sistem' && $student->bidang !== $admin->bidang) {
+            abort(403, 'Akses Ditolak.');
+        }
+
         $attendances = $student->attendances()
             ->orderBy('tanggal', 'desc')
             ->paginate(5, ['*'], 'presensi_page');
 
-        // 4. Pagination Logbook (Limit 5, page name = 'logbook_page')
         $logbooks = $student->logbooks()
             ->orderBy('tanggal', 'desc')
             ->paginate(5, ['*'], 'logbook_page');
 
-        // 5. Kirim ke View
         return view('admin.students.show', compact('student', 'attendances', 'logbooks'));
     }
+
 
     // 5. FORM EDIT MAHASISWA (INI YANG BARU DITAMBAHKAN)
     public function edit($id)
     {
         $student = User::findOrFail($id);
 
-        // Cek Hak Akses (Admin biasa hanya boleh edit mahasiswa bidangnya sendiri)
+        // 🔒 CEK INSTANSI
+        if (
+            Auth::user()->kategori_instansi &&
+            $student->kategori_instansi !== Auth::user()->kategori_instansi
+        ) {
+            abort(403, 'Akses Ditolak. Beda instansi.');
+        }
+
         $admin = Auth::user();
         if ($admin->bidang !== 'Administrator Sistem' && $student->bidang !== $admin->bidang) {
             abort(403, 'Anda tidak berhak mengedit data mahasiswa dari bidang lain.');
         }
 
-       $bidangOptions = \App\Models\AboutSetting::bidangOptions();
+        $bidangOptions = \App\Models\AboutSetting::bidangOptions();
 
-return view('admin.students.edit', compact('student', 'bidangOptions'));
-
+        return view('admin.students.edit', compact('student', 'bidangOptions'));
     }
+
 
     // 6. PROSES UPDATE MAHASISWA (INI YANG BARU DITAMBAHKAN)
     public function update(Request $request, $id)
     {
         $student = User::findOrFail($id);
 
-        // Cek Hak Akses
+        // 🔒 CEK INSTANSI
+        if (
+            Auth::user()->kategori_instansi &&
+            $student->kategori_instansi !== Auth::user()->kategori_instansi
+        ) {
+            abort(403, 'Akses Ditolak. Beda instansi.');
+        }
+
         $admin = Auth::user();
         if ($admin->bidang !== 'Administrator Sistem' && $student->bidang !== $admin->bidang) {
             abort(403, 'Akses Ditolak.');
@@ -233,6 +254,14 @@ return view('admin.students.edit', compact('student', 'bidangOptions'));
     {
         $student = User::findOrFail($id);
 
+        // 🔒 CEK INSTANSI
+        if (
+            Auth::user()->kategori_instansi &&
+            $student->kategori_instansi !== Auth::user()->kategori_instansi
+        ) {
+            abort(403, 'Akses Ditolak. Beda instansi.');
+        }
+
         $admin = Auth::user();
         if ($admin->bidang !== 'Administrator Sistem' && $student->bidang !== $admin->bidang) {
             abort(403, 'Dilarang menghapus mahasiswa dari divisi lain.');
@@ -243,21 +272,33 @@ return view('admin.students.edit', compact('student', 'bidangOptions'));
         return redirect()->back()->with('success', 'Data mahasiswa berhasil dihapus.');
     }
 
+
     // 8. UPDATE STATUS (Tombol Cepat di Show)
     public function updateStatus(Request $request, $id)
     {
         $student = User::findOrFail($id);
+
+        // 🔒 CEK INSTANSI
+        if (
+            Auth::user()->kategori_instansi &&
+            $student->kategori_instansi !== Auth::user()->kategori_instansi
+        ) {
+            abort(403, 'Akses Ditolak. Beda instansi.');
+        }
 
         $admin = Auth::user();
         if ($admin->bidang !== 'Administrator Sistem' && $student->bidang !== $admin->bidang) {
             abort(403, 'Akses Ditolak.');
         }
 
-        $newStatus = ($student->status === 'aktif') ? 'nonaktif' : 'aktif';
+        $newStatus = $student->status === 'aktif' ? 'nonaktif' : 'aktif';
         $student->update(['status' => $newStatus]);
 
-        $pesan = ($newStatus === 'aktif') ? 'Mahasiswa diaktifkan kembali.' : 'Mahasiswa dinonaktifkan.';
-
-        return back()->with('success', $pesan);
+        return back()->with('success',
+            $newStatus === 'aktif'
+                ? 'Mahasiswa diaktifkan kembali.'
+                : 'Mahasiswa dinonaktifkan.'
+        );
     }
+
 }
