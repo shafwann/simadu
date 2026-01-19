@@ -1,115 +1,114 @@
-<?php 
+<?php
+
 namespace App\Http\Controllers;
 
 use App\Models\PembimbingRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str; 
 
 class DosenRequestController extends Controller
 {
-
-    //create
     public function create()
     {
-        $mahasiswa = auth()->user();
-
-        $request = PembimbingRequest::where('mahasiswa_id', $mahasiswa->id)
-            ->latest()
-            ->first();
-
         return view('mahasiswa.pembimbing.request', [
-            'mahasiswa' => $mahasiswa,
-            'request' => $request
+            'mahasiswa' => auth()->user(),
+            'request' => PembimbingRequest::where('mahasiswa_id', auth()->id())->latest()->first()
         ]);
     }
 
-
-
-    // Simpan request mahasiswa
     public function store(Request $request)
     {
         $request->validate([
-            'nama_dosen' => 'required|string|max:255',
-            'nidn' => 'nullable|digits:10',
-            'email' => 'required|email|unique:pembimbing_requests,email',
-            'password' => 'required|min:8',
+            'nama_dosen' => 'required|string',
+            'nidn'       => 'nullable|digits:10',
+            'email'      => 'required|email|unique:pembimbing_requests',
+            'password'   => 'required|min:8',
         ]);
 
         PembimbingRequest::create([
-            'nama_dosen' => $request->nama_dosen,
-            'nidn' => $request->nidn,
-            'email' => $request->email,
-             'password' => Hash::make($request->password),
-            'instansi' => auth()->user()->instansi,
-            'prodi' => auth()->user()->prodi,
-            'fakultas' => auth()->user()->fakultas,
-            'mahasiswa_id' => auth()->id(),
-            'status' => 'pending',
+            'nama_dosen'        => $request->nama_dosen,
+            'nidn'              => $request->nidn,
+            'email'             => $request->email,
+            'password'          => bcrypt($request->password),
+            'mahasiswa_id'      => auth()->id(),
+            'instansi'          => auth()->user()->instansi,
+            'prodi'             => auth()->user()->prodi,
+            'fakultas'          => auth()->user()->fakultas,
+            'kategori_instansi' => auth()->user()->kategori_instansi,
+            'status'            => 'pending',
         ]);
 
-        return back()->with('success', 'Pengajuan pembimbing berhasil dikirim.');
+        return back()->with('success', 'Pengajuan dikirim');
     }
 
-    // Approve request dosen → pindah ke users + hubungkan ke mahasiswa
-public function approve($id)
-{
-    DB::transaction(function () use ($id) {
+    public function approve($id)
+    {
+        DB::transaction(function () use ($id) {
 
-        $request = PembimbingRequest::findOrFail($id);
+            $req = PembimbingRequest::with('mahasiswa')->findOrFail($id);
 
-        // ❌ CEGAH APPROVE ULANG
-        if ($request->status !== 'pending') {
+            // 1️⃣ Cegah approve ulang
+            if ($req->status !== 'pending') {
+                abort(403, 'Request sudah diproses');
+            }
+
+            // 2️⃣ VALIDASI INSTANSI BERDASARKAN MAHASISWA
+            if (
+                auth()->user()->kategori_instansi &&
+                $req->mahasiswa->kategori_instansi !== auth()->user()->kategori_instansi
+            ) {
+                abort(403, 'Akses Ditolak. Beda instansi.');
+            }
+
+            // 3️⃣ BUAT / AMBIL DOSEN
+            $dosen = User::firstOrCreate(
+                ['email' => $req->email],
+                [
+                    'name'              => $req->nama_dosen,
+                    'password'          => $req->password,
+                    'role'              => 'pembimbing',
+                    'status'            => 'aktif',
+                    'kategori_instansi' => $req->mahasiswa->kategori_instansi, // 🔑
+                ]
+            );
+
+            // 4️⃣ HUBUNGKAN DOSEN ↔ MAHASISWA
+            $req->mahasiswa
+                ->dosenPembimbing()
+                ->syncWithoutDetaching([$dosen->id]);
+
+            // 5️⃣ UPDATE STATUS
+            $req->update(['status' => 'approved']);
+        });
+
+        return back()->with('success', 'Request disetujui');
+    }
+
+
+    public function reject($id)
+    {
+        $req = PembimbingRequest::with('mahasiswa')->findOrFail($id);
+
+        // 1️⃣ Cegah reject ulang
+        if ($req->status !== 'pending') {
             abort(403, 'Request sudah diproses');
         }
 
-        // 🔍 CEK APAKAH DOSEN SUDAH ADA
-        $dosen = User::where('email', $request->email)->first();
-
-        if (! $dosen) {
-            $dosen = User::create([
-                'name'      => $request->nama_dosen,
-                'nidn'      => $request->nidn,
-                'email'     => $request->email,
-                'password'  => $request->password, // sudah hash
-                'instansi'  => $request->instansi,
-                'prodi'     => $request->prodi,
-                'fakultas'  => $request->fakultas,
-                'role'      => 'pembimbing',
-                'status'    => 'aktif',
-            ]);
+        // 2️⃣ VALIDASI INSTANSI (PAKAI MAHASISWA)
+        if (
+            auth()->user()->kategori_instansi &&
+            $req->mahasiswa->kategori_instansi !== auth()->user()->kategori_instansi
+        ) {
+            abort(403, 'Akses Ditolak. Beda instansi.');
         }
 
-        // 🔗 HUBUNGKAN DOSEN ↔ MAHASISWA
-        $mahasiswa = User::findOrFail($request->mahasiswa_id);
-        $mahasiswa->dosenPembimbing()
-                  ->syncWithoutDetaching([$dosen->id]);
-
-        // ✅ UPDATE STATUS REQUEST
-        $request->update([
-            'status' => 'approved'
+        // 3️⃣ UPDATE STATUS
+        $req->update([
+            'status' => 'rejected'
         ]);
-    });
 
-    return back()->with('success', 'Dosen berhasil disetujui.');
-}
-
-
-
-
-    // Tolak request
-
-public function reject($id)
-{
-    $request = PembimbingRequest::findOrFail($id);
-
-    $request->update([
-        'status' => 'rejected'
-    ]);
-
-    return back()->with('success', 'Pengajuan dosen ditolak');
-}
+        return back()->with('success', 'Request ditolak');
+    }
 
 }

@@ -10,79 +10,102 @@ use Illuminate\Validation\Rules;
 
 class AdminManagementController extends Controller
 {
-    // Cek apakah user adalah SUPER ADMIN
-    private function checkSuperAdmin()
+    /**
+     * Cek apakah user adalah SUPER ADMIN
+     */
+    private function checkSuperAdmin(): void
     {
-        if (Auth::user()->bidang !== 'Administrator Sistem') {
-            abort(403, 'Akses Ditolak. Hanya Administrator Sistem yang boleh mengakses halaman ini.');
+        if (
+            Auth::user()->role !== 'admin' ||
+            Auth::user()->bidang !== 'Administrator Sistem'
+        ) {
+            abort(403, 'Akses ditolak. Hanya Super Admin yang boleh mengakses.');
         }
     }
 
-    // 1. LIHAT DAFTAR ADMIN
+    /**
+     * 1. DAFTAR ADMIN (HANYA 1 INSTANSI)
+     */
     public function index()
     {
         $this->checkSuperAdmin();
 
-        // Ambil semua user dengan role 'admin', termasuk diri sendiri untuk reference
         $admins = User::where('role', 'admin')
+            ->where('kategori_instansi', Auth::user()->kategori_instansi)
             ->orderBy('bidang')
             ->orderBy('name')
             ->get();
-        
+
         return view('admin.manage.index', compact('admins'));
     }
 
-    // 2. FORM TAMBAH ADMIN
+    /**
+     * 2. FORM TAMBAH ADMIN
+     */
     public function create()
     {
         $this->checkSuperAdmin();
+
         return view('admin.manage.create');
     }
 
-    // 3. SIMPAN ADMIN BARU
+    /**
+     * 3. SIMPAN ADMIN BARU
+     */
     public function store(Request $request)
     {
         $this->checkSuperAdmin();
 
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'bidang' => ['required', 'string'],
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'email', 'unique:users'],
+            'bidang'   => ['required', 'string'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'admin',
-            'bidang' => $request->bidang,
-            'status' => 'aktif',
+            'name'              => $request->name,
+            'email'             => $request->email,
+            'password'          => Hash::make($request->password),
+            'role'              => 'admin',
+            'bidang'            => $request->bidang,
+            'status'            => 'aktif',
+
+            // 🔐 OTOMATIS IKUT SUPER ADMIN
+            'kategori_instansi' => Auth::user()->kategori_instansi,
         ]);
 
-        return redirect()->route('admin.manage.index')
-            ->with('success', 'Admin baru berhasil ditambahkan!');
+        return redirect()
+            ->route('admin.manage.index')
+            ->with('success', 'Admin bidang berhasil ditambahkan.');
     }
 
-    // 4. HAPUS ADMIN
+    /**
+     * 4. HAPUS ADMIN
+     */
     public function destroy($id)
     {
         $this->checkSuperAdmin();
 
         $admin = User::findOrFail($id);
 
-        // Jangan hapus diri sendiri
+        // ❌ Tidak boleh hapus diri sendiri
         if ($admin->id === Auth::id()) {
-            return back()->with('error', 'Tidak dapat menghapus akun sendiri!');
+            return back()->with('error', 'Tidak dapat menghapus akun sendiri.');
         }
 
-        // Jangan hapus sesama Super Admin jika ada logic tambahan
+        // ❌ Tidak boleh hapus Super Admin
         if ($admin->bidang === 'Administrator Sistem') {
-            return back()->with('error', 'Tidak dapat menghapus sesama Administrator Sistem!');
+            return back()->with('error', 'Tidak dapat menghapus Super Admin.');
+        }
+
+        // 🔒 Cegah beda instansi
+        if ($admin->kategori_instansi !== Auth::user()->kategori_instansi) {
+            abort(403, 'Akses ditolak. Beda instansi.');
         }
 
         $admin->delete();
 
-        return back()->with('success', 'Data Admin berhasil dihapus.');
+        return back()->with('success', 'Admin berhasil dihapus.');
     }
 }
