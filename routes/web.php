@@ -48,19 +48,47 @@ Route::get('/', function (Request $request) {
 
     $total = (clone $query)->count();
 
+    // ✅ PERBAIKAN 1: Tambahkan kolom nim, prodi, bidang, status
     $mahasiswa = (clone $query)
-        ->select('name', 'instansi', 'kategori_instansi')
+        ->select(
+            'name',
+            'instansi',
+            'kategori_instansi',
+            'nim',      // Tambahan
+            'prodi',    // Tambahan
+            'bidang',   // Tambahan
+            'status'    // Tambahan
+        )
         ->latest()
         ->paginate(7);
 
+    // ✅ PERBAIKAN 2: Marquee butuh kategori_instansi
     $marquee = (clone $query)
-        ->select('name', 'instansi')
+        ->select('name', 'instansi', 'kategori_instansi')
         ->latest()
         ->take(100)
         ->get();
 
-    $about = AboutSetting::where('kategori_instansi', $filterInstansi)->first()
-             ?? AboutSetting::first();
+    // 1. Coba Cari Berdasarkan Filter URL
+    $about = null;
+    if ($filterInstansi) {
+        $about = AboutSetting::where('kategori_instansi', $filterInstansi)->first();
+    }
+
+    // 2. Jika tidak ada filter, atau data filter tidak ketemu -> Cari MASTER (Buat jika belum ada)
+    if (!$about) {
+        $about = AboutSetting::firstOrCreate(
+            ['kategori_instansi' => 'MASTER'],
+            [
+                'app_name' => 'SISTEM MAGANG KARANGANYAR', // Default Title
+                'agency_name' => 'PEMERINTAH KAB. KARANGANYAR',
+                'app_description' => 'Portal Magang Kabupaten Karanganyar',
+                'nama_instansi' => 'Pusat',
+                'jam_operasional' => 'Senin-Jumat: 08.00-16.00',
+                'radius_meter' => 50
+            ]
+        );
+    }
 
     return view('welcome', compact('total', 'mahasiswa', 'marquee', 'about'));
 });
@@ -277,6 +305,10 @@ Route::middleware(['auth', 'role:master'])
         Route::put('/agencies/{id}', [MasterAgencyController::class, 'update'])->name('agencies.update');
 
         Route::delete('/agencies/{id}', [MasterAgencyController::class, 'destroy'])->name('agencies.destroy');
+
+        //Setting Global Branding & Footer
+        Route::get('/settings', [App\Http\Controllers\MasterSettingController::class, 'index'])->name('settings.index');
+        Route::put('/settings', [App\Http\Controllers\MasterSettingController::class, 'update'])->name('settings.update');
     });
 
 require __DIR__ . '/auth.php';

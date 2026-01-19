@@ -1,7 +1,13 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-black text-xl text-gray-800 leading-tight">About Instansi</h2>
-        <p class="text-sm text-gray-500 mt-1">Hanya Super Admin yang bisa mengubah data ini.</p>
+        <div class="flex flex-col">
+            <h2 class="font-black text-xl text-gray-800 leading-tight">
+                About Instansi: <span class="text-blue-600">{{ Auth::user()->kategori_instansi ?? 'UMUM' }}</span>
+            </h2>
+            <p class="text-sm text-gray-500 mt-1">
+                Data ini hanya berlaku untuk mahasiswa di lingkungan <b>{{ Auth::user()->kategori_instansi ?? 'UMUM' }}</b>.
+            </p>
+        </div>
     </x-slot>
 
     <div class="py-8">
@@ -27,13 +33,11 @@
                 @csrf @method('PUT')
                 <input type="hidden" name="section" value="branding">
 
-                {{-- Header --}}
                 <div class="mb-6 border-b pb-4">
                     <h3 class="font-bold text-lg text-blue-800">1. Branding Aplikasi</h3>
                     <p class="text-xs text-gray-400 mt-1">Mengatur nama, deskripsi, dan logo yang tampil di Navbar/Login.</p>
                 </div>
 
-                {{-- Inputs --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <x-input-label for="app_name" value="Nama Aplikasi" />
@@ -58,7 +62,6 @@
                     </div>
                 </div>
 
-                {{-- Button Bawah Kiri --}}
                 <div class="mt-6 pt-4 border-t border-gray-100 flex justify-start">
                     <x-primary-button>Simpan Branding</x-primary-button>
                 </div>
@@ -76,7 +79,6 @@
                     <p class="text-xs text-gray-400 mt-1">Digunakan untuk dropdown registrasi mahasiswa.</p>
                 </div>
 
-                {{-- Logic AlpineJS --}}
                 <textarea x-ref="seed" class="hidden">{{ old('bidang_options', $bidangOptionsText ?? '') }}</textarea>
                 <input type="hidden" name="bidang_options" :value="serialized">
 
@@ -96,7 +98,6 @@
                     <span>+</span> Tambah Baris Baru
                 </button>
 
-                {{-- Button Bawah Kiri --}}
                 <div class="mt-6 pt-4 border-t border-gray-100 flex justify-start">
                     <x-primary-button>Simpan Bidang</x-primary-button>
                 </div>
@@ -130,11 +131,9 @@
                     <div>
                         <x-input-label value="Jam Operasional (Footer)" />
                         <x-text-input name="jam_operasional" class="mt-1 block w-full" value="{{ old('jam_operasional', $about->jam_operasional) }}" required />
-                        <p class="text-xs text-gray-400 mt-1">Pisahkan dengan koma (,) untuk baris baru.</p>
                     </div>
                 </div>
 
-                {{-- Button Bawah Kiri --}}
                 <div class="mt-6 pt-4 border-t border-gray-100 flex justify-start">
                     <x-primary-button>Simpan Identitas</x-primary-button>
                 </div>
@@ -171,7 +170,6 @@
                     </div>
                 </div>
 
-                {{-- Button Bawah Kiri --}}
                 <div class="mt-6 pt-4 border-t border-gray-100 flex justify-start">
                     <x-primary-button>Simpan Lokasi</x-primary-button>
                 </div>
@@ -188,7 +186,6 @@
                 </div>
 
                 <div class="space-y-6">
-                    {{-- Check IN --}}
                     <div>
                         <h4 class="font-bold text-sm text-gray-500 uppercase mb-3 flex items-center gap-2">
                             <span class="w-2 h-2 bg-green-500 rounded-full"></span> Check-IN (Masuk)
@@ -208,7 +205,6 @@
                         </div>
                     </div>
 
-                    {{-- Check OUT --}}
                     <div class="border-t pt-4">
                         <h4 class="font-bold text-sm text-gray-500 uppercase mb-3 flex items-center gap-2">
                             <span class="w-2 h-2 bg-orange-500 rounded-full"></span> Check-OUT (Pulang)
@@ -229,13 +225,12 @@
                     </div>
                 </div>
 
-                {{-- Button Bawah Kiri --}}
                 <div class="mt-6 pt-4 border-t border-gray-100 flex justify-start">
                     <x-primary-button>Simpan Jadwal</x-primary-button>
                 </div>
             </form>
 
-            {{-- ================= FORM 6: PENGATURAN FOOTER ================= --}}
+            {{-- ================= FORM 6: FOOTER ================= --}}
             <form method="POST" action="{{ route('admin.about.update') }}"
                   class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100"
                   x-data="dynamicLinksForm()" x-init="init()">
@@ -248,7 +243,6 @@
                 </div>
 
                 <div class="space-y-6">
-                    {{-- Kontak --}}
                     <div>
                         <h4 class="font-bold text-sm text-blue-600 uppercase mb-3">Kontak & Alamat</h4>
                         <div class="grid grid-cols-1 gap-4">
@@ -257,155 +251,68 @@
                                 <textarea name="office_address" class="w-full rounded-xl border-gray-200 text-sm" rows="2">{{ old('office_address', $about->office_address) }}</textarea>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <x-input-label value="No. Telepon" />
-                                    <x-text-input name="office_phone" class="w-full" value="{{ old('office_phone', $about->office_phone) }}" />
-                                </div>
-                                <div>
-                                    <x-input-label value="Email" />
-                                    <x-text-input name="office_email" class="w-full" value="{{ old('office_email', $about->office_email) }}" />
+                                <div><x-input-label value="No. Telepon" /><x-text-input name="office_phone" class="w-full" value="{{ old('office_phone', $about->office_phone) }}" /></div>
+                                <div><x-input-label value="Email" /><x-text-input name="office_email" class="w-full" value="{{ old('office_email', $about->office_email) }}" /></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t pt-4">
+                        <h4 class="font-bold text-sm text-blue-600 uppercase mb-3">Media Sosial</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><x-input-label value="Instagram" /><x-text-input name="social_instagram" class="w-full" value="{{ old('social_instagram', $about->social_instagram) }}" /></div>
+                            <div><x-input-label value="Facebook" /><x-text-input name="social_facebook" class="w-full" value="{{ old('social_facebook', $about->social_facebook) }}" /></div>
+                            <div><x-input-label value="YouTube" /><x-text-input name="social_youtube" class="w-full" value="{{ old('social_youtube', $about->social_youtube) }}" /></div>
+                            <div><x-input-label value="X (Twitter)" /><x-text-input name="social_x" class="w-full" value="{{ old('social_x', $about->social_x) }}" /></div>
+                        </div>
+                    </div>
+
+                    <div class="border-t pt-4">
+                        <h4 class="font-bold text-sm text-blue-600 uppercase mb-3">Widget & Peta</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <x-input-label value="Nomor WhatsApp (Sapa Mas)" />
+                                <x-text-input name="whatsapp_number" class="w-full" value="{{ old('whatsapp_number', $about->whatsapp_number) }}" placeholder="628xxxx" />
+                            </div>
+
+                            {{-- Peta dengan Live Preview --}}
+                            <div x-data="{ mapUrl: '{{ old('google_maps_embed', $about->google_maps_embed) }}' }">
+                                <x-input-label value="Link Embed Google Maps (Src)" />
+                                <x-text-input name="google_maps_embed" class="w-full" x-model="mapUrl" placeholder="http://googleusercontent.com/..." />
+                                <p class="text-[10px] text-gray-400 mt-1 mb-2">Copy URL dari menu 'Embed a map' di Google Maps.</p>
+                                <div class="w-full h-40 bg-gray-100 rounded border flex items-center justify-center overflow-hidden">
+                                    <iframe x-show="mapUrl" :src="mapUrl" class="w-full h-full border-0" allowfullscreen loading="lazy"></iframe>
+                                    <span x-show="!mapUrl" class="text-gray-400 text-xs">Preview Peta</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Sosmed --}}
                     <div class="border-t pt-4">
-                        <h4 class="font-bold text-sm text-blue-600 uppercase mb-3">Media Sosial (URL Lengkap)</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-                            <div>
-                                <x-input-label value="Instagram" />
-                                <x-text-input name="social_instagram" class="w-full" value="{{ old('social_instagram', $about->social_instagram) }}" placeholder="https://instagram.com/..." />
-                            </div>
-                            <div>
-                                <x-input-label value="Facebook" />
-                                <x-text-input name="social_facebook" class="w-full" value="{{ old('social_facebook', $about->social_facebook) }}" placeholder="https://facebook.com/..." />
-                            </div>
-                            <div>
-                                <x-input-label value="YouTube" />
-                                <x-text-input name="social_youtube" class="w-full" value="{{ old('social_youtube', $about->social_youtube) }}" placeholder="https://youtube.com/@..." />
-                            </div>
-                            <div>
-                                <x-input-label value="X (Twitter)" />
-                                <x-text-input name="social_x" class="w-full" value="{{ old('social_x', $about->social_x) }}" placeholder="https://x.com/..." />
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Link Terkait (DINAMIS) --}}
-                    <div class="border-t pt-4">
-                        <h4 class="font-bold text-sm text-blue-600 uppercase mb-3">Link Terkait (Dinamis)</h4>
-                        <p class="text-xs text-gray-400 mb-3">Tambahkan link eksternal untuk ditampilkan di footer (misal: Website Utama, PPID, dll).</p>
-
+                        <h4 class="font-bold text-sm text-blue-600 uppercase mb-3">Link Terkait</h4>
                         <div id="existing-links" data-links="{{ $about->custom_links ?? '[]' }}" class="hidden"></div>
-
                         <div class="space-y-3">
                             <template x-for="(row, index) in rows" :key="index">
-                                <div class="flex gap-3 items-center">
-                                    <div class="w-1/3">
-                                        <input type="text" name="links_label[]" x-model="row.label"
-                                            class="w-full rounded-xl border-gray-200 text-sm" placeholder="Nama Link">
-                                    </div>
-                                    <div class="w-2/3">
-                                        <input type="url" name="links_url[]" x-model="row.url"
-                                            class="w-full rounded-xl border-gray-200 text-sm" placeholder="URL (https://...)">
-                                    </div>
-                                    <button type="button" @click="remove(index)" class="text-red-500 hover:text-red-700 font-bold px-2">
-                                        &times;
-                                    </button>
+                                <div class="flex gap-3">
+                                    <input type="text" name="links_label[]" x-model="row.label" class="w-1/3 rounded-xl border-gray-200 text-sm" placeholder="Nama">
+                                    <input type="url" name="links_url[]" x-model="row.url" class="w-2/3 rounded-xl border-gray-200 text-sm" placeholder="URL">
+                                    <button type="button" @click="remove(index)" class="text-red-500 font-bold px-2">&times;</button>
                                 </div>
                             </template>
                         </div>
-
-                        <button type="button" @click="add()" class="mt-3 text-sm text-blue-600 font-bold hover:underline flex items-center gap-1">
-                            <span>+</span> Tambah Link
-                        </button>
-                    </div>
-
-                    {{-- Peta --}}
-                    <div class="border-t pt-4">
-                        <h4 class="font-bold text-sm text-blue-600 uppercase mb-3">Peta Lokasi</h4>
-                        <div>
-                            <x-input-label value="Link Embed Google Maps (Src)" />
-                            <x-text-input name="google_maps_embed" class="w-full" value="{{ old('google_maps_embed', $about->google_maps_embed) }}" />
-                            <p class="text-[10px] text-gray-400 mt-1">
-                                Copy URL dari menu "Embed a map" di Google Maps (hanya bagian dalam tanda kutip <code>src="..."</code>).
-                            </p>
-                        </div>
+                        <button type="button" @click="add()" class="mt-3 text-sm text-blue-600 font-bold hover:underline">+ Tambah Link</button>
                     </div>
                 </div>
 
-                {{-- Button Bawah Kiri --}}
                 <div class="mt-6 pt-4 border-t border-gray-100 flex justify-start">
                     <x-primary-button>Simpan Footer</x-primary-button>
                 </div>
             </form>
 
-            <script>
-                function dynamicLinksForm() {
-                    return {
-                        rows: [],
-                        init() {
-                            const raw = document.getElementById('existing-links').getAttribute('data-links');
-                            try {
-                                const parsed = JSON.parse(raw);
-                                if (Array.isArray(parsed) && parsed.length > 0) {
-                                    this.rows = parsed;
-                                } else {
-                                    this.rows = [{ label: '', url: '' }];
-                                }
-                            } catch (e) {
-                                this.rows = [{ label: '', url: '' }];
-                            }
-                        },
-                        add() { this.rows.push({ label: '', url: '' }); },
-                        remove(index) {
-                            if (this.rows.length > 1) this.rows.splice(index, 1);
-                            else { this.rows[0].label = ''; this.rows[0].url = ''; }
-                        }
-                    }
-                }
-            </script>
-
-            {{-- Script Alpine untuk Link Dinamis --}}
-            <script>
-                function dynamicLinksForm() {
-                    return {
-                        rows: [],
-                        init() {
-                            // Ambil data dari atribut data-links
-                            const raw = document.getElementById('existing-links').getAttribute('data-links');
-                            try {
-                                const parsed = JSON.parse(raw);
-                                if (Array.isArray(parsed) && parsed.length > 0) {
-                                    this.rows = parsed;
-                                } else {
-                                    this.rows = [{ label: '', url: '' }]; // Default 1 baris kosong
-                                }
-                            } catch (e) {
-                                this.rows = [{ label: '', url: '' }];
-                            }
-                        },
-                        add() {
-                            this.rows.push({ label: '', url: '' });
-                        },
-                        remove(index) {
-                            if (this.rows.length > 1) {
-                                this.rows.splice(index, 1);
-                            } else {
-                                // Jika sisa 1, kosongkan saja jangan dihapus
-                                this.rows[0].label = '';
-                                this.rows[0].url = '';
-                            }
-                        }
-                    }
-                }
-            </script>
-
         </div>
     </div>
 
-    {{-- SCRIPT ALPINE UNTUK BIDANG --}}
+    {{-- SCRIPTS --}}
     <script>
         function bidangDivisiForm() {
             return {
@@ -417,11 +324,24 @@
                     if(this.items.length === 0) this.items.push('');
                     this.sync();
                 },
-                sync() {
-                    this.serialized = this.items.map(s => (s || '').trim()).filter(Boolean).join("\n");
-                },
+                sync() { this.serialized = this.items.map(s => (s || '').trim()).filter(Boolean).join("\n"); },
                 add() { this.items.push(''); this.$nextTick(() => this.sync()); },
                 remove(index) { this.items.splice(index, 1); this.$nextTick(() => this.sync()); },
+            }
+        }
+
+        function dynamicLinksForm() {
+            return {
+                rows: [],
+                init() {
+                    const raw = document.getElementById('existing-links').getAttribute('data-links');
+                    try {
+                        const parsed = JSON.parse(raw);
+                        this.rows = (Array.isArray(parsed) && parsed.length > 0) ? parsed : [{ label: '', url: '' }];
+                    } catch (e) { this.rows = [{ label: '', url: '' }]; }
+                },
+                add() { this.rows.push({ label: '', url: '' }); },
+                remove(index) { if(this.rows.length > 1) this.rows.splice(index, 1); else { this.rows[0].label=''; this.rows[0].url=''; } }
             }
         }
     </script>

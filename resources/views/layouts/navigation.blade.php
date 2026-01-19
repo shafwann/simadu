@@ -114,6 +114,18 @@
                             </x-nav-link>
                         @endif
                     @endif
+
+                    {{-- MENU MASTER --}}
+                    @if(Auth::user()->role === 'master')
+                        <x-nav-link :href="route('master.agencies.index')" :active="request()->routeIs('master.agencies.*')" class="font-bold text-gray-900">
+                            {{ __('Kelola Instansi') }}
+                        </x-nav-link>
+
+                        {{-- TAMBAHAN MENU --}}
+                        <x-nav-link :href="route('master.settings.index')" :active="request()->routeIs('master.settings.*')" class="font-bold text-gray-900">
+                            {{ __('Global Branding') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 

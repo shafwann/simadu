@@ -9,6 +9,7 @@ class AboutSetting extends Model
     protected $table = 'about_settings';
 
     protected $fillable = [
+        'kategori_instansi',
         'nama_instansi',
         'kepala_instansi',
         'nip_kepala_instansi',
@@ -82,9 +83,17 @@ class AboutSetting extends Model
     /**
      * ✅ TAMBAHAN: Ambil opsi Bidang/Divisi dari DB (fallback ke default jika kosong)
      */
-    public static function bidangOptions(): array
+    public static function bidangOptions($instansi = null): array
     {
-        $about = self::first();
+        // Jika instansi tidak disebut, coba ambil dari user login
+        if (!$instansi && \Illuminate\Support\Facades\Auth::check()) {
+            $instansi = \Illuminate\Support\Facades\Auth::user()->kategori_instansi;
+        }
+
+        // Default BAPPERIDA jika null
+        $kategori = $instansi ?? 'BAPPERIDA';
+
+        $about = self::where('kategori_instansi', $kategori)->first();
 
         $arr = null;
         if ($about && $about->bidang_options) {
@@ -95,12 +104,10 @@ class AboutSetting extends Model
             return $arr;
         }
 
+        // Default Fallback
         return [
-            'Ekonomi',
-            'Sekretariat',
-            'Sosial & Budaya',
-            'Fisik & Prasarana',
-            'Penelitian, Pengembangan & Penyusunan Program',
+            'Ekonomi', 'Sekretariat', 'Sosial & Budaya',
+            'Fisik & Prasarana', 'Penelitian, Pengembangan & Penyusunan Program'
         ];
     }
 }

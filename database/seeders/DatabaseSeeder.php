@@ -87,17 +87,20 @@ class DatabaseSeeder extends Seeder
             ]);
 
             // B. Buat Default AboutSetting (Supaya dashboard tidak error)
-            AboutSetting::create([
-                'kategori_instansi' => $instansi, // ✅ Link ke Admin
-                'app_name' => $instansi,
-                'agency_name' => 'Pemkab Karanganyar',
-                'app_description' => 'Sistem Magang Dinas ' . $instansi,
-                'nama_instansi' => 'Dinas ' . $instansi . ' Karanganyar',
-                'kepala_instansi' => 'Kepala ' . $instansi,
-                'nip_kepala_instansi' => '19800101 200001 1 001',
-                'jam_operasional' => 'Senin-Jumat: 08.00-16.00',
-                'radius_meter' => 100,
-            ]);
+            AboutSetting::updateOrCreate(
+                ['kategori_instansi' => 'MASTER'],
+                [
+                    'app_name' => 'SISTEM MAGANG TERPADU',
+                    'agency_name' => 'PEMKAB KARANGANYAR',
+                    'nama_instansi' => 'Pemerintah Kabupaten Karanganyar',
+                    'app_description' => 'Portal Resmi Pendaftaran dan Pengelolaan Magang',
+                    'kepala_instansi' => '-',
+                    'nip_kepala_instansi' => '-',
+                    'jam_operasional' => 'Senin-Jumat: 08.00-16.00',
+                    'radius_meter' => 50,
+                    // Logo path biarkan null dulu (nanti diupload master)
+                ]
+            );
         }
 
         $this->command->info('✅ Super Admin & Settings untuk semua instansi berhasil dibuat.');
