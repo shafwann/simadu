@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\AboutSetting; // Jangan lupa import ini
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -13,26 +14,34 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Password Universal (Biar login gampang)
+        // 1. Password Universal
         $password = Hash::make('12345678');
-
-        // Gunakan Faker Bahasa Indonesia
         $faker = \Faker\Factory::create('id_ID');
 
         // ==========================================
         // DATA RANDOM PENDUKUNG
         // ==========================================
 
-        // Daftar Bidang Magang (Tanpa Administrator Sistem)
+        // Daftar Kategori Instansi (Multi-Tenancy)
+        $daftarInstansiPemerintah = [
+            'BAPPERIDA', // Default
+            'DISKOMINFO',
+            'DISDIKBUD',
+            'DINKES',
+            'DPUPR',
+            'DISPARPORA'
+        ];
+
         $pilihanBidangMahasiswa = [
             'Ekonomi',
             'Sekretariat',
             'Sosial & Budaya',
             'Fisik & Prasarana',
-            'Penelitian, Pengembangan & Penyusunan Program'
+            'Penelitian, Pengembangan & Penyusunan Program',
+            'IT & Jaringan', // Tambahan buat anak TI
+            'Humas & Publikasi'
         ];
 
-        // Daftar Kampus (Agar terlihat nyata)
         $daftarKampus = [
             'Universitas Sebelas Maret (UNS)',
             'Universitas Muhammadiyah Surakarta (UMS)',
@@ -51,71 +60,92 @@ class DatabaseSeeder extends Seeder
             'Universitas Padjadjaran (UNPAD)'
         ];
 
-        // Daftar Prodi
         $daftarProdi = [
-            'Teknik Informatika',
-            'Sistem Informasi',
-            'Manajemen',
-            'Akuntansi',
-            'Ilmu Komunikasi',
-            'Hukum',
-            'Administrasi Publik'
+            'Teknik Informatika', 'Sistem Informasi', 'Manajemen',
+            'Akuntansi', 'Ilmu Komunikasi', 'Hukum', 'Administrasi Publik',
+            'Teknik Sipil', 'Kesehatan Masyarakat', 'PGSD'
         ];
 
         // ==========================================
-        // 1. BUAT AKUN SUPER ADMIN (ADMINISTRATOR SISTEM)
+        // 1. BUAT SUPER ADMIN & SETTING UNTUK SETIAP INSTANSI
         // ==========================================
-        User::create([
-            'name' => 'Super Admin',
-            'email' => 'superadmin@bapperlitbang.com',
-            'password' => $password,
-            'role' => 'admin',
-            'bidang' => 'Administrator Sistem',
-            'status' => 'aktif',
-            // Admin tidak perlu NIM/Instansi (Null)
-        ]);
 
-        $this->command->info('✅ Akun Super Admin berhasil dibuat.');
+        foreach ($daftarInstansiPemerintah as $instansi) {
+
+            // Skip BAPPERIDA disini karena sudah dihandle AdminBidangSeeder (biar gak double)
+            if ($instansi === 'BAPPERIDA') continue;
+
+            // A. Buat User Super Admin per Instansi
+            User::create([
+                'name' => 'Super Admin ' . $instansi,
+                'email' => 'admin.' . strtolower($instansi) . '@karanganyar.go.id',
+                'password' => $password,
+                'role' => 'admin',
+                'bidang' => 'Administrator Sistem',
+                'status' => 'aktif',
+                'kategori_instansi' => $instansi, // ✅ PENTING: Penanda Lobby
+            ]);
+
+            // B. Buat Default AboutSetting (Supaya dashboard tidak error)
+            AboutSetting::create([
+                'kategori_instansi' => $instansi, // ✅ Link ke Admin
+                'app_name' => $instansi,
+                'agency_name' => 'Pemkab Karanganyar',
+                'app_description' => 'Sistem Magang Dinas ' . $instansi,
+                'nama_instansi' => 'Dinas ' . $instansi . ' Karanganyar',
+                'kepala_instansi' => 'Kepala ' . $instansi,
+                'nip_kepala_instansi' => '19800101 200001 1 001',
+                'jam_operasional' => 'Senin-Jumat: 08.00-16.00',
+                'radius_meter' => 100,
+            ]);
+        }
+
+        $this->command->info('✅ Super Admin & Settings untuk semua instansi berhasil dibuat.');
+
 
         // ==========================================
-        // 2. BUAT 15 AKUN MAHASISWA RANDOM
+        // 2. BUAT 100 AKUN MAHASISWA RANDOM (TERSEBAR)
         // ==========================================
-        $tglMasuk = $faker->dateTimeBetween('-3 months', 'now');
-        $tglSelesai = (clone $tglMasuk)->modify('+3 months'); // Durasi 3 bulan
+
         for ($i = 1; $i <= 100; $i++) {
+
+            $tglMasuk = $faker->dateTimeBetween('-3 months', 'now');
+            $tglSelesai = (clone $tglMasuk)->modify('+3 months');
+
+            // Pilih Instansi Tujuan secara Acak
+            $instansiTujuan = $faker->randomElement($daftarInstansiPemerintah);
+
             User::create([
                 'name' => $faker->name,
                 'email' => $faker->unique()->userName . '@student.com',
                 'password' => $password,
                 'role' => 'mahasiswa',
-                'bidang' => $faker->randomElement($pilihanBidangMahasiswa), // Pilih Bidang Acak
                 'status' => 'aktif',
 
-                // --- DATA RANDOM BARU ---
-                // Membuat 8 digit angka unik untuk NIM (cth: 21010344)
-                'nim' => $faker->unique()->numerify('########'),
+                // ✅ KUNCI: Mahasiswa ini akan masuk ke lobby instansi mana?
+                'kategori_instansi' => $instansiTujuan,
 
-                // Pilih Kampus & Prodi Acak
-                'instansi' => $faker->randomElement($daftarKampus),
+                // Data Akademik
+                'bidang' => $faker->randomElement($pilihanBidangMahasiswa),
+                'nim' => $faker->unique()->numerify('########'),
+                'instansi' => $faker->randomElement($daftarKampus), // Asal Kampus
                 'prodi' => $faker->randomElement($daftarProdi),
-                'fakultas' => $faker->randomElement(['Teknik', 'Ekonomi & Bisnis', 'Ilmu Sosial', null]), // Ada yang null
-                'kegiatan' => $faker->randomElement(['Magang Reguler', 'PKL SMK', 'Penelitian Skripsi', 'MBKM','Kuliah Kerja Nyata']),
+                'fakultas' => $faker->randomElement(['Teknik', 'Ekonomi', 'Sosial', null]),
+                'kegiatan' => $faker->randomElement(['Magang Reguler', 'PKL SMK', 'MBKM']),
                 'tanggal_masuk' => $tglMasuk,
                 'tanggal_selesai' => $tglSelesai,
             ]);
         }
 
-        $this->command->info('✅ 100 Akun Mahasiswa dengan NIM & Instansi berhasil dibuat.');
+        $this->command->info('✅ 100 Mahasiswa berhasil disebar ke berbagai instansi.');
 
         // ==========================================
-        // 3. PANGGIL SEEDER ADMIN PER BIDANG
+        // 3. PANGGIL SEEDER UTAMA LAINNYA
         // ==========================================
         $this->call([
-            AdminBidangSeeder::class,
-            AboutSettingSeeder::class,//seeder tambahan
-            MasterAdminSeeder::class,
+            MasterAdminSeeder::class, // Akun Master
+            AdminBidangSeeder::class, // Akun Admin Bapperida (Divisi)
+            AboutSettingSeeder::class, // Setting khusus Bapperida
         ]);
-
-
     }
 }
