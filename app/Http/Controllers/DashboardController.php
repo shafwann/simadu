@@ -8,26 +8,31 @@ use App\Models\User; // ✅ TAMBAH INI
 
 class DashboardController extends Controller
 {
-    /**
-     * Dashboard untuk user login (mahasiswa / admin)
-     * - Kita load relasi assessment biar Auth::user()->assessment langsung ada.
-     */
     public function index()
     {
         $user = Auth::user();
 
+        // 1. Jika Master Admin -> Ke Halaman List Instansi
+        if ($user->role === 'master') {
+            return redirect()->route('master.agencies.index');
+        }
+
+        // 2. Jika Admin Instansi -> Ke Dashboard Admin
         if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard');
         }
 
+        // 3. Jika Pembimbing -> Ke Dashboard Pembimbing
         if ($user->role === 'pembimbing') {
             return redirect()->route('pembimbing.dashboard');
         }
 
-        // default = mahasiswa
-        return view('dashboard', [
-            'user' => User::with('assessment')->findOrFail($user->id)
-        ]);
-    }
+        // 4. Jika Mahasiswa -> Tampilkan View Dashboard Mahasiswa
+        if ($user->role === 'mahasiswa') {
+            return view('dashboard'); // File: resources/views/dashboard.blade.php
+        }
 
+        // 5. Default Fallback (jika role tidak dikenali)
+        abort(403, 'Role tidak dikenali.');
+    }
 }

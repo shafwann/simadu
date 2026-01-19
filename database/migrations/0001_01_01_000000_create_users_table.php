@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            // $table->foreignId('agency_id')->nullable()->constrained('agencies')->onDelete('cascade');
             $table->string('email')->unique();
             $table->string('nim')->nullable();
             $table->string('prodi')->nullable();
@@ -27,7 +28,7 @@ return new class extends Migration
 
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['mahasiswa', 'pembimbing', 'admin'])->default('mahasiswa');
+            $table->enum('role', ['master','mahasiswa', 'pembimbing', 'admin'])->default('mahasiswa');
             $table->enum('bidang', [
                 'Administrator Sistem',
                 'Ekonomi',

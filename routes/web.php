@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 // Controllers
@@ -21,237 +22,186 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminAboutController;
 use App\Http\Controllers\AdminPresensiPdfController;
 use App\Http\Controllers\DosenRequestController;
+use App\Http\Controllers\MasterAgencyController; // Pastikan Controller ini ada
 
 use App\Models\AboutSetting;
 use App\Models\User;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| Web Routes (ISOLASI KATEGORI INSTANSI)
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function () {
-    // 1. Hitung Total Mahasiswa
-    $total = User::where('role', 'mahasiswa')->count();
+// ==========================================
+// 1. LANDING PAGE (PUBLIC)
+// ==========================================
+Route::get('/', function (Request $request) {
+    // Fitur Filter Publik: /?instansi=BAPPERIDA
+    $filterInstansi = $request->query('instansi');
 
-    // 2. Data Tabel (Paginate 7 per halaman)
-    $mahasiswa = User::where('role', 'mahasiswa')
-        ->select('name', 'instansi')
+    $query = User::where('role', 'mahasiswa');
+
+    if ($filterInstansi) {
+        $query->where('kategori_instansi', $filterInstansi);
+    }
+
+    $total = (clone $query)->count();
+
+    $mahasiswa = (clone $query)
+        ->select('name', 'instansi', 'kategori_instansi')
         ->latest()
         ->paginate(7);
 
-    // 3. Data Marquee/Running Text (Ambil 100 terakhir biar animasi tetap panjang)
-    $marquee = User::where('role', 'mahasiswa')
+    $marquee = (clone $query)
         ->select('name', 'instansi')
         ->latest()
         ->take(100)
         ->get();
 
-    // Ambil branding
-    $about = AboutSetting::first();
+    $about = AboutSetting::where('kategori_instansi', $filterInstansi)->first()
+             ?? AboutSetting::first();
 
     return view('welcome', compact('total', 'mahasiswa', 'marquee', 'about'));
 });
 
-/**
- * Dashboard (Pakai DashboardController)
- * Pastikan DashboardController handle role redirect (admin/pembimbing/mahasiswa)
- */
+// ==========================================
+// 2. LOBBY UTAMA (PENGALIH ARUS)
+// ==========================================
+// Route ini yang menentukan user akan dilempar kemana (Admin/Mahasiswa/Master)
+// Pastikan logic di DashboardController sudah benar seperti diskusi sebelumnya.
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
 
 // ==========================================
-// GROUP: AUTHENTICATED USERS (UMUM)
+// 3. GROUP: AUTHENTICATED USERS (SHARED)
 // ==========================================
+// Hanya fitur umum seperti Profile yang ditaruh disini.
 Route::middleware('auth')->group(function () {
-
-    // DOWNLOAD SERTIFIKAT (USER LOGIN, HANYA MILIK SENDIRI)
-    Route::get('/certificate/download', function () {
-        $user = User::with('assessment')->findOrFail(Auth::id());
-
-        if (!$user->assessment) {
-            abort(404, 'Penilaian belum ada.');
-        }
-
-        return app(AssessmentController::class)->certificate($user);
-    })->name('certificate.download');
-
-    // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
 
-    // Attendance
+
+// ==========================================
+// 4. GROUP: MAHASISWA ONLY
+// ==========================================
+// Semua fitur yang HANYA boleh diakses mahasiswa masuk sini.
+Route::middleware(['auth', 'role:mahasiswa'])->group(function () {
+
+    // Certificate
+    Route::get('/certificate/download', function () {
+        $user = User::with('assessment')->findOrFail(Auth::id());
+        if (!$user->assessment) abort(404, 'Penilaian belum ada.');
+        return app(AssessmentController::class)->certificate($user);
+    })->name('certificate.download');
+
+    // Attendance (Absen)
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.checkin');
     Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkout');
-
-    // ✅ MAHASISWA BISA LIHAT RIWAYAT PRESENSI
-    Route::get('/attendance/history', [AttendanceController::class, 'history'])
-        ->name('attendance.history');
-
-    // ✅ MAHASISWA DOWNLOAD PDF PRESENSI
-    Route::get('/attendance/presensi-pdf', [AttendanceController::class, 'presensiPdf'])
-        ->name('attendance.presensi_pdf');
+    Route::get('/attendance/history', [AttendanceController::class, 'history'])->name('attendance.history');
+    Route::get('/attendance/presensi-pdf', [AttendanceController::class, 'presensiPdf'])->name('attendance.presensi_pdf');
 
     // Logbook
     Route::get('/logbook', [LogbookController::class, 'index'])->name('logbook.index');
     Route::post('/logbook', [LogbookController::class, 'store'])->name('logbook.store');
+    Route::get('/logbook/pdf', [LogbookController::class, 'exportPdf'])->name('logbook.export.pdf');
 
-    // LAPORAN SHARED (OWNER / ADMIN)
+    // Laporan (CRUD Mahasiswa)
+    Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
+    Route::post('/laporan/upload', [LaporanController::class, 'upload'])->name('laporan.upload');
     Route::get('/laporan/download/{laporan}', [LaporanController::class, 'download'])->name('laporan.download');
     Route::get('/laporan/preview/{laporan}', [LaporanController::class, 'preview'])->name('laporan.preview');
-
-    // Edit/update laporan (owner)
     Route::get('/laporan/{laporan}/edit', [LaporanController::class, 'edit'])->name('laporan.edit');
     Route::put('/laporan/{laporan}', [LaporanController::class, 'update'])->name('laporan.update');
 
-    // EXPORT PRESENSI (CSV pribadi)
+    // Data Diri & Bidang
+    Route::get('/bidang-divisi', [ProfileController::class, 'showBidang'])->name('mahasiswa.bidang.show');
+    Route::patch('/mahasiswa/bidang', [ProfileController::class, 'updateBidang'])->name('mahasiswa.bidang.update');
+
+    // Request Pembimbing
+    Route::get('/pembimbing/request', [DosenRequestController::class, 'create'])->name('mahasiswa.pembimbing.request.create');
+    Route::post('/pembimbing/request', [DosenRequestController::class, 'store'])->name('mahasiswa.pembimbing.request.store');
+
+    // Export Data Pribadi (CSV)
     Route::get('/export-presensi', function () {
         $data = \App\Models\Attendance::where('user_id', Auth::id())->with('user')->get();
-
         return response()->stream(function () use ($data) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['Nama Mahasiswa', 'Tanggal', 'Jam Masuk', 'Status', 'Lokasi']);
-
+            fputcsv($file, ['Nama', 'Tanggal', 'Masuk', 'Status', 'Lokasi']);
             foreach ($data as $row) {
-                $googleMapsLink = $row->location ? $row->location : "Tidak ada lokasi";
-                fputcsv($file, [
-                    $row->user->name,
-                    Carbon::parse($row->tanggal)->format('d/m/Y'),
-                    $row->check_in,
-                    $row->status,
-                    $googleMapsLink
-                ]);
+                fputcsv($file, [$row->user->name, Carbon::parse($row->tanggal)->format('d/m/Y'), $row->check_in, $row->status, $row->location ?? '-']);
             }
-
             fclose($file);
-        }, 200, [
-            "Content-type" => "text/csv",
-            "Content-Disposition" => "attachment; filename=laporan-presensi-pribadi.csv"
-        ]);
+        }, 200, ["Content-type" => "text/csv", "Content-Disposition" => "attachment; filename=presensi-pribadi.csv"]);
     })->name('attendance.export');
 
-    // EXPORT LOGBOOK (CSV pribadi)
     Route::get('/export-logbook', function () {
         $data = \App\Models\Logbook::where('user_id', Auth::id())->get();
-
         return response()->stream(function () use ($data) {
             $file = fopen('php://output', 'w');
             fputcsv($file, ['Tanggal', 'Kegiatan', 'Status Validasi']);
-
             foreach ($data as $row) {
-                fputcsv($file, [
-                    Carbon::parse($row->tanggal)->format('d/m/Y'),
-                    $row->kegiatan,
-                    $row->is_validated ? 'Sudah' : 'Belum'
-                ]);
+                fputcsv($file, [Carbon::parse($row->tanggal)->format('d/m/Y'), $row->kegiatan, $row->is_validated ? 'Valid' : 'Pending']);
             }
-
             fclose($file);
-        }, 200, [
-            "Content-type" => "text/csv",
-            "Content-Disposition" => "attachment; filename=logbook-magang.csv"
-        ]);
+        }, 200, ["Content-type" => "text/csv", "Content-Disposition" => "attachment; filename=logbook-pribadi.csv"]);
     })->name('logbook.export');
-
-    // EXPORT LOGBOOK (PDF pribadi)
-    Route::get('/logbook/pdf', [LogbookController::class, 'exportPdf'])
-        ->name('logbook.export.pdf');
 });
 
 
 // ==========================================
-// GROUP: MAHASISWA ONLY
-// ==========================================
-Route::middleware(['auth', 'role:mahasiswa'])->group(function () {
-    Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
-    Route::post('/laporan/upload', [LaporanController::class, 'upload'])->name('laporan.upload');
-
-    // ✅ HALAMAN BIDANG/DIVISI (SENDIRI)
-    Route::get('/bidang-divisi', [ProfileController::class, 'showBidang'])
-        ->name('mahasiswa.bidang.show');
-
-    // ✅ SIMPAN BIDANG/DIVISI
-    Route::patch('/mahasiswa/bidang', [ProfileController::class, 'updateBidang'])
-        ->name('mahasiswa.bidang.update');
-
-    // AJUKAN DOSEN PEMBIMBING
-
-        Route::get('/pembimbing/request', [DosenRequestController::class, 'create'])
-            ->name('mahasiswa.pembimbing.request.create');
-
-        Route::post('/pembimbing/request', [DosenRequestController::class, 'store'])
-            ->name('mahasiswa.pembimbing.request.store');
-
-});
-
-
-// ==========================================
-// GROUP: ADMIN ONLY
+// 5. GROUP: ADMIN ONLY (ISOLASI BERLAKU)
 // ==========================================
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
 
+        // Dashboard Admin
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
 
-        // validasi
+        // Validasi
         Route::post('/logbook/{id}/validate', [AdminController::class, 'validateLogbook'])->name('logbook.validate');
         Route::post('/laporan/{id}/validate', [LaporanController::class, 'validateLaporan'])->name('laporan.validate');
+        Route::post('/logbook/validate-all', [AdminController::class, 'validateAllLogbook'])->name('logbook.validateAll');
 
-        // ✅ VALIDASI SEMUA LOGBOOK (sesuai bidang admin)
-        Route::post('/logbook/validate-all', [AdminController::class, 'validateAllLogbook'])
-            ->name('logbook.validateAll');
-
-        // admin lihat semua laporan
+        // Laporan (View Admin)
         Route::get('/laporan-list', [LaporanController::class, 'adminIndex'])->name('laporan.index');
-
-        // admin download laporan
         Route::get('/laporan/download/{laporan}', [LaporanController::class, 'download'])->name('laporan.download');
 
-        // CRUD mahasiswa
+        // CRUD Mahasiswa
         Route::resource('students', AdminStudentController::class);
         Route::patch('/students/{user}/status', [AdminStudentController::class, 'updateStatus'])->name('students.updateStatus');
 
-        // ✅ ROUTE DOWNLOAD PDF PRESENSI (ADMIN)
-        Route::get('/students/{id}/presensi-pdf', [AdminPresensiPdfController::class, 'download'])
-            ->name('students.presensi.pdf');
+        // PDF & Export
+        Route::get('/students/{id}/presensi-pdf', [AdminPresensiPdfController::class, 'download'])->name('students.presensi.pdf');
+        Route::get('/students/{student}/logbook/pdf', [AdminLogbookController::class, 'exportPdf'])->name('students.logbook.pdf');
 
-        // ✅ ROUTE DOWNLOAD PDF LOGBOOK (ADMIN)
-        Route::get('/students/{student}/logbook/pdf', [AdminLogbookController::class, 'exportPdf'])
-            ->name('students.logbook.pdf');
-
-
-        // ===== DOSEN & ASSIGN MAHASISWA =====
-        // LIST DOSEN (AKTIF + PENDING)
+        // Dosen Request & CRUD
         Route::get('/pembimbing-requests', [DosenRequestController::class, 'index'])->name('pembimbing-requests.requests');
         Route::post('/pembimbing-requests/{id}/approve', [DosenRequestController::class, 'approve'])->name('pembimbing-requests.approve');
-        Route::post('/pembimbing-requests/{id}/reject', [DosenRequestController::class, 'reject'])->name('pembimbing-requests.reject');;
+        Route::post('/pembimbing-requests/{id}/reject', [DosenRequestController::class, 'reject'])->name('pembimbing-requests.reject');
 
-        // DOSEN AKTIF (CRUD LANJUTAN TETAP ADA)
-        
         Route::get('/dosen', [AdminDosenController::class, 'index'])->name('dosen.index');
         Route::get('/dosen/create', [AdminDosenController::class, 'create'])->name('dosen.create');
         Route::post('/dosen', [AdminDosenController::class, 'store'])->name('dosen.store');
         Route::get('/dosen/{id}/edit', [AdminDosenController::class, 'edit'])->name('dosen.edit');
         Route::put('/dosen/{id}', [AdminDosenController::class, 'update'])->name('dosen.update');
         Route::delete('/dosen/{dosen}', [AdminDosenController::class, 'destroy'])->name('dosen.destroy');
+        Route::get('/dosen/{dosen}/mahasiswa', [AdminDosenController::class, 'showMahasiswa'])->name('dosen.mahasiswa');
 
-        Route::get('/dosen/{dosen}/mahasiswa', [AdminDosenController::class, 'showMahasiswa'])
-            ->name('dosen.mahasiswa');
-
-        // absensi manual
+        // Attendance Management
         Route::post('/attendance/store', [AdminAttendanceController::class, 'store'])->name('attendance.store');
         Route::delete('/attendance/{id}', [AdminAttendanceController::class, 'destroy'])->name('attendance.destroy');
         Route::get('/attendance/{id}/edit', [AdminAttendanceController::class, 'edit'])->name('attendance.edit');
         Route::put('/attendance/{id}', [AdminAttendanceController::class, 'update'])->name('attendance.update');
 
-        // assessment
+        // Assessment / Sertifikat
         Route::prefix('assessment')->name('assessment.')->group(function () {
             Route::post('/{user}', [AssessmentController::class, 'store'])->name('store');
             Route::patch('/{assessment}', [AssessmentController::class, 'update'])->name('update');
@@ -259,7 +209,7 @@ Route::middleware(['auth', 'role:admin'])
             Route::get('/certificate/{user}', [AssessmentController::class, 'certificate'])->name('certificate');
         });
 
-        // manage admins
+        // Manage Admins
         Route::prefix('manage-admins')->name('manage.')->group(function () {
             Route::get('/', [AdminManagementController::class, 'index'])->name('index');
             Route::get('/create', [AdminManagementController::class, 'create'])->name('create');
@@ -267,122 +217,61 @@ Route::middleware(['auth', 'role:admin'])
             Route::delete('/{id}', [AdminManagementController::class, 'destroy'])->name('destroy');
         });
 
-        // ==========================================
-        // ABOUT (SUPER ADMIN ONLY - Administrator Sistem)
-        // ==========================================
+        // About Setting (Hanya mengubah setting instansinya sendiri)
         Route::get('/about', [AdminAboutController::class, 'index'])->name('about.index');
         Route::put('/about', [AdminAboutController::class, 'update'])->name('about.update');
+
+        // Export Mahasiswa (CSV)
+        Route::get('/export-mahasiswa', function () {
+            $mahasiswa = User::where('role', 'mahasiswa')->orderBy('name', 'asc')->get();
+            $filename = "DATA_MAGANG_" . (Auth::user()->kategori_instansi ?? 'ALL') . "_" . date('Y') . ".csv";
+
+            return response()->stream(function () use ($mahasiswa) {
+                $file = fopen('php://output', 'w');
+                fputs($file, "\xEF\xBB\xBF"); // BOM
+                fputs($file, "sep=;\n");
+                fputcsv($file, ['DATA MAGANG ' . (Auth::user()->kategori_instansi ?? '') . ' ' . date('Y')], ';');
+                fputcsv($file, [], ';');
+                fputcsv($file, ['NO', 'NAMA', 'NIM', 'JURUSAN', 'UNIVERSITAS', 'KETERANGAN', 'BIDANG', 'AKTIF'], ';');
+
+                foreach ($mahasiswa as $index => $u) {
+                    fputcsv($file, [
+                        $index + 1, strtoupper($u->name), "'" . $u->nim, strtoupper($u->prodi), strtoupper($u->instansi),
+                        ($u->tanggal_masuk && $u->tanggal_selesai ? Carbon::parse($u->tanggal_masuk)->format('d/m/Y') . ' - ' . Carbon::parse($u->tanggal_selesai)->format('d/m/Y') : '-'),
+                        strtoupper($u->bidang ?? ''), ucfirst($u->status)
+                    ], ';');
+                }
+                fclose($file);
+            }, 200, ["Content-type" => "text/csv", "Content-Disposition" => "attachment; filename=" . $filename]);
+        })->name('export.mahasiswa');
     });
 
 
 // ==========================================
-// Route download data format Bapperlitbang (CSV)
-// ==========================================
-Route::get('/export-mahasiswa', function () {
-
-    $mahasiswa = User::where('role', 'mahasiswa')->orderBy('name', 'asc')->get();
-
-    $callback = function () use ($mahasiswa) {
-        $file = fopen('php://output', 'w');
-
-        // BOM utk Excel
-        fputs($file, "\xEF\xBB\xBF");
-
-        // Separator Excel
-        fputs($file, "sep=;\n");
-
-        fputcsv($file, ['DATA MAGANG BAPERLITBANG ' . date('Y')], ';');
-        fputcsv($file, [], ';');
-
-        fputcsv($file, [
-            'NO',
-            'NAMA',
-            'NIM',
-            'JURUSAN',
-            'UNIVERSITAS',
-            'KETERANGAN',
-            'BIDANG',
-            'AKTIF'
-        ], ';');
-
-        foreach ($mahasiswa as $index => $user) {
-
-            $periode = '-';
-            if ($user->tanggal_masuk && $user->tanggal_selesai) {
-                $start = Carbon::parse($user->tanggal_masuk);
-                $end = Carbon::parse($user->tanggal_selesai);
-
-                $bulanIndo = [
-                    1 => 'Januari',
-                    2 => 'Februari',
-                    3 => 'Maret',
-                    4 => 'April',
-                    5 => 'Mei',
-                    6 => 'Juni',
-                    7 => 'Juli',
-                    8 => 'Agustus',
-                    9 => 'September',
-                    10 => 'Oktober',
-                    11 => 'November',
-                    12 => 'Desember'
-                ];
-
-                $strStart = $start->day . ' ' . $bulanIndo[$start->month] . ' ' . $start->year;
-                $strEnd = $end->day . ' ' . $bulanIndo[$end->month] . ' ' . $end->year;
-
-                if ($start->year == $end->year) {
-                    $strStart = $start->day . ' ' . $bulanIndo[$start->month];
-                }
-
-                $periode = $strStart . ' - ' . $strEnd;
-            }
-
-            $bidang = strtoupper(str_replace(["\r", "\n"], " ", $user->bidang ?? ''));
-            $status = ucfirst($user->status ?? '-');
-
-            fputcsv($file, [
-                $index + 1,
-                strtoupper($user->name),
-                "'" . $user->nim,
-                strtoupper($user->prodi),
-                strtoupper($user->instansi),
-                $periode,
-                $bidang,
-                $status
-            ], ';');
-        }
-
-        fclose($file);
-    };
-
-    return response()->stream($callback, 200, [
-        "Content-type" => "text/csv",
-        "Content-Disposition" => "attachment; filename=DATA_MAGANG_BAPERLITBANG_" . date('Y') . ".csv",
-        "Pragma" => "no-cache",
-        "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-        "Expires" => "0"
-    ]);
-})->name('admin.export.mahasiswa');
-
-
-// ==========================================
-// GROUP: PEMBIMBING ONLY
+// 6. GROUP: PEMBIMBING ONLY
 // ==========================================
 Route::middleware(['auth', 'role:pembimbing'])
     ->prefix('pembimbing')
     ->name('pembimbing.')
     ->group(function () {
-
         Route::get('/dashboard', [AdminDosenController::class, 'dashboard'])->name('dashboard');
         Route::get('/mahasiswa/{id}', [AdminDosenController::class, 'detailMahasiswa'])->name('mahasiswa.detail');
+        Route::get('/mahasiswa/{id}/presensi-pdf', [PembimbingPdfController::class, 'presensiPdf'])->name('mahasiswa.presensi.pdf');
+        Route::get('/mahasiswa/{id}/logbook-pdf', [PembimbingPdfController::class, 'logbookPdf'])->name('mahasiswa.logbook.pdf');
+    });
 
-        // ✅ DOWNLOAD PRESENSI PDF (PEMBIMBING)
-        Route::get('/mahasiswa/{id}/presensi-pdf', [PembimbingPdfController::class, 'presensiPdf'])
-            ->name('mahasiswa.presensi.pdf');
 
-        // ✅ DOWNLOAD LOGBOOK PDF (PEMBIMBING)
-        Route::get('/mahasiswa/{id}/logbook-pdf', [PembimbingPdfController::class, 'logbookPdf'])
-            ->name('mahasiswa.logbook.pdf');
+// ==========================================
+// 7. GROUP: MASTER ADMIN ONLY (Super User)
+// ==========================================
+Route::middleware(['auth', 'role:master'])
+    ->prefix('master')
+    ->name('master.')
+    ->group(function () {
+        Route::get('/agencies', [MasterAgencyController::class, 'index'])->name('agencies.index');
+        Route::get('/agencies/create', [MasterAgencyController::class, 'create'])->name('agencies.create');
+        Route::post('/agencies', [MasterAgencyController::class, 'store'])->name('agencies.store');
+        Route::delete('/agencies/{id}', [MasterAgencyController::class, 'destroy'])->name('agencies.destroy');
     });
 
 require __DIR__ . '/auth.php';

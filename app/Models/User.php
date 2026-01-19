@@ -20,6 +20,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'kategori_instansi',
         'nim',
         'nidn',
         'prodi',
@@ -100,5 +101,12 @@ class User extends Authenticatable
                 'mahasiswa_id',
                 'dosen_id'
             );
+        }
+
+        // app/Models/User.php
+
+        protected static function booted()
+        {
+            static::addGlobalScope(new \App\Models\Scopes\AgencyScope);
         }
 }

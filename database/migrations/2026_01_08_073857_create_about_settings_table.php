@@ -9,6 +9,7 @@ return new class extends Migration {
     {
         Schema::create('about_settings', function (Blueprint $table) {
             $table->id();
+
             $table->string('nama_instansi')->nullable();
             $table->string('kepala_instansi')->nullable();
             $table->string('nip_kepala_instansi')->nullable();
@@ -42,6 +43,7 @@ return new class extends Migration {
             $table->time('kamis_checkout_selesai')->nullable();
             $table->time('jumat_checkout_mulai')->nullable();
             $table->time('jumat_checkout_selesai')->nullable();
+
 
             $table->timestamps();
         });
