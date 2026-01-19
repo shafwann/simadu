@@ -12,14 +12,16 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminStudentController;
 use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\AdminLogbookController;
+use App\Http\Controllers\PembimbingPdfController;
 use App\Http\Controllers\AdminManagementController;
 use App\Http\Controllers\AdminDosenController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminAboutController;
 use App\Http\Controllers\AdminPresensiPdfController;
-use App\Http\Controllers\AdminLogbookController;
-use App\Http\Controllers\PembimbingPdfController;
+use App\Http\Controllers\DosenRequestController;
+
 use App\Models\AboutSetting;
 use App\Models\User;
 
@@ -30,13 +32,16 @@ use App\Models\User;
 */
 
 Route::get('/', function () {
+    // 1. Hitung Total Mahasiswa
     $total = User::where('role', 'mahasiswa')->count();
 
+    // 2. Data Tabel (Paginate 7 per halaman)
     $mahasiswa = User::where('role', 'mahasiswa')
         ->select('name', 'instansi')
         ->latest()
         ->paginate(7);
 
+    // 3. Data Marquee/Running Text (Ambil 100 terakhir biar animasi tetap panjang)
     $marquee = User::where('role', 'mahasiswa')
         ->select('name', 'instansi')
         ->latest()
@@ -84,11 +89,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.checkin');
     Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkout');
 
-    // ✅ TAMBAHAN: MAHASISWA BISA LIHAT RIWAYAT PRESENSI (AKTIF / NONAKTIF TETAP BISA)
+    // ✅ MAHASISWA BISA LIHAT RIWAYAT PRESENSI
     Route::get('/attendance/history', [AttendanceController::class, 'history'])
         ->name('attendance.history');
 
-    // ✅ TAMBAHAN: MAHASISWA BISA DOWNLOAD PDF PRESENSI (TAMPILAN SAMA DENGAN ADMIN)
+    // ✅ MAHASISWA DOWNLOAD PDF PRESENSI
     Route::get('/attendance/presensi-pdf', [AttendanceController::class, 'presensiPdf'])
         ->name('attendance.presensi_pdf');
 
@@ -173,6 +178,15 @@ Route::middleware(['auth', 'role:mahasiswa'])->group(function () {
     // ✅ SIMPAN BIDANG/DIVISI
     Route::patch('/mahasiswa/bidang', [ProfileController::class, 'updateBidang'])
         ->name('mahasiswa.bidang.update');
+
+    // AJUKAN DOSEN PEMBIMBING
+
+        Route::get('/pembimbing/request', [DosenRequestController::class, 'create'])
+            ->name('mahasiswa.pembimbing.request.create');
+
+        Route::post('/pembimbing/request', [DosenRequestController::class, 'store'])
+            ->name('mahasiswa.pembimbing.request.store');
+
 });
 
 
@@ -190,6 +204,10 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/logbook/{id}/validate', [AdminController::class, 'validateLogbook'])->name('logbook.validate');
         Route::post('/laporan/{id}/validate', [LaporanController::class, 'validateLaporan'])->name('laporan.validate');
 
+        // ✅ VALIDASI SEMUA LOGBOOK (sesuai bidang admin)
+        Route::post('/logbook/validate-all', [AdminController::class, 'validateAllLogbook'])
+            ->name('logbook.validateAll');
+
         // admin lihat semua laporan
         Route::get('/laporan-list', [LaporanController::class, 'adminIndex'])->name('laporan.index');
 
@@ -200,22 +218,32 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('students', AdminStudentController::class);
         Route::patch('/students/{user}/status', [AdminStudentController::class, 'updateStatus'])->name('students.updateStatus');
 
-        // ✅ ROUTE DOWNLOAD PDF PRESENSI (TARUH DI DALAM GROUP ADMIN)
+        // ✅ ROUTE DOWNLOAD PDF PRESENSI (ADMIN)
         Route::get('/students/{id}/presensi-pdf', [AdminPresensiPdfController::class, 'download'])
             ->name('students.presensi.pdf');
 
+        // ✅ ROUTE DOWNLOAD PDF LOGBOOK (ADMIN)
+        Route::get('/students/{student}/logbook/pdf', [AdminLogbookController::class, 'exportPdf'])
+            ->name('students.logbook.pdf');
+
+
         // ===== DOSEN & ASSIGN MAHASISWA =====
-        Route::get('dosen', [AdminDosenController::class, 'index'])->name('dosen.index');
-        Route::get('dosen/create', [AdminDosenController::class, 'create'])->name('dosen.create');
-        Route::post('dosen/store', [AdminDosenController::class, 'store'])->name('dosen.store');
-        Route::delete('dosen/{dosen}', [AdminDosenController::class, 'destroy'])->name('dosen.destroy');
+        // LIST DOSEN (AKTIF + PENDING)
+        Route::get('/pembimbing-requests', [DosenRequestController::class, 'index'])->name('pembimbing-requests.requests');
+        Route::post('/pembimbing-requests/{id}/approve', [DosenRequestController::class, 'approve'])->name('pembimbing-requests.approve');
+        Route::post('/pembimbing-requests/{id}/reject', [DosenRequestController::class, 'reject'])->name('pembimbing-requests.reject');;
+
+        // DOSEN AKTIF (CRUD LANJUTAN TETAP ADA)
+        
+        Route::get('/dosen', [AdminDosenController::class, 'index'])->name('dosen.index');
+        Route::get('/dosen/create', [AdminDosenController::class, 'create'])->name('dosen.create');
+        Route::post('/dosen', [AdminDosenController::class, 'store'])->name('dosen.store');
         Route::get('/dosen/{id}/edit', [AdminDosenController::class, 'edit'])->name('dosen.edit');
         Route::put('/dosen/{id}', [AdminDosenController::class, 'update'])->name('dosen.update');
-        Route::get('dosen/{dosen}/mahasiswa', [AdminDosenController::class, 'showMahasiswa'])->name('dosen.mahasiswa');
-        Route::get('/mahasiswa/{id}', [AdminStudentController::class, 'show'])->name('mahasiswa.show');
+        Route::delete('/dosen/{dosen}', [AdminDosenController::class, 'destroy'])->name('dosen.destroy');
 
-        Route::get('dosen/{dosen}/assign', [AdminDosenController::class, 'showAssignForm'])->name('dosen.assign.form');
-        Route::post('dosen/{dosen}/assign', [AdminDosenController::class, 'assignMahasiswa'])->name('dosen.assign.submit');
+        Route::get('/dosen/{dosen}/mahasiswa', [AdminDosenController::class, 'showMahasiswa'])
+            ->name('dosen.mahasiswa');
 
         // absensi manual
         Route::post('/attendance/store', [AdminAttendanceController::class, 'store'])->name('attendance.store');
@@ -239,19 +267,11 @@ Route::middleware(['auth', 'role:admin'])
             Route::delete('/{id}', [AdminManagementController::class, 'destroy'])->name('destroy');
         });
 
-        // ✅ ROUTE DOWNLOAD PDF LOGBOOK (ADMIN)
-        Route::get('/students/{student}/logbook/pdf', [AdminLogbookController::class, 'exportPdf'])
-            ->name('students.logbook.pdf');
-
         // ==========================================
         // ABOUT (SUPER ADMIN ONLY - Administrator Sistem)
         // ==========================================
         Route::get('/about', [AdminAboutController::class, 'index'])->name('about.index');
         Route::put('/about', [AdminAboutController::class, 'update'])->name('about.update');
-
-        // ✅ VALIDASI SEMUA LOGBOOK (sesuai bidang admin)
-        Route::post('/logbook/validate-all', [AdminController::class, 'validateAllLogbook'])
-            ->name('logbook.validateAll');
     });
 
 
@@ -360,10 +380,9 @@ Route::middleware(['auth', 'role:pembimbing'])
         Route::get('/mahasiswa/{id}/presensi-pdf', [PembimbingPdfController::class, 'presensiPdf'])
             ->name('mahasiswa.presensi.pdf');
 
-        // ✅ DOWNLOAD LOGBOOK PDF (PEMBIMBING)  <-- TAMBAHKAN INI
+        // ✅ DOWNLOAD LOGBOOK PDF (PEMBIMBING)
         Route::get('/mahasiswa/{id}/logbook-pdf', [PembimbingPdfController::class, 'logbookPdf'])
             ->name('mahasiswa.logbook.pdf');
     });
-
 
 require __DIR__ . '/auth.php';

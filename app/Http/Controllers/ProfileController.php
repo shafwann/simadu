@@ -16,8 +16,11 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        $bidangOptions = config('bidang.options');
+
         return view('profile.edit', [
             'user' => $request->user(),
+            'bidangOptions' => $bidangOptions,
         ]);
     }
 
@@ -62,7 +65,6 @@ class ProfileController extends Controller
 
     return view('mahasiswaa.bidang-divisi', compact('bidangOptions'));
 }
-
 
     /**
      * Delete the user's account.

@@ -9,15 +9,26 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Models\PembimbingRequest;
 
 class AdminDosenController extends Controller
 {
     // 1. Daftar Dosen
-    public function index()
-    {
-        $dosen = User::where('role', 'pembimbing')->latest()->with('mahasiswaBimbingan')->paginate(10);
-        return view('admin.dosen.index', compact('dosen'));
-    }
+public function index()
+{
+    $pendingDosens = PembimbingRequest::with('mahasiswa')
+        ->where('status', 'pending')
+        ->latest()
+        ->get();
+
+    $dosen = User::where('role', 'pembimbing')
+        ->orderBy('created_at', 'desc')
+        ->paginate(10);
+
+    return view('admin.dosen.index', compact('pendingDosens', 'dosen'));
+}
+
+
 
     // 2. Form buat akun Dosen
     public function create(Request $request)
@@ -308,5 +319,20 @@ class AdminDosenController extends Controller
 
         return view('admin.dosen.mahasiswa', compact('dosen', 'mahasiswa'));
     }
+
+    //APPROVE DOSEN
+    public function requests()
+{
+    $requests = \App\Models\PembimbingRequest::with('mahasiswa')
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    return view('admin.dosen.requests', compact('requests'));
+}
+
+
+
+
+
 
 }

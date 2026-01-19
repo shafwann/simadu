@@ -16,14 +16,97 @@
 
                 {{-- Kanan: Tambah --}}
                 <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-                    <a href="{{ route('admin.dosen.create') }}" class="group flex items-center justify-center gap-2 bg-blue-700 text-white px-5 py-3 rounded-2xl font-bold hover:bg-blue-800 transition shadow-lg shadow-blue-100 hover:shadow-blue-200 hover:-translate-y-0.5 text-sm">
-                        <svg class="w-5 h-5 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Tambah Dosen
-                    </a>
                 </div>
             </div>
+
+            {{-- TABEL APPROVAL DOSEN (PENDING) --}}
+            {{-- =============================== --}}
+            @if(isset($pendingDosens))
+                @if($pendingDosens->count())
+                    <div class="bg-white border border-yellow-100 rounded-[2rem] shadow-xl shadow-yellow-100/40 overflow-hidden mb-10">
+
+                        <div class="px-6 py-5 border-b border-yellow-100 bg-yellow-50/40">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                                <h2 class="text-lg font-black text-yellow-800 tracking-tight">
+                                    Pengajuan Dosen dari Mahasiswa
+                                </h2>
+                            </div>
+                            <p class="text-sm text-yellow-700 mt-1">
+                                Menunggu persetujuan admin
+                            </p>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+
+                                <thead>
+                                    <tr class="bg-yellow-50 text-xs uppercase tracking-widest text-yellow-700 font-bold">
+                                        <th class="px-6 py-4">Nama Dosen</th>
+                                        <th class="px-6 py-4">NIDN</th>
+                                        <th class="px-6 py-4">Instansi</th>
+                                        <th class="px-6 py-4 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody class="divide-y divide-yellow-100">
+                                    @foreach($pendingDosens as $d)
+                                    <tr>
+
+                                        <td class="px-6 py-4 font-semibold text-gray-800">
+                                            {{ $d->nama_dosen  }}
+                                        </td>
+
+                                        <td class="px-6 py-4 text-sm text-gray-600">
+                                            {{ $d->nidn }}
+                                        </td>
+
+                                        <td class="px-6 py-4 text-sm text-gray-600">
+                                            {{ $d->instansi }}
+                                        </td>
+
+                                        {{-- 🔥 INI TEMPAT APPROVE / REJECT --}}
+                                        <td class="px-6 py-4 text-center">
+                                            <div class="flex justify-center gap-2">
+
+                                                {{-- APPROVE --}}
+                                                <form action="{{ route('admin.pembimbing-requests.approve', $d->id) }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit"
+                                                        class="px-3 py-1.5 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-700">
+                                                        Approve
+                                                    </button>
+                                                </form>
+
+                                                {{-- REJECT --}}
+                                                <form action="{{ route('admin.pembimbing-requests.reject', $d->id) }}" method="POST"
+                                                    onsubmit="return confirm('Tolak pengajuan dosen ini?')">
+                                                    @csrf
+                                                    <button type="submit"
+                                                        class="px-3 py-1.5 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700">
+                                                        Reject
+                                                    </button>
+                                                </form>
+
+                                            </div>
+                                        </td>
+
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+
+                        </div>
+
+                    </div>
+                @else
+                    <div class="mb-10 p-6 text-sm text-gray-500 bg-yellow-50 rounded-xl">
+                        Belum ada pengajuan dosen dari mahasiswa.
+                    </div>
+                @endif
+            @endif
+
+
 
             {{-- TABEL DOSEN --}}
             <div class="bg-white border border-gray-100 rounded-[2rem] shadow-2xl shadow-gray-100/50 overflow-hidden mb-6">

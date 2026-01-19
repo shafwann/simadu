@@ -103,7 +103,7 @@
                                 </td>
 
                                 <td class="px-6 py-4 text-center">
-                                    <a href="{{ route('admin.mahasiswa.show', $mhs->id) }}"
+                                    <a href="{{ route('admin.students.show', $mhs->id) }}"
                                     class="inline-flex items-center gap-1
                                             text-sm font-semibold text-blue-600
                                             hover:text-blue-800 transition">

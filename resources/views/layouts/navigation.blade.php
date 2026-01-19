@@ -57,9 +57,10 @@
                             {{ __('Laporan') }}
                         </x-nav-link>
 
-                        <x-nav-link :href="route('mahasiswa.bidang.show')" :active="request()->routeIs('mahasiswa.bidang.show')" class="font-bold text-gray-900">
-                            {{ __('Bidang/Divisi') }}
-                        </x-nav-link>
+                        <x-nav-link :href="route('mahasiswa.pembimbing.request.create')" :active="request()->routeIs('mahasiswa.pembimbing.request.*')"  class="font-bold text-gray-900" >
+                        {{ __('Pembimbing Instansi') }}
+                         </x-nav-link>
+
 
                     @endif
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Attendance;
+use App\Models\Logbook;
 use App\Models\AboutSetting;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -156,5 +157,40 @@ class PembimbingPdfController extends Controller
             5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',
             9=>'September',10=>'Oktober',11=>'November',12=>'Desember'
         ][$m] ?? '-';
+    }
+
+    
+    public function logbookPdf(Request $request, $id)
+    {
+        $month = (int) $request->get('month', now()->month);
+        $year  = (int) $request->get('year', now()->year);
+
+        if ($month < 1 || $month > 12) $month = now()->month;
+        if ($year < 2000 || $year > 2100) $year = now()->year;
+
+        $student = User::findOrFail($id);
+        $this->ensureMahasiswaBimbingan($student);
+
+        $about = AboutSetting::first();
+
+        $logbooks = Logbook::where('user_id', $student->id)
+            ->whereMonth('tanggal', $month)
+            ->whereYear('tanggal', $year)
+            ->orderBy('tanggal', 'asc')
+            ->get();
+
+        $bulanLabel = $this->bulanIndo($month);
+
+        $pdf = Pdf::loadView('admin.logbook.pdf', [
+            'student'    => $student,
+            'about'      => $about,
+            'year'       => $year,
+            'bulanLabel' => $bulanLabel,
+            'logbooks'   => $logbooks,
+        ])->setPaper('a4', 'portrait');
+
+        $safeName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $student->name);
+
+        return $pdf->download("LOGBOOK_{$safeName}_{$bulanLabel}_{$year}.pdf");
     }
 }
