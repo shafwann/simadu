@@ -12,6 +12,8 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminStudentController;
 use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\AdminLogbookController;
+use App\Http\Controllers\PembimbingPdfController;
 use App\Http\Controllers\AdminManagementController;
 use App\Http\Controllers\AdminDosenController;
 use App\Http\Controllers\AssessmentController;

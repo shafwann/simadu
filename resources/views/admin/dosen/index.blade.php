@@ -16,12 +16,6 @@
 
                 {{-- Kanan: Tambah --}}
                 <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-                    <a href="{{ route('admin.dosen.create') }}" class="group flex items-center justify-center gap-2 bg-blue-700 text-white px-5 py-3 rounded-2xl font-bold hover:bg-blue-800 transition shadow-lg shadow-blue-100 hover:shadow-blue-200 hover:-translate-y-0.5 text-sm">
-                        <svg class="w-5 h-5 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Tambah Dosen
-                    </a>
                 </div>
             </div>
 
