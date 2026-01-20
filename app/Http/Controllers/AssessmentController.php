@@ -160,7 +160,7 @@ class AssessmentController extends Controller
 
         // ambil data about (1 row)
         // karena AdminAboutController pakai firstOrCreate, harusnya pasti ada
-        $about = AboutSetting::first();
+        $about = AboutSetting::where('kategori_instansi',$user->kategori_instansi)->first();
 
         // F4: 210 x 330 mm (landscape => 330 x 210)
         $w = 330 / 25.4 * 72;
