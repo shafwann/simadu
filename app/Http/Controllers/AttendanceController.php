@@ -180,7 +180,10 @@
 
         private function getTodayAbsensiSchedule(): array
         {
-            $about = AboutSetting::first();
+                $about = AboutSetting::where(
+        'kategori_instansi',
+        auth()->user()->kategori_instansi
+    )->first();
 
             if (!$about) {
                 return ['error' => 'Jam absensi belum diatur oleh admin.'];
@@ -234,6 +237,7 @@
             $today = $map[$dow];
 
             if (
+                
                 !$today['checkin_mulai'] || !$today['checkin_selesai'] ||
                 !$today['checkout_mulai'] || !$today['checkout_selesai']
             ) {
