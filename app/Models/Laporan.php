@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -8,11 +9,19 @@ class Laporan extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'file_path', 'nama_file', 'is_validated'];
+    protected $fillable = [
+        'user_id',
+        'file_path',
+        'nama_file',
+        'is_validated',
+    ];
 
-    public function user() {
+    protected $casts = [
+        'is_validated' => 'boolean',
+    ];
+
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 }
-
-?>
