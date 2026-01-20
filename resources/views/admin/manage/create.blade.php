@@ -29,19 +29,23 @@
                         <x-input-error :messages="$errors->get('name')" class="mt-2" />
                     </div>
 
+                    {{-- GANTI BAGIAN SELECT BIDANG INI --}}
                     <div>
                         <x-input-label for="bidang" :value="__('Divisi / Bidang yang Dikelola')" class="text-gray-700 font-bold" />
                         <div class="relative mt-2">
                             <select id="bidang" name="bidang" class="block w-full border-gray-300 rounded-xl shadow-sm focus:border-purple-500 focus:ring-purple-500 appearance-none py-3 px-4" required>
                                 <option value="" disabled selected class="text-gray-400">-- Pilih Bidang --</option>
-                                <option value="Ekonomi">Ekonomi</option>
-                                <option value="Sekretariat">Sekretariat</option>
-                                <option value="Sosial & Budaya">Sosial & Budaya</option>
-                                <option value="Fisik & Prasarana">Fisik & Prasarana</option>
-                                <option value="Penelitian, Pengembangan & Penyusunan Program">Penelitian, Pengembangan & Penyusunan Program</option>
+
+                                {{-- ✅ LOOPING OPSI DINAMIS DARI CONTROLLER --}}
+                                @foreach($bidangOptions as $option)
+                                    <option value="{{ $option }}" {{ old('bidang') == $option ? 'selected' : '' }}>
+                                        {{ $option }}
+                                    </option>
+                                @endforeach
+
                             </select>
                         </div>
-                        <p class="text-xs text-gray-400 mt-2">*Admin ini hanya bisa melihat data mahasiswa di bidang yang dipilih.</p>
+                        <p class="text-xs text-gray-400 mt-2">*Daftar bidang diambil dari menu Setting Instansi.</p>
                         <x-input-error :messages="$errors->get('bidang')" class="mt-2" />
                     </div>
 

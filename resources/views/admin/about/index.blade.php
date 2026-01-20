@@ -67,10 +67,41 @@
                 </div>
             </form>
 
-            {{-- ================= FORM 2: BIDANG / DIVISI ================= --}}
+            {{-- ================= FORM 2: BIDANG / DIVISI (INLINE ALPINE) ================= --}}
             <form method="POST" action="{{ route('admin.about.update') }}"
-                  class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100"
-                  x-data="bidangDivisiForm()" x-init="init()">
+                class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100"
+                {{-- LOGIKA ALPINE LANGSUNG DISINI --}}
+                x-data="{
+                    items: [],
+                    serialized: '',
+                    init() {
+                        // Ambil data dari textarea hidden
+                        const raw = this.$refs.seed.value;
+                        // Pecah string jadi array (pisahkan enter \n)
+                        this.items = raw.split(/\r\n|\n|\r/).map(s => s.trim()).filter(Boolean);
+                        // Jika kosong, kasih 1 baris default
+                        if (this.items.length === 0) this.items.push('');
+                        this.sync();
+                    },
+                    add() {
+                        this.items.push('');
+                        this.sync();
+                    },
+                    remove(index) {
+                        if (this.items.length > 1) {
+                            this.items.splice(index, 1);
+                        } else {
+                            this.items[0] = ''; // Reset baris terakhir
+                        }
+                        this.sync();
+                    },
+                    sync() {
+                        // Gabung array jadi string (pisahkan enter \n)
+                        this.serialized = this.items.filter(s => s.trim() !== '').join('\n');
+                    }
+                }"
+                x-init="init()">
+
                 @csrf @method('PUT')
                 <input type="hidden" name="section" value="bidang">
 
@@ -79,14 +110,21 @@
                     <p class="text-xs text-gray-400 mt-1">Digunakan untuk dropdown registrasi mahasiswa.</p>
                 </div>
 
-                <textarea x-ref="seed" class="hidden">{{ old('bidang_options', $bidangOptionsText ?? '') }}</textarea>
+                {{-- Data Awal dari Controller --}}
+                <textarea x-ref="seed" class="hidden">{{ $bidangOptionsText ?? '' }}</textarea>
+
+                {{-- Input Hidden yang dikirim ke Server --}}
                 <input type="hidden" name="bidang_options" :value="serialized">
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                     <template x-for="(item, index) in items" :key="index">
                         <div class="relative">
-                            <input type="text" class="w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                                   x-model="items[index]" @input="sync()" placeholder="Nama Bidang">
+                            <input type="text"
+                                class="w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                                x-model="items[index]"
+                                @input="sync()"
+                                placeholder="Nama Bidang">
+
                             <button type="button" x-show="items.length > 1" @click="remove(index)"
                                     class="absolute right-2 top-2 text-gray-400 hover:text-red-500 font-bold px-2">
                                 &times;
@@ -94,6 +132,7 @@
                         </div>
                     </template>
                 </div>
+
                 <button type="button" @click="add()" class="text-sm text-blue-600 font-bold hover:underline flex items-center gap-1">
                     <span>+</span> Tambah Baris Baru
                 </button>

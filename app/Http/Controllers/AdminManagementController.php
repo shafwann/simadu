@@ -45,8 +45,9 @@ class AdminManagementController extends Controller
     public function create()
     {
         $this->checkSuperAdmin();
+        $bidangOptions = \App\Models\AboutSetting::bidangOptions();
 
-        return view('admin.manage.create');
+        return view('admin.manage.create', compact('bidangOptions'));
     }
 
     /**
