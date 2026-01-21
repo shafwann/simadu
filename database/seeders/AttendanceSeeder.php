@@ -11,14 +11,60 @@ class AttendanceSeeder extends Seeder
 {
     public function run(): void
     {
-        $faker = \Faker\Factory::create('id_ID');
+        // 1. DAFTAR KOORDINAT KANTOR (Pusat di Karanganyar)
+        $kantorCoordinates = [
+            'BAPPERIDA' => [
+                'lat' => -7.5949176,
+                'lng' => 110.9406551,
+                'name' => 'KANTOR BAPPERIDA'
+            ],
+            'DISKOMINFO' => [
+                'lat' => -7.5972000,
+                'lng' => 110.9421000,
+                'name' => 'KANTOR DISKOMINFO'
+            ],
+            'DISDIKBUD' => [
+                'lat' => -7.5935000,
+                'lng' => 110.9392000,
+                'name' => 'KANTOR DISDIKBUD'
+            ],
+            'DINKES' => [
+                'lat' => -7.5928000,
+                'lng' => 110.9385000,
+                'name' => 'KANTOR DINAS KESEHATAN'
+            ],
+            'DPUPR' => [
+                'lat' => -7.5991000,
+                'lng' => 110.9453000,
+                'name' => 'KANTOR DPUPR'
+            ],
+            'DISPARPORA' => [
+                'lat' => -7.5960000,
+                'lng' => 110.9415000,
+                'name' => 'KANTOR DISPARPORA'
+            ],
+            // Default Fallback
+            'UMUM' => [
+                'lat' => -7.5949176,
+                'lng' => 110.9406551,
+                'name' => 'KANTOR PEMDA'
+            ]
+        ];
 
         // Ambil semua mahasiswa
         $students = User::where('role', 'mahasiswa')->get();
 
         foreach ($students as $student) {
+
+            // Tentukan Kantor Berdasarkan Kategori Instansi Mahasiswa
+            $kategori = $student->kategori_instansi ?? 'BAPPERIDA'; // Default ke Bapperida
+
+            // Ambil data koordinat (Fallback ke Bapperida jika kategori tidak ada di list)
+            $officeData = $kantorCoordinates[$kategori] ?? $kantorCoordinates['BAPPERIDA'];
+
             // Kita buatkan data untuk 15 hari kerja pertama sejak tanggal masuk
-            $startDate = Carbon::parse($student->tanggal_masuk);
+            // Jika tanggal masuk null, pakai tanggal hari ini mundur 15 hari
+            $startDate = $student->tanggal_masuk ? Carbon::parse($student->tanggal_masuk) : Carbon::now()->subDays(20);
 
             for ($i = 0; $i < 15; $i++) {
                 $date = $startDate->copy()->addDays($i);
@@ -28,7 +74,7 @@ class AttendanceSeeder extends Seeder
                     continue;
                 }
 
-                // Random Status (80% Hadir, sisanya aneh-aneh)
+                // Random Status (80% Hadir)
                 $rand = rand(1, 100);
 
                 if ($rand <= 80) {
@@ -52,23 +98,30 @@ class AttendanceSeeder extends Seeder
                 if ($status === 'Hadir') {
                     $checkIn = '07:' . str_pad(rand(15, 59), 2, '0', STR_PAD_LEFT) . ':00';
                     $checkOut = '16:' . str_pad(rand(0, 30), 2, '0', STR_PAD_LEFT) . ':00';
-                    $location = '-7.5949176,110.9406551'; // Koordinat Bapperida
-                    $locationName = 'KANTOR BAPPERIDA';
+
+                    // Generate Random Jitter (Agar titik GPS tidak menumpuk 100% sama)
+                    // Variasi sekitar 5-10 meter
+                    $lat = $officeData['lat'] + (rand(-50, 50) / 1000000);
+                    $lng = $officeData['lng'] + (rand(-50, 50) / 1000000);
+
+                    $location = "{$lat},{$lng}";
+                    $locationName = $officeData['name'];
                 }
                 elseif ($status === 'Telat') {
                     $checkIn = '08:' . str_pad(rand(10, 45), 2, '0', STR_PAD_LEFT) . ':00'; // Datang siang
                     $checkOut = '16:00:00';
-                    $location = '-7.5949176,110.9406551';
-                    $locationName = 'KANTOR BAPPERIDA';
+
+                    $lat = $officeData['lat'] + (rand(-50, 50) / 1000000);
+                    $lng = $officeData['lng'] + (rand(-50, 50) / 1000000);
+
+                    $location = "{$lat},{$lng}";
+                    $locationName = $officeData['name'];
                 }
                 elseif ($status === 'Sakit') {
                     $locationName = 'RUMAH / RS';
                 }
                 elseif ($status === 'Ijin') {
                     $locationName = 'KEPERLUAN KELUARGA';
-                }
-                elseif ($status === 'Dinas Luar') {
-                    $locationName = 'DINAS LUAR (PEMKAB)';
                 }
 
                 Attendance::create([

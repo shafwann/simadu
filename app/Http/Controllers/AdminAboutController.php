@@ -64,7 +64,7 @@ class AdminAboutController extends Controller
             case 'branding':
                 $data = $request->validate([
                     'app_name' => ['nullable', 'string', 'max:50'],
-                    'agency_name' => ['nullable', 'string', 'max:50'], 
+                    'agency_name' => ['nullable', 'string', 'max:50'],
                     'app_description' => ['nullable', 'string', 'max:100'],
                     'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:5048'],
                 ]);
@@ -109,15 +109,16 @@ class AdminAboutController extends Controller
                     'office_address' => ['nullable', 'string'],
                     'office_phone' => ['nullable', 'string', 'max:20'],
                     'office_email' => ['nullable', 'email'],
-                    'social_instagram' => ['nullable', 'url'],
-                    'social_facebook' => ['nullable', 'url'],
-                    'social_youtube' => ['nullable', 'url'],
-                    'social_x' => ['nullable', 'url'],
+                    'social_instagram' => ['nullable', 'string', 'max:255'],
+                    'social_facebook' => ['nullable', 'string', 'max:255'],
+                    'social_youtube' => ['nullable', 'string', 'max:255'],
+                    'social_x' => ['nullable', 'string', 'max:255'],
                     'google_maps_embed' => ['nullable', 'string'],
-                    'whatsapp_number' => ['nullable', 'numeric'],
+                    'whatsapp_number' => ['nullable', 'string', 'max:20'],
                     'links_label' => ['nullable', 'array'],
                     'links_url' => ['nullable', 'array'],
                 ]);
+
 
                 // Proses Link Dinamis
                 $customLinks = [];

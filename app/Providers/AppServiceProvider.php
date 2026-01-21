@@ -21,29 +21,39 @@ class AppServiceProvider extends ServiceProvider
         // Kode ini akan berjalan di SETIAP halaman untuk menyuntikkan $globalAbout
         View::composer('*', function ($view) {
 
-        $kategori = 'MASTER'; // ✅ DEFAULTNYA SEKARANG 'MASTER' (Global)
+            $targetKategori = 'MASTER';
 
-        // 1. Jika User Login -> Ambil instansi user tersebut
-        if (Auth::check()) {
-            // Master tetap melihat MASTER, Admin Instansi melihat Instansinya
-            $kategori = Auth::user()->kategori_instansi ?? 'MASTER';
-        }
-        // 2. Jika Tamu (Guest) -> Cek apakah ada filter di URL (?instansi=DISKOMINFO)
-        elseif (request()->has('instansi')) {
-            $kategori = request()->query('instansi');
-        }
+            // Prioritas 1: Jika ada filter di URL (untuk testing/tamu)
+            if (request()->has('instansi')) {
+                $targetKategori = request()->query('instansi');
+            }
+            // Prioritas 2: Jika User Login (Admin/Mahasiswa melihat instansi sendiri)
+            elseif (Auth::check()) {
+                $user = Auth::user();
+                // Jika user punya kategori, pakai itu. Jika tidak, tetap MASTER.
+                $targetKategori = $user->kategori_instansi ?? 'MASTER';
+            }
 
-            // 3. Ambil Data Setting dari DB
-            // firstOrCreate digunakan agar tidak error jika data belum ada
-            $setting = AboutSetting::firstOrCreate(
-                ['kategori_instansi' => $kategori],
-                [
-                    'app_name' => 'System Magang',
-                    'agency_name' => 'Pemerintah Kab. Karanganyar',
-                    'nama_instansi' => ' system Magang',
-                    'jam_operasional' => 'Senin-Jumat: 08.00-16.00'
-                ]
-            );
+            // 2. AMBIL DATA DARI DB (Hanya Read, Jangan Create!)
+            $setting = AboutSetting::where('kategori_instansi', $targetKategori)->first();
+
+            // 3. LOGIKA FALLBACK (CADANGAN)
+            // Jika data instansi spesifik (misal: DISKOMINFO) belum disetting adminnya (belum ada di DB),
+            // Maka TAMPILKAN DATA MASTER dulu agar layout tidak rusak/kosong.
+            if (!$setting && $targetKategori !== 'MASTER') {
+                $setting = AboutSetting::where('kategori_instansi', 'MASTER')->first();
+            }
+
+            // 4. ULTIMATE FALLBACK (Jika MASTER pun belum ada di DB)
+            // Buat object dummy di memory saja, jangan simpan ke DB.
+            if (!$setting) {
+                $setting = new AboutSetting([
+                    'app_name' => 'SISTEM MAGANG',
+                    'agency_name' => 'PEMERINTAH KABUPATEN',
+                    'office_address' => 'Alamat belum disetting',
+                    'logo_path' => null,
+                ]);
+            }
 
             // 4. Suntikkan variabel $globalAbout ke semua View
             $view->with('globalAbout', $setting);

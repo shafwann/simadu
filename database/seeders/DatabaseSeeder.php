@@ -149,6 +149,8 @@ class DatabaseSeeder extends Seeder
             MasterAdminSeeder::class, // Akun Master
             AdminBidangSeeder::class, // Akun Admin Bapperida (Divisi)
             AboutSettingSeeder::class, // Setting khusus Bapperida
+            AttendanceSeeder::class, // Data Kehadiran awal
+            LogbookSeeder::class,    // Data Logbook awal
         ]);
     }
 }
