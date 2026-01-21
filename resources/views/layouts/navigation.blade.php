@@ -58,12 +58,6 @@
                         <x-nav-link :href="route('laporan.index')" :active="request()->routeIs('laporan.*')" class="font-bold text-gray-900">
                             {{ __('Laporan') }}
                         </x-nav-link>
-
-                        <x-nav-link :href="route('mahasiswa.pembimbing.request.create')" :active="request()->routeIs('mahasiswa.pembimbing.request.*')"  class="font-bold text-gray-900" >
-                        {{ __('Pembimbing Instansi') }}
-                         </x-nav-link>
-
-
                     @endif
 
                     {{-- 2. MENU ADMIN --}}

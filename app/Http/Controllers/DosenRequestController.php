@@ -6,6 +6,7 @@ use App\Models\PembimbingRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class DosenRequestController extends Controller
 {
@@ -19,14 +20,18 @@ class DosenRequestController extends Controller
 
     public function store(Request $request)
     {
+        // ✅ ambil request milik mahasiswa (kalau sudah pernah ajukan)
+        $existing = PembimbingRequest::where('mahasiswa_id', auth()->id())->latest()->first();
+        $existingId = $existing?->id;
+
         $request->validate([
-            'nama_dosen' => 'required|string',
-            'nidn'       => 'nullable|digits:10',
-            'email'      => 'required|email|unique:pembimbing_requests',
-            'password'   => 'required|min:8',
+            'nama_dosen' => ['required', 'string', 'max:255'],
+            'nidn'       => ['nullable', 'digits:10', Rule::unique('pembimbing_requests', 'nidn')->ignore($existingId)],
+            'email'      => ['required', 'email', 'max:255', Rule::unique('pembimbing_requests', 'email')->ignore($existingId)],
+            'password'   => ['required', 'string', 'min:8'],
         ]);
 
-        PembimbingRequest::create([
+        $payload = [
             'nama_dosen'        => $request->nama_dosen,
             'nidn'              => $request->nidn,
             'email'             => $request->email,
@@ -37,9 +42,18 @@ class DosenRequestController extends Controller
             'fakultas'          => auth()->user()->fakultas,
             'kategori_instansi' => auth()->user()->kategori_instansi,
             'status'            => 'pending',
-        ]);
+        ];
 
-        return back()->with('success', 'Pengajuan dikirim');
+        // ✅ jika sudah ada -> update saja (agar tidak duplicate NIDN/Email unik)
+        if ($existing) {
+            $existing->update($payload);
+            return back()->with('success', 'Perubahan dikirim. Menunggu persetujuan admin.');
+        }
+
+        // ✅ jika belum ada -> create
+        PembimbingRequest::create($payload);
+
+        return back()->with('success', 'Pengajuan dikirim. Menunggu persetujuan admin.');
     }
 
     public function approve($id)
@@ -62,16 +76,25 @@ class DosenRequestController extends Controller
             }
 
             // 3️⃣ BUAT / AMBIL DOSEN
-            $dosen = User::firstOrCreate(
-                ['email' => $req->email],
-                [
+            $dosen = User::where('email', $req->email)->first();
+
+            if (!$dosen) {
+                $dosen = User::create([
                     'name'              => $req->nama_dosen,
+                    'email'             => $req->email,
                     'password'          => $req->password,
                     'role'              => 'pembimbing',
                     'status'            => 'aktif',
-                    'kategori_instansi' => $req->mahasiswa->kategori_instansi, // 🔑
-                ]
-            );
+                    'kategori_instansi' => $req->mahasiswa->kategori_instansi,
+                ]);
+            } else {
+                // OPTIONAL: sinkronkan data dosen
+                $dosen->update([
+                    'name'     => $req->nama_dosen,
+                    'password' => $req->password,
+                    'status'   => 'aktif',
+                ]);
+            }
 
             // 4️⃣ HUBUNGKAN DOSEN ↔ MAHASISWA
             $req->mahasiswa
@@ -84,7 +107,6 @@ class DosenRequestController extends Controller
 
         return back()->with('success', 'Request disetujui');
     }
-
 
     public function reject($id)
     {
@@ -110,5 +132,4 @@ class DosenRequestController extends Controller
 
         return back()->with('success', 'Request ditolak');
     }
-
 }

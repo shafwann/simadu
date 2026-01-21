@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\PembimbingRequest; // ✅ TAMBAH
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,9 +19,27 @@ class ProfileController extends Controller
     {
         $bidangOptions = config('bidang.options');
 
+        // ✅ TAMBAH: ambil request pembimbing instansi
+        $user = $request->user();
+
+        // request terbaru (buat status & isi form putih)
+        $latestRequest = PembimbingRequest::where('mahasiswa_id', $user->id)
+            ->latest()
+            ->first();
+
+        // request terakhir yang APPROVED (buat tampil di sidebar box biru)
+        $approvedRequest = PembimbingRequest::where('mahasiswa_id', $user->id)
+            ->where('status', 'approved')
+            ->latest()
+            ->first();
+
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user' => $user,
             'bidangOptions' => $bidangOptions,
+
+            // ✅ dikirim ke blade
+            'latestRequest' => $latestRequest,
+            'approvedRequest' => $approvedRequest,
         ]);
     }
 
@@ -60,11 +79,11 @@ class ProfileController extends Controller
      * ✅ TAMBAHAN: Halaman Bidang/Divisi (halaman sendiri)
      */
     public function showBidang(): View
-{
-    $bidangOptions = \App\Models\AboutSetting::bidangOptions();
+    {
+        $bidangOptions = \App\Models\AboutSetting::bidangOptions();
 
-    return view('mahasiswaa.bidang-divisi', compact('bidangOptions'));
-}
+        return view('mahasiswaa.bidang-divisi', compact('bidangOptions'));
+    }
 
     /**
      * Delete the user's account.
