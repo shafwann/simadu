@@ -201,8 +201,9 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/logbook/validate-all', [AdminController::class, 'validateAllLogbook'])->name('logbook.validateAll');
 
         // Laporan (View Admin)
-        Route::get('/laporan-list', [LaporanController::class, 'adminIndex'])->name('laporan.index');
-        Route::get('/laporan/download/{laporan}', [LaporanController::class, 'download'])->name('laporan.download');
+        // ✅ FIX: {id} -> {laporan} supaya Route Model Binding cocok dengan controller (Laporan $laporan)
+        Route::get('/laporan/{laporan}/preview', [LaporanController::class, 'preview'])->name('laporan.preview');
+        Route::get('/laporan/{laporan}/download', [LaporanController::class, 'download'])->name('laporan.download');
 
         // CRUD Mahasiswa
         Route::resource('students', AdminStudentController::class);
@@ -266,9 +267,14 @@ Route::middleware(['auth', 'role:admin'])
 
                 foreach ($mahasiswa as $index => $u) {
                     fputcsv($file, [
-                        $index + 1, strtoupper($u->name), "'" . $u->nim, strtoupper($u->prodi), strtoupper($u->instansi),
+                        $index + 1,
+                        strtoupper($u->name),
+                        "'" . $u->nim,
+                        strtoupper($u->prodi),
+                        strtoupper($u->instansi),
                         ($u->tanggal_masuk && $u->tanggal_selesai ? Carbon::parse($u->tanggal_masuk)->format('d/m/Y') . ' - ' . Carbon::parse($u->tanggal_selesai)->format('d/m/Y') : '-'),
-                        strtoupper($u->bidang ?? ''), ucfirst($u->status)
+                        strtoupper($u->bidang ?? ''),
+                        ucfirst($u->status)
                     ], ';');
                 }
                 fclose($file);

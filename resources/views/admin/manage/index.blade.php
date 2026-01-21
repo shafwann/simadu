@@ -10,7 +10,7 @@
                         <span class="text-xs font-bold text-purple-700 uppercase tracking-wider">Super Admin Area</span>
                     </div>
                     <h1 class="text-3xl font-black text-gray-900 tracking-tight">Manajemen Admin Bidang</h1>
-                    <p class="text-gray-500 mt-2 text-sm">Kelola akun admin untuk setiap divisi/bidang di Bapperlitbang.</p>
+                    <p class="text-gray-500 mt-2 text-sm">Kelola akun admin untuk setiap divisi/bidang di <b>{{ Auth::user()->kategori_instansi ?? 'UMUM' }}</b>.</p>
                 </div>
 
             <a href="{{ route('admin.manage.create') }}"

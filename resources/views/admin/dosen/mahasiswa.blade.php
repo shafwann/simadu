@@ -37,7 +37,7 @@
                             <div class="text-sm text-gray-600">
                                 Instansi:
                                 <span class="font-semibold">
-                                    {{ $dosen->instansi ?? '-' }}
+                                    {{ $dosen->instansi ?? $mahasiswa->first()?->instansi ?? '-' }}
                                 </span>
                             </div>
                         </div>

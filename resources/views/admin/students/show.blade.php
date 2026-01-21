@@ -394,11 +394,12 @@
                                         <td class="p-4 text-gray-500">{{ \Carbon\Carbon::parse($lap->created_at)->format('d M Y') }}</td>
                                         <td class="p-4 text-center flex justify-center gap-2">
                                             <button type="button"
-                                                onclick="document.getElementById('preview-iframe').src='{{ route('laporan.preview', $lap->id) }}'"
+                                                onclick="document.getElementById('preview-iframe').src='{{ route("admin.laporan.preview", $lap->id) }}'"
                                                 class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-200 transition">
                                                 Preview
                                             </button>
-                                            <a href="{{ route('laporan.download', $lap->id) }}"
+
+                                            <a href="{{ route('admin.laporan.download', $lap->id) }}"
                                                 class="px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded-lg hover:bg-purple-700 transition">
                                                 Download
                                             </a>

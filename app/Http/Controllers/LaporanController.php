@@ -8,16 +8,52 @@ use Illuminate\Support\Facades\Storage;
 
 class LaporanController extends Controller
 {
+    // =========================
+    // Helper: cari file di disk local/public
+    // =========================
+    private function resolveFile(Laporan $laporan): array
+    {
+        // file_path biasanya: "laporan/xxx.pdf" atau kadang "public/laporan/xxx.pdf"
+        $path = ltrim($laporan->file_path ?? '', '/');
+
+        // Kandidat path yang mungkin tersimpan
+        $candidates = [
+            $path,
+        ];
+
+        // Kalau ada yang menyimpan "public/xxx", coba juga versi tanpa "public/"
+        if (str_starts_with($path, 'public/')) {
+            $candidates[] = substr($path, 7);
+        } else {
+            // Kalau tidak ada "public/", coba juga versi dengan "public/"
+            $candidates[] = 'public/' . $path;
+        }
+
+        // Cek disk local dan public
+        foreach (['local', 'public'] as $disk) {
+            foreach ($candidates as $candidate) {
+                if ($candidate && Storage::disk($disk)->exists($candidate)) {
+                    return [
+                        'disk' => $disk,
+                        'path' => $candidate,
+                        'absolute' => Storage::disk($disk)->path($candidate),
+                    ];
+                }
+            }
+        }
+
+        // Tidak ketemu
+        abort(404, 'File tidak ditemukan: ' . ($laporan->file_path ?? '-'));
+    }
+
     // Mahasiswa lihat list & upload
     public function index()
     {
         $laporans = auth()->user()->laporans()->latest()->get();
-
         $bidangOptions = \App\Models\AboutSetting::bidangOptions();
 
         return view('laporan.index', compact('laporans', 'bidangOptions'));
     }
-
 
     public function validateLaporan($id)
     {
@@ -35,7 +71,6 @@ class LaporanController extends Controller
 
         return back()->with('success', 'Laporan berhasil divalidasi.');
     }
-
 
     public function upload(Request $request)
     {
@@ -59,8 +94,8 @@ class LaporanController extends Controller
         $file = $request->file('file');
         $filename = $file->getClientOriginalName();
 
-        // simpan ke storage/app/laporan/...
-        $path = $file->store('laporan');
+        // ✅ BIARKAN seperti semula: ikut default disk (biar tidak mengubah perilaku lama)
+        $path = $file->store('laporan'); // bisa masuk local atau public tergantung config
 
         Laporan::create([
             'user_id' => auth()->id(),
@@ -75,6 +110,10 @@ class LaporanController extends Controller
     // Admin lihat semua
     public function adminIndex()
     {
+        if (auth()->user()->role !== 'admin') {
+            abort(403);
+        }
+
         $laporans = Laporan::with('user')->latest()->get();
         return view('laporan.admin', compact('laporans'));
     }
@@ -88,17 +127,12 @@ class LaporanController extends Controller
             abort(403, 'Akses ditolak');
         }
 
-        // ✅ Path sesuai file yang di-store()
-        $filePath = storage_path('app/' . $laporan->file_path);
+        $resolved = $this->resolveFile($laporan);
 
-        if (!file_exists($filePath)) {
-            abort(404, 'File tidak ditemukan: ' . $laporan->file_path);
-        }
-
-        return response()->download($filePath, $laporan->nama_file);
+        return response()->download($resolved['absolute'], $laporan->nama_file);
     }
 
-    // Preview pdf/doc (kalau bukan pdf, browser biasanya download)
+    // Preview (pdf tampil di iframe, doc/docx biasanya download)
     public function preview(Laporan $laporan)
     {
         $user = auth()->user();
@@ -107,15 +141,14 @@ class LaporanController extends Controller
             abort(403);
         }
 
-        if (!Storage::disk('private')->exists($laporan->file_path)) {
-            abort(404, 'File tidak ditemukan');
-        }
+        $resolved = $this->resolveFile($laporan);
 
-        $filePath = Storage::disk('private')->path($laporan->file_path);
+        $mime = @mime_content_type($resolved['absolute']) ?: 'application/octet-stream';
 
-        return response()->file($filePath, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline',
+        return response()->file($resolved['absolute'], [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="' . $laporan->nama_file . '"',
+            'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 
@@ -150,10 +183,15 @@ class LaporanController extends Controller
             'file.max' => 'Ukuran maksimal 20 MB.',
         ]);
 
-        // hapus file lama
-        Storage::delete($laporan->file_path);
+        // ✅ hapus file lama: coba cari dulu di disk local/public
+        try {
+            $resolved = $this->resolveFile($laporan);
+            Storage::disk($resolved['disk'])->delete($resolved['path']);
+        } catch (\Throwable $e) {
+            // kalau file lama memang hilang, lanjut saja upload baru
+        }
 
-        // simpan file baru
+        // simpan file baru (ikut default disk seperti semula)
         $file = $request->file('file');
         $path = $file->store('laporan');
 
