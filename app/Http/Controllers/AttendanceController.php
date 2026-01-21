@@ -1,56 +1,104 @@
 <?php
 
-    namespace App\Http\Controllers;
+namespace App\Http\Controllers;
 
-    use App\Models\Attendance;
-    use Illuminate\Http\Request;
-    use Illuminate\Support\Facades\Auth;
-    use Carbon\Carbon;
-    use App\Models\Logbook;
-    use App\Models\AboutSetting;
-    use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+use App\Models\Attendance;
+use App\Models\AboutSetting;
+ use Barryvdh\DomPDF\Facade\Pdf;
+ use App\Models\Logbook;
 
-    class AttendanceController extends Controller
-    {
-        public function index()
-    {
-        $attendance = Attendance::where('user_id', Auth::id())
-            ->whereDate('tanggal', Carbon::today())
-            ->orderByDesc('id')
-            ->first();
+class AttendanceController extends Controller
+{
+    /**
+     * Halaman utama presensi mahasiswa
+     */
+public function index()
+{
+    $user = Auth::user();
+    $todayDate = Carbon::now()->toDateString();
 
-        $schedule = $this->getTodayAbsensiSchedule();
+    // 🔹 Ambil hari (senin, selasa, ...)
+    $today = strtolower(
+        Carbon::now()->locale('id')->isoFormat('dddd')
+    );
 
-        // ✅ TAMBAHAN: Ambil Settingan Lokasi Kantor
-        $about = AboutSetting::first();
+    // 🔹 Ambil kategori instansi user
+    $kategori = $user->kategori_instansi ?? 'UMUM';
 
-        $checkinExpired = false;
-        $checkoutAvailable = false;
-        $checkoutExpired = false;
+    // 🔹 Ambil setting instansi SESUAI kategori
+    $about = AboutSetting::where('kategori_instansi', $kategori)->first();
 
-        if (!isset($schedule['error'])) {
-            $now = Carbon::now('Asia/Jakarta');
-
-            $checkinStart = Carbon::createFromTimeString($schedule['checkin_mulai']);
-            $checkinEnd   = Carbon::createFromTimeString($schedule['checkin_selesai']);
-
-            $checkoutStart = Carbon::createFromTimeString($schedule['checkout_mulai']);
-            $checkoutEnd   = Carbon::createFromTimeString($schedule['checkout_selesai']);
-
-            $checkinExpired     = $now->gt($checkinEnd);
-            $checkoutAvailable  = $now->between($checkoutStart, $checkoutEnd);
-            $checkoutExpired    = $now->gt($checkoutEnd);
-        }
-
-        return view('attendance.index', compact(
-            'attendance',
-            'schedule',
-            'about', // ✅ Kirim variabel $about ke view
-            'checkinExpired',
-            'checkoutAvailable',
-            'checkoutExpired'
-        ));
+    if (!$about) {
+        return view('attendance.index', [
+            'error' => 'Data instansi belum diatur oleh admin.',
+            'attendance' => null,
+            'about' => null,
+            'schedule' => [],
+            'checkinExpired' => false,
+            'checkoutExpired' => false,
+            'checkoutAvailable' => false,
+        ]);
     }
+
+    // 🔹 Ambil attendance hari ini (boleh null)
+    $attendance = Attendance::where('user_id', $user->id)
+        ->whereDate('tanggal', $todayDate)
+        ->first();
+
+    // 🔹 BENTUK JADWAL HARI INI (INI KUNCI UTAMA)
+    $schedule = [
+        'checkin_mulai'    => $about->{$today . '_mulai'} ?? null,
+        'checkin_selesai'  => $about->{$today . '_selesai'} ?? null,
+        'checkout_mulai'   => $about->{$today . '_checkout_mulai'} ?? null,
+        'checkout_selesai' => $about->{$today . '_checkout_selesai'} ?? null,
+    ];
+
+    // 🔹 JIKA JADWAL BELUM DIISI ADMIN
+    if (
+        !$schedule['checkin_mulai'] ||
+        !$schedule['checkin_selesai'] ||
+        !$schedule['checkout_mulai'] ||
+        !$schedule['checkout_selesai']
+    ) {
+        $schedule = [
+            'error' => 'Jam check-in/check-out hari ini belum diatur oleh admin.'
+        ];
+    }
+
+    // 🔹 LOGIC STATUS WAKTU
+    $now = Carbon::now();
+
+    $checkinExpired = false;
+    $checkoutExpired = false;
+    $checkoutAvailable = false;
+
+    if (!isset($schedule['error'])) {
+        $checkinExpired = $now->gt(
+            Carbon::createFromFormat('H:i:s', $schedule['checkin_selesai'])
+        );
+
+        $checkoutAvailable = $now->gte(
+            Carbon::createFromFormat('H:i:s', $schedule['checkout_mulai'])
+        );
+
+        $checkoutExpired = $now->gt(
+            Carbon::createFromFormat('H:i:s', $schedule['checkout_selesai'])
+        );
+    }
+
+    return view('attendance.index', compact(
+        'about',
+        'attendance',
+        'schedule',
+        'checkinExpired',
+        'checkoutExpired',
+        'checkoutAvailable'
+    ));
+}
+
 
         // ✅ RIWAYAT PRESENSI
         public function history()
@@ -276,130 +324,140 @@
             }
             return null;
         }
+        
+    /**
+     * Proses CHECK-IN
+     */
+  public function checkIn(Request $request)
+{
+    $request->validate([
+        'latitude' => 'required',
+        'longitude' => 'required',
+    ]);
 
-        public function checkIn(Request $request)
-            {
-                $user = Auth::user();
-                if ($user->status !== 'aktif') {
-                    return back()->with('error', 'Akun Anda tidak aktif, tidak bisa melakukan presensi.');
-                }
+    $user = Auth::user();
+    $now = Carbon::now();
 
-                $msg = $this->ensureWithinCheckInWindow();
-                if ($msg) return back()->with('error', $msg);
+  $kategori = $user->kategori_instansi ?? 'UMUM';
 
-                // Validasi input location (koordinat)
-                $request->validate(['location' => 'required']);
+$about = AboutSetting::where('kategori_instansi', $kategori)->first();
 
-                // --- LOGIKA JARAK & SETTING KANTOR ---
-                $officeLat = -7.594917597849972;
-                $officeLng = 110.94065517764916;
-                $maxRadius = 20; // Default 20 meter
-                $officeName = 'KANTOR BAPPERIDA'; // Default nama kantor
 
-                $about = AboutSetting::first();
-                if ($about) {
-                    if ($about->office_latitude && $about->office_longitude) {
-                        $officeLat = $about->office_latitude;
-                        $officeLng = $about->office_longitude;
-                    }
-                    $maxRadius = $about->radius_meter ?? $maxRadius;
 
-                    // Ambil nama kantor dari database jika ada
-                    if (!empty($about->office_name)) {
-                        $officeName = $about->office_name;
-                    }
-                }
 
-                $userLoc = explode(',', $request->location);
-                $distance = $this->calculateDistance($officeLat, $officeLng, $userLoc[0], $userLoc[1]);
+if (
+    !$about ||
+    !$about->office_latitude ||
+    !$about->office_longitude
+) {
+    return back()->with('error', 'Lokasi instansi belum diatur oleh admin.');
+}
 
-                // --- PENENTUAN NAMA LOKASI & STATUS ---
-                $statusInput = $request->input('status', 'Hadir'); // Default Hadir
-                $locationName = 'LUAR KANTOR'; // Default
 
-                if (in_array($statusInput, ['Hadir', 'Telat'])) {
-                    // Kalau Hadir/Telat, WAJIB di dalam radius
-                    if ($distance > $maxRadius) {
-                        return back()->with('error', 'Gagal! Jarak Anda ' . round($distance) . 'm dari kantor. Harap mendekat ke kantor.');
-                    }
-                    // ✅ GUNAKAN NAMA KANTOR DARI DATABASE (ATAU DEFAULT)
-                    $locationName = $officeName;
-                } else {
-                    // Kalau Ijin/Sakit/DL, nama lokasi sesuai status
-                    if ($statusInput == 'Dinas Luar') $locationName = 'DINAS LUAR';
-                    elseif ($statusInput == 'Sakit') $locationName = 'RUMAH / RS';
-                    elseif ($statusInput == 'Ijin') $locationName = 'TEMPAT KEPERLUAN';
-                    elseif ($statusInput == 'Cuti') $locationName = 'CUTI';
-                }
+    // ✅ AMBIL KOORDINAT YANG BENAR
+    $instansiLat = (float) $about->office_latitude;
+    $instansiLng = (float) $about->office_longitude;
+    $radius      = (int) $about->radius_meter;
 
-                Attendance::create([
-                    'user_id' => Auth::id(),
-                    'tanggal' => now()->toDateString(),
-                    'check_in' => now()->toTimeString(),
-                    'status' => $statusInput,
-                    'location' => $request->location, // Koordinat Link
-                    'location_name' => $locationName, // ✅ SIMPAN NAMA LOKASI SESUAI SETTING
-                ]);
-
-                return back()->with('success', 'Berhasil melakukan presensi masuk.');
-            }
-
-        public function checkOut(Request $request)
-        {
-            $user = Auth::user();
-            if ($user->status !== 'aktif') {
-                return back()->with('error', 'Akun Anda tidak aktif, tidak bisa melakukan presensi.');
-            }
-
-            $request->validate(['location' => 'required']);
-
-            $msg = $this->ensureWithinCheckOutWindow();
-            if ($msg) return back()->with('error', $msg);
-
-            $officeLat = -7.594917597849972;
-            $officeLng = 110.94065517764916;
-            $maxRadius = 99999;
-
-            $about = AboutSetting::first();
-            if ($about && $about->office_latitude && $about->office_longitude) {
-                $officeLat = $about->office_latitude;
-                $officeLng = $about->office_longitude;
-                $maxRadius = $about->radius_meter ?? $maxRadius;
-            }
-
-            $userLoc = explode(',', $request->location);
-            $distance = $this->calculateDistance($officeLat, $officeLng, $userLoc[0], $userLoc[1]);
-
-            if ($distance > $maxRadius) {
-                return back()->with('error', 'Gagal! Anda masih di luar area kantor (' . round($distance) . 'm).');
-            }
-
-            $attendance = Attendance::where('user_id', Auth::id())
-                ->whereDate('tanggal', Carbon::today())
-                ->first();
-
-            if (!$attendance) {
-                return back()->with('error', 'Anda belum melakukan check-in hari ini.');
-            }
-
-            $attendance->update(['check_out' => now()->toTimeString()]);
-
-            return back()->with('success', 'Hati-hati di jalan! Absen pulang berhasil.');
-        }
-
-        private function calculateDistance($lat1, $lon1, $lat2, $lon2)
-        {
-            $earthRadius = 6371000;
-            $latFrom = deg2rad($lat1);
-            $lonFrom = deg2rad($lon1);
-            $latTo = deg2rad($lat2);
-            $lonTo = deg2rad($lon2);
-            $latDelta = $latTo - $latFrom;
-            $lonDelta = $lonTo - $lonFrom;
-            $angle = 2 * asin(sqrt(
-                pow(sin($latDelta / 2), 2) +
-                cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)
-            ));
-            return $angle * $earthRadius;
-        }
+    // 🛑 VALIDASI KOORDINAT INSTANSI
+    if (!$instansiLat || !$instansiLng) {
+        return back()->with('error', 'Koordinat instansi belum diisi oleh admin.');
     }
+
+    // USER COORD
+    $userLat = (float) $request->latitude;
+    $userLng = (float) $request->longitude;
+
+    // 🔍 DEBUG TERAKHIR (hapus setelah yakin)
+    /*
+    dd(
+        'INSTANSI', $instansiLat, $instansiLng,
+        'USER', $userLat, $userLng,
+        'RADIUS', $radius
+    );
+    */
+
+    // 📏 HITUNG JARAK
+    $distance = $this->distance(
+        $userLat,
+        $userLng,
+        $instansiLat,
+        $instansiLng
+    );
+
+    if ($distance > $radius) {
+        return back()->with('error', 'Anda berada di luar radius instansi.');
+    }
+
+    // ❌ CEK DUPLIKAT
+    $attendance = Attendance::where('user_id', $user->id)
+        ->whereDate('tanggal', $now->toDateString())
+        ->first();
+
+    if ($attendance) {
+        return back()->with('error', 'Anda sudah melakukan check-in hari ini.');
+    }
+
+    Attendance::create([
+        'user_id'   => $user->id,
+        'tanggal'   => $now->toDateString(),
+        'check_in'  => $now->toTimeString(),
+        'status'    => 'Hadir',
+        'latitude'  => $userLat,
+        'longitude' => $userLng,
+        'location_name' => $about->office_name,
+    ]);
+
+    return back()->with('success', 'Check-in berhasil.');
+}
+
+
+    /**
+     * Proses CHECK-OUT
+     */
+    public function checkOut(Request $request)
+    {
+        $request->validate([
+            'latitude' => 'required',
+            'longitude' => 'required',
+        ]);
+
+        $user = Auth::user();
+        $now = Carbon::now();
+
+        $attendance = Attendance::where('user_id', $user->id)
+            ->whereDate('tanggal', $now->toDateString())
+            ->first();
+
+        if (!$attendance) {
+            return back()->with('error', 'Anda belum check-in hari ini.');
+        }
+
+        if ($attendance->check_out) {
+            return back()->with('error', 'Anda sudah check-out.');
+        }
+
+        $attendance->update([
+            'check_out' => $now->toTimeString()
+        ]);
+
+        return back()->with('success', 'Check-out berhasil.');
+    }
+
+    /**
+     * Hitung jarak (meter) antara 2 koordinat
+     */
+    private function distance($lat1, $lon1, $lat2, $lon2)
+    {
+        $theta = $lon1 - $lon2;
+        $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) +
+                cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
+        $dist = acos($dist);
+        $dist = rad2deg($dist);
+        $meters = $dist * 60 * 1.1515 * 1609.344;
+
+        return $meters;
+    }
+}
+
+
