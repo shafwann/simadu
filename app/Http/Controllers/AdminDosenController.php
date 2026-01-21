@@ -14,29 +14,57 @@ use App\Models\PembimbingRequest;
 class AdminDosenController extends Controller
 {
     // 1. Daftar Dosen
-    public function index()
-    {
-        $admin = auth()->user();
+public function index()
+{
+    $admin = auth()->user();
 
-        $pendingDosens = PembimbingRequest::with('mahasiswa')
-            ->when($admin->kategori_instansi, function ($q) use ($admin) {
+    // ===============================
+    // 1. PENDING DOSEN
+    // ===============================
+    $pendingDosens = PembimbingRequest::with('mahasiswa')
+        ->where('status', 'pending')
+        ->when(
+            $admin->bidang !== 'Administrator Sistem',
+            function ($q) use ($admin) {
                 $q->whereHas('mahasiswa', function ($m) use ($admin) {
-                    $m->where('kategori_instansi', $admin->kategori_instansi);
+                    $m->where('bidang', $admin->bidang)
+                      ->where('kategori_instansi', $admin->kategori_instansi);
                 });
-            })
-            ->where('status', 'pending')
-            ->latest()
-            ->get();
+            }
+        )
+        ->latest()
+        ->get();
 
-        $dosen = User::where('role', 'pembimbing')
-            ->when($admin->kategori_instansi, function ($q) use ($admin) {
-                $q->where('kategori_instansi', $admin->kategori_instansi);
-            })
-            ->latest()
-            ->paginate(10);
+    // ===============================
+    // 2. DAFTAR DOSEN (FINAL & AMAN)
+    // ===============================
+    $dosen = User::where('role', 'pembimbing')
+        ->when(
+            $admin->bidang !== 'Administrator Sistem',
+            function ($q) use ($admin) {
 
-        return view('admin.dosen.index', compact('pendingDosens', 'dosen'));
-    }
+                // HARUS PUNYA mahasiswa sesuai bidang + instansi admin
+                $q->whereHas('mahasiswaBimbingan', function ($m) use ($admin) {
+                    $m->where('bidang', $admin->bidang)
+                      ->where('kategori_instansi', $admin->kategori_instansi);
+                })
+
+                // TIDAK BOLEH punya mahasiswa dari bidang / instansi lain
+                ->whereDoesntHave('mahasiswaBimbingan', function ($m) use ($admin) {
+                    $m->where(function ($x) use ($admin) {
+                        $x->where('bidang', '!=', $admin->bidang)
+                          ->orWhere('kategori_instansi', '!=', $admin->kategori_instansi);
+                    });
+                });
+            }
+        )
+        ->latest()
+        ->paginate(10);
+
+    return view('admin.dosen.index', compact('pendingDosens', 'dosen'));
+}
+
+
 
 
 
