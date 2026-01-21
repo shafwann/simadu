@@ -1,4 +1,12 @@
 <x-app-layout>
+    @php
+    $schedule = $schedule ?? [];
+    $checkinExpired = $checkinExpired ?? false;
+    $checkoutExpired = $checkoutExpired ?? false;
+    $checkoutAvailable = $checkoutAvailable ?? false;
+@endphp
+
+
     <div class="py-12 bg-gray-50 min-h-screen">
         <div class="max-w-xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-2xl border border-gray-100">
@@ -74,9 +82,12 @@
                                         </button>
 
                                     @else
-                                        <form id="attendance-form" action="{{ route('attendance.checkin') }}" method="POST">
+                                        <form id="attendance-form-checkin" action="{{ route('attendance.checkin') }}" method="POST">
                                             @csrf
-                                            <input type="hidden" name="location" id="location-input">
+                                            <input type="hidden" name="latitude" id="latitude-checkin">
+                                            <input type="hidden" name="longitude" id="longitude-checkin">
+
+
 
                                             <button type="button" onclick="getLocation('checkin')" id="btn-checkin"
                                                 class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg transition transform hover:scale-[1.02] flex items-center justify-center gap-2">
@@ -116,7 +127,7 @@
                                     @endif
 
                                     <p class="text-xs text-gray-400 mt-4">
-                                        Absen pulang dibuka pukul <span class="font-bold text-gray-600">{{ $schedule['checkout_mulai'] }}</span>
+                                        Absen pulang dibuka pukul <span class="font-bold text-gray-600">{{ $schedule['checkout_mulai'] ?? '-'}}</span>
                                     </p>
                                 </div>
 
@@ -133,13 +144,15 @@
                                     @elseif(!$checkoutAvailable)
                                         <div class="p-3 bg-yellow-50 text-yellow-700 rounded-xl border text-xs text-center">
                                             ⏳ Absen pulang belum dibuka<br>
-                                            ({{ $schedule['checkout_mulai'] }} WIB)
+                                            ({{ $schedule['checkout_mulai'] ?? '-' }} WIB)
                                         </div>
 
                                     @else
-                                        <form id="attendance-form" action="{{ route('attendance.checkout') }}" method="POST">
-                                            @csrf
-                                            <input type="hidden" name="location" id="location-input">
+                                            <form id="attendance-form-checkout" action="{{ route('attendance.checkout') }}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="latitude" id="latitude-checkout">
+                                                <input type="hidden" name="longitude" id="longitude-checkout">
+
 
                                             <button type="button" onclick="getLocation('checkout')" id="btn-checkout"
                                                 class="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-2xl shadow-lg transition transform hover:scale-[1.02] flex items-center justify-center gap-2">
@@ -201,8 +214,9 @@
     function getLocation(type) {
         const btnId = (type === 'checkin') ? 'btn-checkin' : 'btn-checkout';
         const btn = document.getElementById(btnId);
-        const locationInput = document.getElementById('location-input');
-        const form = document.getElementById('attendance-form');
+        const form = document.getElementById(
+            type === 'checkin' ? 'attendance-form-checkin' : 'attendance-form-checkout'
+        );
         const infoDiv = document.getElementById('location-info');
 
         if (navigator.geolocation) {
@@ -227,11 +241,22 @@
 
                     if (infoDiv) infoDiv.innerText = `Posisi ditemukan! Jarak: ${Math.round(distance)} meter.`;
 
-                    if (distance <= maxRadius) {
-                        if (infoDiv) infoDiv.className = "mb-4 p-3 bg-green-50 text-green-700 rounded-lg border border-green-200 text-xs";
-                        locationInput.value = userLat + "," + userLng;
-                        form.submit();
-                    } else {
+                   if (distance <= maxRadius) {
+    if (infoDiv) {
+        infoDiv.className = "mb-4 p-3 bg-green-50 text-green-700 rounded-lg border border-green-200 text-xs";
+    }
+
+    document.getElementById(
+        type === 'checkin' ? 'latitude-checkin' : 'latitude-checkout'
+    ).value = userLat;
+
+    document.getElementById(
+        type === 'checkin' ? 'longitude-checkin' : 'longitude-checkout'
+    ).value = userLng;
+
+    form.submit();
+}
+ else {
                         if (infoDiv) infoDiv.className = "mb-4 p-3 bg-red-50 text-red-700 rounded-lg border border-red-200 text-xs";
                         alert(`Gagal! Anda berjarak ${Math.round(distance)} meter dari kantor. (Max: ${maxRadius}m)`);
                         resetButton(btn, type);
