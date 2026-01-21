@@ -1,9 +1,19 @@
 @php
 use Carbon\Carbon;
 
+$judulRaw = trim((string) ($student->kegiatan ?? 'Magang Kerja'));
+$judulKegiatan = ucwords(mb_strtolower($judulRaw, 'UTF-8'));
+
+
+
 $mulai = Carbon::parse($student->tanggal_masuk)->translatedFormat('d F Y');
 $selesai = Carbon::parse($student->tanggal_selesai)->translatedFormat('d F Y');
 $hariIni = $today->translatedFormat('d F Y');
+
+/* ✅ AMBIL TANGGAL DARI DATABASE */
+$tanggalSertifikat = $student->assessment?->certificate_date
+    ? Carbon::parse($student->assessment->certificate_date)->translatedFormat('d F Y')
+    : Carbon::now()->translatedFormat('d F Y');
 
 /* ==== INSTANSI: paksa 1 baris + auto kecilkan font ==== */
 $instansiText = trim((string) ($student->instansi ?? ''));
@@ -85,7 +95,7 @@ if ($len <= 20) {
 
             {{-- MAGANG KERJA --}}
             <div style="position:absolute; top:50mm; left:80mm;">
-                <div style="font-size:40px; font-weight:700;">Magang Kerja</div>
+                <div style="font-size:40px; font-weight:700;"> {{ $judulKegiatan }}</div>
             </div>
 
             {{-- NOMOR --}}
@@ -131,7 +141,7 @@ if ($len <= 20) {
 
             {{-- PARAGRAF (DINAMIS NAMA INSTANSI DARI ABOUT) --}}
             <div style="position:absolute; top:123mm; left:40mm; right:40mm; text-align:center; font-size:18px; line-height:1.30;">
-                Telah melaksanakan Magang Kerja di
+                Telah melaksanakan {{ strtolower($judulKegiatan) }}  di
                 {{ $about->nama_instansi ?? '-' }} Kabupaten Karanganyar
                 dari {{ $mulai }} sampai {{ $selesai }} dengan hasil
                 <span style="font-weight:700; text-transform:uppercase;">{{ $hasilLabel }}</span>.
@@ -139,7 +149,7 @@ if ($len <= 20) {
 
             {{-- TANGGAL --}}
             <div style="position:absolute; top:139mm; left:60mm; width:210mm; text-align:center; font-size: 18.5px; font-weight:700;">
-                Karanganyar, {{ $hariIni }}
+                Karanganyar, {{ $tanggalSertifikat }}
             </div>
 
             {{-- JABATAN + TTD (DINAMIS NAMA + NIP DARI ABOUT) --}}
