@@ -146,6 +146,8 @@ Route::middleware(['auth', 'role:mahasiswa'])->group(function () {
     Route::get('/laporan/preview/{laporan}', [LaporanController::class, 'preview'])->name('laporan.preview');
     Route::get('/laporan/{laporan}/edit', [LaporanController::class, 'edit'])->name('laporan.edit');
     Route::put('/laporan/{laporan}', [LaporanController::class, 'update'])->name('laporan.update');
+    Route::delete('/laporan/{laporan}', [LaporanController::class, 'destroy'])->name('laporan.destroy');
+
 
     // Data Diri & Bidang
     Route::get('/bidang-divisi', [ProfileController::class, 'showBidang'])->name('mahasiswa.bidang.show');

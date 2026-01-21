@@ -9,14 +9,14 @@ use Illuminate\Support\Facades\Storage;
 class LaporanController extends Controller
 {
     // Mahasiswa lihat list & upload
-public function index()
-{
-    $laporans = auth()->user()->laporans()->latest()->get();
+    public function index()
+    {
+        $laporans = auth()->user()->laporans()->latest()->get();
 
-    $bidangOptions = \App\Models\AboutSetting::bidangOptions();
+        $bidangOptions = \App\Models\AboutSetting::bidangOptions();
 
-    return view('laporan.index', compact('laporans', 'bidangOptions'));
-}
+        return view('laporan.index', compact('laporans', 'bidangOptions'));
+    }
 
 
     public function validateLaporan($id)
@@ -165,5 +165,29 @@ public function index()
 
         return redirect()->route('laporan.index')
             ->with('success', 'Laporan berhasil diperbarui.');
+    }
+
+    // ✅ Tambahan: Hapus laporan (mahasiswa owner / admin sesuai kebutuhan)
+    public function destroy(Laporan $laporan)
+    {
+        $user = auth()->user();
+
+        // hanya owner yang boleh hapus (kalau mau admin juga boleh, tinggal tambahkan OR role admin)
+        if ($user->id !== $laporan->user_id) {
+            abort(403);
+        }
+
+        // kalau sudah divalidasi, jangan boleh dihapus
+        if ($laporan->is_validated) {
+            return back()->with('error', 'Laporan sudah divalidasi dan tidak dapat dihapus.');
+        }
+
+        // hapus file fisik
+        Storage::delete($laporan->file_path);
+
+        // hapus record
+        $laporan->delete();
+
+        return back()->with('success', 'Laporan berhasil dihapus.');
     }
 }

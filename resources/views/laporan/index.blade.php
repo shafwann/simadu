@@ -84,6 +84,24 @@
 
 
 
+                    <form action="{{ route('laporan.destroy', $lap->id) }}" method="POST"
+                          onsubmit="return confirm('Yakin hapus laporan ini? File juga akan ikut terhapus.');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit"
+                                class="px-4 py-2 rounded-xl text-sm font-semibold
+                                        bg-red-600 text-white
+                                        hover:bg-red-400
+                                        active:bg-red-200
+                                        border border-red-300
+                                        shadow-sm
+                                        transition-all duration-150">
+                            Hapus
+                        </button>
+                    </form>
+
+
+
                 @else
                     <span class="px-4 py-2 text-sm text-gray-400 border rounded-xl cursor-not-allowed">
                         Edit
