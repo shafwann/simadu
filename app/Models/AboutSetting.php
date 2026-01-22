@@ -59,6 +59,9 @@ class AboutSetting extends Model
         'agency_name',
         'app_description',
         'logo_path',
+        'running_text',
+        'hero_image_path',
+    
 
         // ✅ TAMBAHAN: simpan opsi bidang/divisi dari menu About (format JSON)
         'bidang_options',

@@ -52,6 +52,45 @@
                 </div>
             </form>
 
+            {{-- FORM 2: WELCOME PAGE (HERO IMAGE) --}}
+            <form method="POST" action="{{ route('master.settings.update') }}"
+                enctype="multipart/form-data"
+                class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100">
+                @csrf @method('PUT')
+                <input type="hidden" name="section" value="welcome">
+
+                <div class="mb-6 border-b pb-4">
+                    <h3 class="font-bold text-lg text-purple-700">
+                        2. Welcome Page (Gambar Hero)
+                    </h3>
+                    <p class="text-sm text-gray-500">
+                        Gambar ini akan menggantikan teks besar di halaman awal.
+                    </p>
+                </div>
+
+                <x-input-label value="Gambar Hero Welcome Page" />
+
+                @if($about->hero_image_path)
+                    <img src="{{ asset('storage/' . $about->hero_image_path) }}"
+                        class="w-full max-w-xl rounded-xl border mb-3">
+                @endif
+
+                <input type="file" name="hero_image"
+                    class="block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:bg-purple-50 file:text-purple-700">
+
+                <p class="text-xs text-gray-400 mt-2">
+                    Ukuran ideal: <b>1200 x 500 px</b>. Gambar akan otomatis disesuaikan.
+                </p>
+
+                <div class="mt-4 pt-4 border-t flex justify-end">
+                    <x-primary-button>Simpan Welcome Page</x-primary-button>
+                </div>
+            </form>
+
+
             {{-- FORM 2: KONTAK PUSAT (FOOTER) --}}
             <form method="POST" action="{{ route('master.settings.update') }}"
                   class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100">
