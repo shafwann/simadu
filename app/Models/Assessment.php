@@ -15,7 +15,7 @@ class Assessment extends Model
 
         'aspek_1','aspek_2','aspek_3','aspek_4','aspek_5','aspek_6',
         'total','average','grade_letter',
-        'assessed_at',
+        'assessed_at', 'apresiasi_khusus',
     ];
 
     protected $casts = [

@@ -607,6 +607,19 @@
                             </div>
                         </div>
 
+                        <div class="mb-4">
+    <label class="block text-sm font-medium text-gray-700">
+        Apresiasi Khusus
+    </label>
+    <textarea
+        name="apresiasi_khusus"
+        rows="3"
+        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+        placeholder="Contoh: Menunjukkan dedikasi tinggi dan kontribusi yang menonjol selama magang"
+    >{{ old('apresiasi_khusus', $penilaian->apresiasi_khusus ?? '') }}</textarea>
+</div>
+
+
                         {{-- ✅ TAMBAHAN BARU: TANGGAL SERTIFIKAT (DITAMBAHKAN SAJA, TIDAK MENGUBAH KODE LAIN) --}}
                         <div class="rounded-2xl border border-gray-100 bg-white p-4 mt-0">
                             <label class="block text-[11px] font-black text-gray-500 uppercase tracking-wide">
