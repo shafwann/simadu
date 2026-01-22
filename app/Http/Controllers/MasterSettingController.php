@@ -38,6 +38,7 @@ class MasterSettingController extends Controller
                 'app_name' => 'required|string|max:50',
                 'agency_name' => 'required|string|max:50',
                 'app_description' => 'nullable|string|max:150',
+                'running_text' => 'nullable|string',
                 'logo' => 'nullable|image|max:2048',
             ]);
 

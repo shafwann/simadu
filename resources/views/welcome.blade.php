@@ -20,33 +20,72 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         <style>
-            /* Animasi Marquee Halus */
-            @keyframes marquee {
-                0% { transform: translateX(0); }
-                100% { transform: translateX(-50%); }
-            }
-            .animate-marquee {
-                display: flex;
-                width: max-content;
-                animation: marquee 250s linear infinite;
-            }
-            .animate-marquee:hover {
-                animation-play-state: paused;
-            }
-            /* Custom Scrollbar untuk Tabel */
-            .custom-scrollbar::-webkit-scrollbar {
-                height: 6px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-track {
-                background: #f1f1f1;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-                background: #cbd5e1;
-                border-radius: 10px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                background: #94a3b8;
-            }
+         @keyframes marquee2 {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+.marquee2 {
+  width: 100%;
+  overflow: hidden;
+}
+
+.marquee2__track {
+  display: flex;
+  width: max-content;
+  animation: marquee2 280s linear infinite;
+  will-change: transform;
+}
+
+.marquee2__track:hover {
+  animation-play-state: paused;
+}
+
+.marquee2__group {
+  display: flex;
+  align-items: center;
+}
+
+.marquee2__item {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 34px;   /* bikin renggang */
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  opacity: 0.95;
+}
+
+/* ========================= */
+/* TITIK HIJAU KELAP-KELIP  */
+/* ========================= */
+@keyframes pulse-green {
+  0% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+  100% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+}
+
+.marquee2__dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 18px;
+  border-radius: 9999px;
+  background-color: #22c55e; /* green-500 */
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.9);
+  animation: pulse-green 1.8s ease-in-out infinite;
+}
+
         </style>
     </head>
     <body class="bg-gray-50 text-gray-900 antialiased min-h-screen flex flex-col font-[Instrument_Sans]">
@@ -81,32 +120,41 @@
             </div>
         </header>
 
-        {{-- RUNNING TEXT (MARQUEE) --}}
-        @if(isset($marquee) && count($marquee) > 0)
-        <div class="bg-blue-900 text-white py-2 overflow-hidden relative z-40 border-b border-blue-800">
-            <div class="animate-marquee flex gap-8 items-center">
-                @foreach($marquee as $m)
-                    <div class="flex items-center gap-2 text-xs font-medium opacity-90">
-                        <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
-                        <span class="font-bold text-blue-200 uppercase">{{ $m->kategori_instansi ?? 'UMUM' }}</span>
-                        <span class="text-gray-300">|</span>
-                        <span class="uppercase">{{ $m->name }}</span>
-                        <span class="text-blue-300">({{ Str::limit($m->instansi, 20) }})</span>
-                    </div>
-                @endforeach
-                {{-- Duplikasi agar seamless loop --}}
-                @foreach($marquee as $m)
-                    <div class="flex items-center gap-2 text-xs font-medium opacity-90">
-                        <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
-                        <span class="font-bold text-blue-200 uppercase">{{ $m->kategori_instansi ?? 'UMUM' }}</span>
-                        <span class="text-gray-300">|</span>
-                        <span class="uppercase">{{ $m->name }}</span>
-                        <span class="text-blue-300">({{ Str::limit($m->instansi, 20) }})</span>
-                    </div>
-                @endforeach
+       </header>
+
+{{-- RUNNING TEXT (INSTANSI AKTIF) --}}
+@if(isset($instansiAktif) && $instansiAktif->count() > 0)
+<div class="bg-blue-900 text-white py-2 overflow-hidden relative z-40 border-b border-blue-800">
+    <div class="marquee2">
+        <div class="marquee2__track">
+            {{-- GROUP 1 (dibikin panjang) --}}
+            <div class="marquee2__group">
+                @for($r = 0; $r < 35; $r++)
+                    @foreach($instansiAktif as $i)
+                        <span class="marquee2__item">
+                            {{ $i->kategori_instansi }} <span class="marquee2__dot"></span>
+
+                        </span>
+                    @endforeach
+                @endfor
+            </div>
+
+            {{-- GROUP 2 (duplikat persis) --}}
+            <div class="marquee2__group" aria-hidden="true">
+                @for($r = 0; $r < 4; $r++)
+                    @foreach($instansiAktif as $i)
+                        <span class="marquee2__item">
+                            {{ $i->kategori_instansi }} <span class="marquee2__dot"></span>
+
+                        </span>
+                    @endforeach
+                @endfor
             </div>
         </div>
-        @endif
+    </div>
+</div>
+@endif
+
 
         <main class="flex-grow">
 
