@@ -292,8 +292,11 @@
                     <div class="grid grid-cols-1 gap-4">
                         <div>
                         <x-input-label value="Jam Operasional (Footer)" />
-                        <x-text-input name="jam_operasional" class="mt-1 block w-full" value="{{ old('jam_operasional', nl2br(e($about->jam_operasional))) }}" required />
-                        </div>
+                        <x-text-input name="jam_operasional" class="mt-1 block w-full" value="{{ old('jam_operasional', nl2br(e($about->jam_operasional))) }}" placeholder="Senin:08.00-16.00, Selasa:08.00-16.00, ..." required />
+                            <p class="text-xs text-gray-400 mt-1">
+                                Masukkan hari dan jam buka-tutup, pisahkan dengan koma. Contoh: Senin:08.00-16.00, Selasa:08.00-16.00
+                            </p>
+                    </div>
                     </div>
 
                     <div class="border-t pt-4">
