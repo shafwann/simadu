@@ -197,6 +197,37 @@
                     </div>
                 </div>
 
+                {{-- PESERTA MAGANG AKTIF PER INSTANSI --}}
+<div class="mt-8 max-w-5xl mx-auto">
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-black uppercase tracking-wider text-gray-800">
+            Peserta Magang Aktif per Instansi
+        </h3>
+        <span class="text-[10px] font-bold text-green-600 uppercase">
+            Live Data
+        </span>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-2xl p-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 justify-items-center">
+            @foreach($pesertaAktifPerInstansi as $item)
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+
+                    <span class="text-xs font-bold uppercase text-gray-700">
+                        {{ $item->kategori_instansi }}
+                    </span>
+
+                    <span class="text-xs font-black text-blue-600">
+                        {{ $item->total }}
+                    </span>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</div>
+
+
                 {{-- Background Decoration --}}
                 <div class="absolute top-0 left-1/2 w-full -translate-x-1/2 h-full z-0 pointer-events-none">
                     <div class="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>

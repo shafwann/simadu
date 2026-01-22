@@ -114,7 +114,16 @@ $instansiAktif = User::where('role', 'admin')
     ->orderBy('kategori_instansi')
     ->get();
 
-return view('welcome', compact('total', 'mahasiswa', 'marquee', 'about', 'aboutMaster', 'instansiAktif'));
+    // ✅ TAMBAHAN: JUMLAH PESERTA MAGANG AKTIF PER INSTANSI
+$pesertaAktifPerInstansi = User::where('role', 'mahasiswa')
+    ->where('status', 'aktif')
+    ->whereNotNull('kategori_instansi')
+    ->select('kategori_instansi', DB::raw('COUNT(*) as total'))
+    ->groupBy('kategori_instansi')
+    ->orderByDesc('total')
+    ->get();
+
+return view('welcome', compact('total', 'mahasiswa', 'marquee', 'about', 'aboutMaster', 'instansiAktif', 'pesertaAktifPerInstansi'));
 });
 
 
