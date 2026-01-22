@@ -162,16 +162,27 @@
             <div class="relative bg-white pt-16 pb-20 lg:pt-24 lg:pb-28 overflow-hidden">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
 
-                    <span class="inline-block py-1 px-3 rounded-full bg-blue-50 text-blue-600 text-xs font-bold tracking-widest uppercase mb-6 border border-blue-100">
-                        Sistem Informasi Manajemen Magang
-                    </span>
-
-                    <h1 class="text-4xl sm:text-6xl font-black text-gray-900 tracking-tight leading-none mb-6">
-                        Data Presensi & <br class="hidden sm:block">
-                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-                            Aktivitas Harian
+                    @if(isset($about) && $about->hero_image_path)
+                        <div class="mb-10 flex justify-center">
+                            <img
+                                src="{{ asset('storage/' . $about->hero_image_path) }}"
+                                alt="Welcome Image"
+                                class="w-full max-w-5xl rounded-2xl shadow-lg object-cover">
+                        </div>
+                    @else
+                        {{-- FALLBACK TEXT --}}
+                        <span class="inline-block py-1 px-3 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase mb-6">
+                            Sistem Informasi Manajemen Magang
                         </span>
-                    </h1>
+
+                        <h1 class="text-4xl sm:text-6xl font-black text-gray-900 mb-6">
+                            Data Presensi & <br>
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                                Aktivitas Harian
+                            </span>
+                        </h1>
+                    @endif
+
 
                     <p class="text-lg text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
                         {{ $about->app_description ?? 'Platform terintegrasi untuk memantau kehadiran, laporan kegiatan, dan penilaian kinerja peserta magang di lingkungan Pemerintahan Kabupaten Karanganyar.' }}

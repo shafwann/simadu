@@ -251,28 +251,111 @@
                                 </thead>
                                 <tbody class="divide-y divide-gray-50">
                                     @forelse($student->attendances()->orderBy('tanggal', 'desc')->get() as $a)
+                                    @php
+                                        // ============================
+                                        // STATUS ADMIN: samakan dengan logika ringkas (H/T/I/S/DL/CT/TK + PC/TAP)
+                                        // ============================
+
+                                        $stRaw  = $a->status ?? '-';
+                                        $ketRaw = $a->keterangan ?? null;
+
+                                        $st  = strtoupper(trim((string) $stRaw));
+                                        $ket = strtoupper(trim((string) $ketRaw));
+
+                                        // base code
+                                        $code = '-';
+                                        if ($st === '' || $st === '-') $code = '-';
+                                        elseif (in_array($st, ['ALPHA','TANPA KETERANGAN','TK'])) $code = 'TK';
+                                        elseif ($st === 'HADIR') $code = 'H';
+                                        elseif ($st === 'TELAT') $code = 'T';
+                                        elseif (in_array($st, ['I','IZIN','IJIN'])) $code = 'I';
+                                        elseif (in_array($st, ['S','SAKIT'])) $code = 'S';
+                                        elseif (in_array($st, ['DL','DINAS LUAR'])) $code = 'DL';
+                                        elseif (in_array($st, ['CT','CUTI'])) $code = 'CT';
+
+                                        // PC
+                                        $isPC = ($ket === 'PULANG CEPAT');
+
+                                        // TAP: check_in ada, check_out kosong, dan sekarang sudah lewat checkout_selesai hari itu
+                                        $isTAP = false;
+                                        if (!empty($a->check_in) && empty($a->check_out)) {
+                                            try {
+                                                // perlu about setting / jadwal checkout per hari.
+                                                // pakai kategori_instansi dari student agar sesuai instansi
+                                                $about = \App\Models\AboutSetting::where('kategori_instansi', $student->kategori_instansi ?? 'UMUM')->first();
+
+                                                $checkoutEndMap = [
+                                                    1 => $about?->senin_checkout_selesai,
+                                                    2 => $about?->selasa_checkout_selesai,
+                                                    3 => $about?->rabu_checkout_selesai,
+                                                    4 => $about?->kamis_checkout_selesai,
+                                                    5 => $about?->jumat_checkout_selesai,
+                                                ];
+
+                                                $date = \Carbon\Carbon::parse($a->tanggal, 'Asia/Jakarta');
+                                                $dow  = $date->dayOfWeekIso; // 1..7
+
+                                                if ($dow <= 5) {
+                                                    $endStr = $checkoutEndMap[$dow] ?? null;
+                                                    if (!empty($endStr)) {
+                                                        $endTime = \Carbon\Carbon::parse($date->format('Y-m-d') . ' ' . $endStr, 'Asia/Jakarta');
+                                                        $isTAP = \Carbon\Carbon::now('Asia/Jakarta')->gt($endTime);
+                                                    }
+                                                }
+                                            } catch (\Throwable $e) {
+                                                $isTAP = false;
+                                            }
+                                        }
+
+                                        $extras = [];
+                                        if ($isPC) $extras[] = 'PC';
+                                        if ($isTAP) $extras[] = 'TAP';
+
+                                        $statusFinal = $code;
+                                        if (!empty($extras)) {
+                                            $statusFinal = $code . ',' . implode(',', $extras);
+                                        }
+
+                                        // split badge
+                                        $parts = array_filter(array_map('trim', explode(',', $statusFinal)));
+                                    @endphp
+
                                     <tr class="hover:bg-blue-50/50 transition">
                                         <td class="p-4 font-medium">{{ \Carbon\Carbon::parse($a->tanggal)->format('d M Y') }}</td>
-                                        <td class="p-4 font-mono text-gray-600">{{ $a->check_in }}</td>
-                                        <td class="p-4">
-                                            @if($a->status == 'Hadir')
-                                            <span class="px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-bold">Hadir</span>
-                                            @elseif($a->status == 'Telat')
-                                            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md text-xs font-bold">Telat</span>
-                                            @elseif($a->status == 'Sakit')
-                                            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md text-xs font-bold">Sakit</span>
-                                            @elseif($a->status == 'Ijin' || $a->status == 'Izin')
-                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-bold">Ijin</span>
-                                            @elseif($a->status == 'Dinas Luar')
-                                            <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs font-bold">Dinas Luar</span>
-                                            @elseif($a->status == 'Cuti')
-                                            <span class="px-2 py-1 bg-pink-100 text-pink-700 rounded-md text-xs font-bold">Cuti</span>
-                                            @elseif($a->status == 'Tanpa Keterangan' || $a->status == 'Alpha')
-                                            <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">TK</span>
-                                            @else
-                                            <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">{{ $a->status }}</span>
-                                            @endif
 
+                                        {{-- Jam: tampil check_in - check_out biar lengkap --}}
+                                        <td class="p-4 font-mono text-gray-600">
+                                            {{ \Carbon\Carbon::parse($a->check_in)->format('H:i') ?? '-' }}
+                                            <span class="text-gray-300">—</span>
+                                            {{ $a->check_out ? \Carbon\Carbon::parse($a->check_out)->format('H:i') : '-' }}
+                                        </td>
+
+                                        <td class="p-4">
+                                            <div class="flex flex-wrap gap-2">
+                                                @foreach($parts as $p)
+                                                    @if($p === 'H')
+                                                        <span class="px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-bold">H</span>
+                                                    @elseif($p === 'T')
+                                                        <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md text-xs font-bold">T</span>
+                                                    @elseif($p === 'I')
+                                                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-bold">I</span>
+                                                    @elseif($p === 'S')
+                                                        <span class="px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-xs font-bold">S</span>
+                                                    @elseif($p === 'DL')
+                                                        <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs font-bold">DL</span>
+                                                    @elseif($p === 'CT')
+                                                        <span class="px-2 py-1 bg-pink-100 text-pink-700 rounded-md text-xs font-bold">CT</span>
+                                                    @elseif($p === 'TK')
+                                                        <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">TK</span>
+                                                    @elseif($p === 'PC')
+                                                        <span class="px-2 py-1 bg-orange-100 text-orange-700 rounded-md text-xs font-bold">PC</span>
+                                                    @elseif($p === 'TAP')
+                                                        <span class="px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs font-bold">TAP</span>
+                                                    @else
+                                                        <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">{{ $p }}</span>
+                                                    @endif
+                                                @endforeach
+                                            </div>
                                         </td>
 
                                         <td class="p-4 text-xs">
@@ -755,7 +838,7 @@
                         <select name="month" class="w-full rounded-xl border-gray-200 bg-gray-50 font-bold">
                             @for($m=1; $m<=12; $m++)
                                 <option value="{{ $m }}" {{ $m==now()->month ? 'selected' : '' }}>
-                                {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                                {{ \Carbon\Carbon::create()->month($m)->locale('id')->translatedFormat('F') }}
                                 </option>
                                 @endfor
                         </select>

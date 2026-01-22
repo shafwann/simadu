@@ -27,6 +27,82 @@
                     </button>
                 </div>
 
+                {{-- ✅ Badge style --}}
+                <style>
+                    .badgex {
+                        display: inline-flex;
+                        align-items: center;
+                        padding: 4px 10px;
+                        border-radius: 999px;
+                        font-weight: 800;
+                        font-size: 12px;
+                        line-height: 1;
+                        border: 1px solid rgba(0, 0, 0, .06);
+                        white-space: nowrap;
+                    }
+
+                    .b-h {
+                        background: #dcfce7;
+                        color: #166534;
+                    }
+
+                    /* Hadir */
+                    .b-t {
+                        background: #fef9c3;
+                        color: #854d0e;
+                    }
+
+                    /* Terlambat */
+                    .b-i {
+                        background: #dbeafe;
+                        color: #1e40af;
+                    }
+
+                    /* Ijin */
+                    .b-s {
+                        background: #fde68a;
+                        color: #92400e;
+                    }
+
+                    /* Sakit */
+                    .b-dl {
+                        background: #e9d5ff;
+                        color: #6b21a8;
+                    }
+
+                    /* Dinas Luar */
+                    .b-ct {
+                        background: #fbcfe8;
+                        color: #9d174d;
+                    }
+
+                    /* Cuti */
+                    .b-tk {
+                        background: #e5e7eb;
+                        color: #374151;
+                    }
+
+                    /* Tanpa Keterangan */
+                    .b-pc {
+                        background: #ffedd5;
+                        color: #9a3412;
+                    }
+
+                    /* Pulang Cepat */
+                    .b-tap {
+                        background: #fee2e2;
+                        color: #991b1b;
+                    }
+
+                    /* Tidak Absen Pulang */
+                    .b-na {
+                        background: #f3f4f6;
+                        color: #6b7280;
+                    }
+
+                    /* Default/Unknown */
+                </style>
+
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm border border-gray-200">
                         <thead class="bg-gray-100">
@@ -39,20 +115,95 @@
                         </thead>
                         <tbody>
                             @forelse ($presensi as $p)
-                                <tr>
-                                    <td class="px-3 py-2 border">{{ $p->tanggal }}</td>
-                                    <td class="px-3 py-2 border">{{ $p->status }}</td>
-                                    <td class="px-3 py-2 border">{{ $p->check_in }}</td>
-                                    <td class="px-3 py-2 border">
-                                        {{ $p->check_out ?? '-' }}
-                                    </td>
-                                </tr>
+                            @php
+                            // ============================
+                            // ✅ NORMALISASI STATUS (TAMPIL LENGKAP)
+                            // ============================
+                            $rawStatus = strtoupper(trim((string) ($p->status ?? '')));
+
+                            // Label utama (lengkap)
+                            if ($rawStatus === '' || $rawStatus === '-') {
+                            $mainLabel = '-';
+                            $mainClass = 'b-na';
+                            }
+                            elseif (in_array($rawStatus, ['ALPHA','TANPA KETERANGAN','TK'], true)) {
+                            $mainLabel = 'Tanpa Keterangan';
+                            $mainClass = 'b-tk';
+                            }
+                            elseif ($rawStatus === 'HADIR') {
+                            $mainLabel = 'Hadir';
+                            $mainClass = 'b-h';
+                            }
+                            elseif ($rawStatus === 'TELAT' || $rawStatus === 'TERLAMBAT') {
+                            $mainLabel = 'Terlambat';
+                            $mainClass = 'b-t';
+                            }
+                            elseif (in_array($rawStatus, ['IJIN','IZIN','I'], true)) {
+                            $mainLabel = 'Ijin';
+                            $mainClass = 'b-i';
+                            }
+                            elseif (in_array($rawStatus, ['SAKIT','S'], true)) {
+                            $mainLabel = 'Sakit';
+                            $mainClass = 'b-s';
+                            }
+                            elseif (in_array($rawStatus, ['DINAS LUAR','DL'], true)) {
+                            $mainLabel = 'Dinas Luar';
+                            $mainClass = 'b-dl';
+                            }
+                            elseif (in_array($rawStatus, ['CUTI','CT'], true)) {
+                            $mainLabel = 'Cuti';
+                            $mainClass = 'b-ct';
+                            }
+                            else {
+                            // fallback kalau ada status lain
+                            $mainLabel = ucwords(strtolower($p->status ?? '-'));
+                            $mainClass = 'b-na';
+                            }
+
+                            // ============================
+                            // ✅ TAG TAMBAHAN (LENGKAP)
+                            // ============================
+                            // Pulang Cepat (ambil dari kolom keterangan jika kamu pakai itu)
+                            $pc = strtoupper(trim((string) ($p->keterangan ?? ''))) === 'PULANG CEPAT';
+
+                            // Tidak Absen Pulang (punya check_in tapi check_out kosong)
+                            $tap = !empty($p->check_in) && empty($p->check_out);
+                            @endphp
+
+                            <tr>
+                                <td class="px-3 py-2 border">{{ $p->tanggal }}</td>
+
+                                {{-- ✅ STATUS LENGKAP --}}
+                                <td class="px-3 py-2 border">
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="badgex {{ $mainClass }}">{{ $mainLabel }}</span>
+
+                                        @if($pc)
+                                        <span class="badgex b-pc">Pulang Cepat</span>
+                                        @endif
+
+                                        @if($tap)
+                                        <span class="badgex b-tap">Tidak Absen Pulang</span>
+                                        @endif
+                                    </div>
+                                </td>
+
+
+                                <td class="px-3 py-2 border">
+                                    {{ $p->check_in ? \Carbon\Carbon::parse($p->check_in)->format('H:i') : '-' }}
+                                </td>
+
+                                <td class="px-3 py-2 border">
+                                    {{ $p->check_out ? \Carbon\Carbon::parse($p->check_out)->format('H:i') : '-' }}
+                                </td>
+
+                            </tr>
                             @empty
-                                <tr>
-                                    <td colspan="4" class="text-center py-4 text-gray-500">
-                                        Belum ada data presensi
-                                    </td>
-                                </tr>
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-gray-500">
+                                    Belum ada data presensi
+                                </td>
+                            </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -78,18 +229,18 @@
 
                 <div class="space-y-3">
                     @forelse ($logbooks as $log)
-                        <div class="border rounded-lg p-4">
-                            <p class="text-sm text-gray-500">
-                                {{ $log->tanggal }}
-                            </p>
-                            <p class="text-gray-800 mt-1">
-                                {{ $log->kegiatan }}
-                            </p>
-                        </div>
-                    @empty
-                        <p class="text-gray-500 text-sm">
-                            Belum ada logbook
+                    <div class="border rounded-lg p-4">
+                        <p class="text-sm text-gray-500">
+                            {{ $log->tanggal }}
                         </p>
+                        <p class="text-gray-800 mt-1">
+                            {{ $log->kegiatan }}
+                        </p>
+                    </div>
+                    @empty
+                    <p class="text-gray-500 text-sm">
+                        Belum ada logbook
+                    </p>
                     @endforelse
                 </div>
 
@@ -101,7 +252,7 @@
             {{-- BACK --}}
             <div>
                 <a href="{{ route('pembimbing.dashboard') }}"
-                   class="text-blue-600 hover:underline text-sm">
+                    class="text-blue-600 hover:underline text-sm">
                     ← Kembali ke Dashboard
                 </a>
             </div>
@@ -136,9 +287,9 @@
                         <select name="month" class="w-full rounded-xl border-gray-200 bg-gray-50 font-bold">
                             @for($m=1; $m<=12; $m++)
                                 <option value="{{ $m }}" {{ $m==now()->month ? 'selected' : '' }}>
-                                    {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                                {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
                                 </option>
-                            @endfor
+                                @endfor
                         </select>
                     </div>
 
@@ -184,9 +335,9 @@
                         <select name="month" class="w-full rounded-xl border-gray-200 bg-gray-50 font-bold">
                             @for($m=1; $m<=12; $m++)
                                 <option value="{{ $m }}" {{ $m==now()->month ? 'selected' : '' }}>
-                                    {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                                {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
                                 </option>
-                            @endfor
+                                @endfor
                         </select>
                     </div>
 
@@ -209,55 +360,57 @@
         SCRIPT MODAL
     ============================ --}}
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // Presensi modal
-        const presModal = document.getElementById('downloadPresensiDosenModal');
-        const presBtn = document.getElementById('btnDownloadPresensiDosen');
-        const presClose = document.getElementById('closePresensiDosenModal');
-        const presBackdrop = presModal?.querySelector('[data-backdrop]');
+        document.addEventListener('DOMContentLoaded', () => {
+            // Presensi modal
+            const presModal = document.getElementById('downloadPresensiDosenModal');
+            const presBtn = document.getElementById('btnDownloadPresensiDosen');
+            const presClose = document.getElementById('closePresensiDosenModal');
+            const presBackdrop = presModal?.querySelector('[data-backdrop]');
 
-        function openPres() {
-            if (!presModal) return;
-            presModal.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-        }
-        function closePres() {
-            if (!presModal) return;
-            presModal.classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
-        }
-        presBtn?.addEventListener('click', openPres);
-        presClose?.addEventListener('click', closePres);
-        presBackdrop?.addEventListener('click', closePres);
+            function openPres() {
+                if (!presModal) return;
+                presModal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
 
-        // Logbook modal
-        const logModal = document.getElementById('downloadLogbookDosenModal');
-        const logBtn = document.getElementById('btnDownloadLogbookDosen');
-        const logClose = document.getElementById('closeLogbookDosenModal');
-        const logBackdrop = logModal?.querySelector('[data-backdrop]');
+            function closePres() {
+                if (!presModal) return;
+                presModal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+            presBtn?.addEventListener('click', openPres);
+            presClose?.addEventListener('click', closePres);
+            presBackdrop?.addEventListener('click', closePres);
 
-        function openLog() {
-            if (!logModal) return;
-            logModal.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-        }
-        function closeLog() {
-            if (!logModal) return;
-            logModal.classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
-        }
-        logBtn?.addEventListener('click', openLog);
-        logClose?.addEventListener('click', closeLog);
-        logBackdrop?.addEventListener('click', closeLog);
+            // Logbook modal
+            const logModal = document.getElementById('downloadLogbookDosenModal');
+            const logBtn = document.getElementById('btnDownloadLogbookDosen');
+            const logClose = document.getElementById('closeLogbookDosenModal');
+            const logBackdrop = logModal?.querySelector('[data-backdrop]');
 
-        // ESC close
-        window.addEventListener('keydown', (e) => {
-            if (e.key !== 'Escape') return;
+            function openLog() {
+                if (!logModal) return;
+                logModal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
 
-            if (presModal && !presModal.classList.contains('hidden')) closePres();
-            if (logModal && !logModal.classList.contains('hidden')) closeLog();
+            function closeLog() {
+                if (!logModal) return;
+                logModal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+            logBtn?.addEventListener('click', openLog);
+            logClose?.addEventListener('click', closeLog);
+            logBackdrop?.addEventListener('click', closeLog);
+
+            // ESC close
+            window.addEventListener('keydown', (e) => {
+                if (e.key !== 'Escape') return;
+
+                if (presModal && !presModal.classList.contains('hidden')) closePres();
+                if (logModal && !logModal.classList.contains('hidden')) closeLog();
+            });
         });
-    });
     </script>
 
 </x-app-layout>

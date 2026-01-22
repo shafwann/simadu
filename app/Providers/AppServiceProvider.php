@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
 use App\Models\AboutSetting;
+use Illuminate\Support\Facades\URL; // ✅ PENTING
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -17,35 +18,48 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // 🔥 PERBAIKAN DI SINI:
+        // Kita paksa HTTPS tanpa peduli environment 'local' atau bukan.
+        // Ini wajib agar CSS/JS terbaca saat pakai Pinggy/Ngrok.
+
+        // Cek jika URL di .env dimulai dengan https, maka paksa https
+        if (str_contains(config('app.url'), 'https://')) {
+            URL::forceScheme('https');
+        }
+
+        // ATAU: Kalau mau cara kasar (pasti jalan di ngrok), uncomment baris bawah ini:
+        // URL::forceScheme('https');
+
+
         // ✅ LOGIKA MULTI-TENANCY VIEW
-        // Kode ini akan berjalan di SETIAP halaman untuk menyuntikkan $globalAbout
         View::composer('*', function ($view) {
 
             $targetKategori = 'MASTER';
 
-            // Prioritas 1: Jika ada filter di URL (untuk testing/tamu)
+            // Prioritas 1: Jika ada filter di URL
             if (request()->has('instansi')) {
                 $targetKategori = request()->query('instansi');
             }
-            // Prioritas 2: Jika User Login (Admin/Mahasiswa melihat instansi sendiri)
+            // Prioritas 2: Jika User Login
             elseif (Auth::check()) {
                 $user = Auth::user();
-                // Jika user punya kategori, pakai itu. Jika tidak, tetap MASTER.
                 $targetKategori = $user->kategori_instansi ?? 'MASTER';
             }
 
-            // 2. AMBIL DATA DARI DB (Hanya Read, Jangan Create!)
-            $setting = AboutSetting::where('kategori_instansi', $targetKategori)->first();
+            // 2. AMBIL DATA DARI DB
+            // Menggunakan try-catch agar jika tabel belum ada (saat migrate fresh) tidak error
+            try {
+                $setting = AboutSetting::where('kategori_instansi', $targetKategori)->first();
 
-            // 3. LOGIKA FALLBACK (CADANGAN)
-            // Jika data instansi spesifik (misal: DISKOMINFO) belum disetting adminnya (belum ada di DB),
-            // Maka TAMPILKAN DATA MASTER dulu agar layout tidak rusak/kosong.
-            if (!$setting && $targetKategori !== 'MASTER') {
-                $setting = AboutSetting::where('kategori_instansi', 'MASTER')->first();
+                // 3. LOGIKA FALLBACK
+                if (!$setting && $targetKategori !== 'MASTER') {
+                    $setting = AboutSetting::where('kategori_instansi', 'MASTER')->first();
+                }
+            } catch (\Exception $e) {
+                $setting = null;
             }
 
-            // 4. ULTIMATE FALLBACK (Jika MASTER pun belum ada di DB)
-            // Buat object dummy di memory saja, jangan simpan ke DB.
+            // 4. ULTIMATE FALLBACK (Dummy Data)
             if (!$setting) {
                 $setting = new AboutSetting([
                     'app_name' => 'SISTEM MAGANG',
@@ -55,7 +69,6 @@ class AppServiceProvider extends ServiceProvider
                 ]);
             }
 
-            // 4. Suntikkan variabel $globalAbout ke semua View
             $view->with('globalAbout', $setting);
         });
     }
