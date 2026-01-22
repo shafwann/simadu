@@ -81,15 +81,8 @@ class AssessmentController extends Controller
 
                 'total' => $total,
                 'average' => $avg,
-<<<<<<< HEAD
-                'grade_letter' => $grade,
-
-                // ✅ SIMPAN apresiasi khusus
                 'apresiasi_khusus' => $validated['apresiasi_khusus'] ?? null,
-
-=======
                 'grade_letter' => $grade, 
->>>>>>> 4d2568c19a49caba96511ea18f5d93dc11990244
                 'assessed_at' => now(),
             ]
         );
