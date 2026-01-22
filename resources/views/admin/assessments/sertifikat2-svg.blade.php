@@ -1,4 +1,3 @@
-
 @php
 $rows = [
     [1,'Etika dan Kedisiplinan',$assessment->aspek_1],
@@ -9,10 +8,7 @@ $rows = [
     [6,'Kemampuan mengidentifikasi dan memecahkan masalah',$assessment->aspek_6],
 ];
 
-// ===========================
 // ✅ FORMAT NIP (8-6-1-3) UNTUK HALAMAN FORM PENILAIAN
-// (kalau halaman ini dicetak terpisah, tetap benar)
-// ===========================
 $nipRaw2 = preg_replace('/\s+/', '', (string)($about->nip_kepala_instansi ?? ''));
 $nipFormatted2 = $nipRaw2;
 
@@ -184,7 +180,6 @@ if (strlen($nipRaw2) === 18) {
 
         <b style="font-size:16px;">{{ $about->kepala_instansi ?? '-' }}</b><br>
 
-        {{-- ✅ NIP DIFORMAT (8-6-1-3) HANYA TAMPILAN --}}
         NIP. {{ $nipFormatted2 ?: '-' }}
 
       </td>

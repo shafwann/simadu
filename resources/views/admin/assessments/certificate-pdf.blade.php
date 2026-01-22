@@ -5,12 +5,10 @@ $mulai   = Carbon::parse($student->tanggal_masuk)->translatedFormat('d F Y');
 $selesai = Carbon::parse($student->tanggal_selesai)->translatedFormat('d F Y');
 $hariIni = $today->translatedFormat('d F Y');
 
-// ✅ TAMBAHAN BARU: jika ada tanggal dari form (certificate_date), pakai itu untuk sertifikat
 if (!empty($assessment->certificate_date)) {
     $hariIni = Carbon::parse($assessment->certificate_date)->translatedFormat('d F Y');
 }
 
-// === INSTANSI MAHASISWA (yang kamu sudah buat auto font) ===
 $instansiText = trim((string) ($student->instansi ?? ''));
 $len = mb_strlen($instansiText, 'UTF-8');
 
@@ -34,17 +32,11 @@ $instansiStyle = 'display:block;margin-top:2px;font-weight:700;line-height:1.15;
 <head>
     <meta charset="utf-8">
     <style>
-        @page {
-            size: 330mm 210mm;
-            margin: 0;
-        }
+        @page { size: 330mm 210mm; margin: 0; }
 
-        html, body {
-            margin: 0;
-            padding: 0;
-        }
+        html, body { margin: 0; padding: 0; }
 
-        .page {
+        .page{
             position: relative;
             width: 330mm;
             height: 210mm;
@@ -53,30 +45,21 @@ $instansiStyle = 'display:block;margin-top:2px;font-weight:700;line-height:1.15;
             color: #111;
         }
 
-        .page-break {
-            page-break-after: always;
-        }
+        .page-break { page-break-after: always; }
 
-        * {
-            box-sizing: border-box;
-            page-break-inside: avoid;
-        }
+        * { box-sizing: border-box; page-break-inside: avoid; }
     </style>
 </head>
-
 <body>
 
-    {{-- ================= PAGE 1 ================= --}}
+    {{-- PAGE 1 --}}
     <div class="page page-break">
-
-        {{-- BACKGROUND --}}
         <img
             src="{{ public_path('sertifikat/sertifikat.png') }}"
             style="position:absolute; top:0; left:0; width:330mm; height:210mm; image-rendering:auto;"
             alt="Sertifikat Background"
         >
 
-        {{-- KONTEN PAGE 1 --}}
         <div style="position:absolute; inset:0;">
             @include('admin.assessments.sertifikat1-svg', [
                 'student' => $student,
@@ -90,13 +73,10 @@ $instansiStyle = 'display:block;margin-top:2px;font-weight:700;line-height:1.15;
                 'about' => $about,
             ])
         </div>
-
     </div>
 
-    {{-- ================= PAGE 2 ================= --}}
+    {{-- PAGE 2 --}}
     <div class="page">
-
-        {{-- KONTEN PAGE 2 --}}
         <div style="position:absolute; inset:0;">
             @include('admin.assessments.sertifikat2-svg', [
                 'student' => $student,
@@ -105,7 +85,6 @@ $instansiStyle = 'display:block;margin-top:2px;font-weight:700;line-height:1.15;
                 'about' => $about,
             ])
         </div>
-
     </div>
 
 </body>
