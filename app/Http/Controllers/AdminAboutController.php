@@ -117,6 +117,7 @@ class AdminAboutController extends Controller
                     'whatsapp_number' => ['nullable', 'string', 'max:20'],
                     'links_label' => ['nullable', 'array'],
                     'links_url' => ['nullable', 'array'],
+                    'jam_operasional' => ['nullable', 'string'], 
                 ]);
 
 
@@ -170,6 +171,16 @@ class AdminAboutController extends Controller
                 if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $val)) $data[$key] = substr($val, 0, 5);
             }
             // (Validasi manual jam mulai < selesai bisa ditambahkan di sini)
+        }
+
+        //pemisah koma
+        if ($section === 'lokasi') {
+            // Ambil data GPS yang digabung
+            $gps = explode(',', $request->office_gps ?? '');
+            $data['office_latitude']  = trim($gps[0] ?? null);
+            $data['office_longitude'] = trim($gps[1] ?? null);
+            $data['radius_meter']     = $request->radius_meter;
+            $data['office_name']      = $request->office_name;
         }
 
         // ✅ INI PERBAIKANNYA: Pakai updateOrCreate

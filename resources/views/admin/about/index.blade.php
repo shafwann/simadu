@@ -163,13 +163,9 @@
                             <x-text-input name="kepala_instansi" class="mt-1 block w-full" value="{{ old('kepala_instansi', $about->kepala_instansi) }}" required />
                         </div>
                         <div>
-                            <x-input-label value="NIP Kepala" />
+                            <x-input-label value="Nomor ID / Nomor Induk" />
                             <x-text-input name="nip_kepala_instansi" class="mt-1 block w-full" value="{{ old('nip_kepala_instansi', $about->nip_kepala_instansi) }}" required />
                         </div>
-                    </div>
-                    <div>
-                        <x-input-label value="Jam Operasional (Footer)" />
-                        <x-text-input name="jam_operasional" class="mt-1 block w-full" value="{{ old('jam_operasional', $about->jam_operasional) }}" required />
                     </div>
                 </div>
 
@@ -195,12 +191,9 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <x-input-label value="Latitude" />
-                            <x-text-input name="office_latitude" class="mt-1 block w-full" value="{{ old('office_latitude', $about->office_latitude) }}" />
-                        </div>
-                        <div>
-                            <x-input-label value="Longitude" />
-                            <x-text-input name="office_longitude" class="mt-1 block w-full" value="{{ old('office_longitude', $about->office_longitude) }}" />
+                            <x-input-label value="Koordinat GPS (Latitude, Longitude)" />
+                            <x-text-input name="office_gps" class="mt-1 block w-full" placeholder="-7.5949963811058385, 110.94069955794491"
+                                        value="{{ old('office_gps', $about->office_latitude . ', ' . $about->office_longitude) }}" />
                         </div>
                         <div>
                             <x-input-label value="Radius (Meter)" />
@@ -294,6 +287,16 @@
                                 <div><x-input-label value="Email" /><x-text-input name="office_email" class="w-full" value="{{ old('office_email', $about->office_email) }}" /></div>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                        <x-input-label value="Jam Operasional (Footer)" />
+                        <x-text-input name="jam_operasional" class="mt-1 block w-full" value="{{ old('jam_operasional', nl2br(e($about->jam_operasional))) }}" placeholder="Senin:08.00-16.00, Selasa:08.00-16.00, ..." required />
+                            <p class="text-xs text-gray-400 mt-1">
+                                Masukkan hari dan jam buka-tutup, pisahkan dengan koma. Contoh: Senin:08.00-16.00, Selasa:08.00-16.00
+                            </p>
+                    </div>
                     </div>
 
                     <div class="border-t pt-4">

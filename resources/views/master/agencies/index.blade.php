@@ -19,6 +19,57 @@
                 </div>
             @endif
 
+            {{-- ✅ RUNNING TEXT (MARQUEE) - GLOBAL BRANDING --}}
+            <div class="mb-6 bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-black text-gray-800 uppercase tracking-wider">
+                            Running Text (Marquee)
+                        </h3>
+                        <span class="text-xs text-gray-400 font-bold uppercase">
+                            Global Branding (MASTER)
+                        </span>
+                    </div>
+
+                    {{-- PREVIEW --}}
+                    @if(!empty($about?->running_text))
+                        <div class="mb-4 border border-blue-200 bg-blue-50 rounded-lg px-4 py-3">
+                            <div class="text-xs font-bold text-blue-700 mb-2">Preview</div>
+                            <div class="text-sm text-blue-900 font-semibold">
+                                {{ $about->running_text }}
+                            </div>
+                        </div>
+                    @else
+                        <div class="mb-4 border border-gray-200 bg-gray-50 rounded-lg px-4 py-3 text-xs text-gray-500">
+                            Belum ada running text. Silakan isi lalu simpan.
+                        </div>
+                    @endif
+
+                    {{-- FORM --}}
+                    {{--
+                    <form method="POST" action="{{ route('master.settings.running-text.update') }}">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="mt-4">
+                            <label class="block text-sm font-bold text-gray-700">Running Text (Marquee)</label>
+                            <textarea name="running_text" rows="3"
+                                class="mt-1 w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">{{ old('running_text', $about->running_text ?? '') }}</textarea>
+                            <p class="text-xs text-gray-400 mt-1">
+                                Contoh: DISDIKBUD | RIZKI SAPTONO | DISPAPORA | ...
+                            </p>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700">
+                                Simpan Running Text
+                            </button>
+                        </div>
+                    </form>
+                    --}}
+                </div>
+            </div>
+
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <table class="w-full text-sm text-left text-gray-500">
