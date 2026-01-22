@@ -166,6 +166,12 @@ class AssessmentController extends Controller
         $w = 330 / 25.4 * 72;
         $h = 210 / 25.4 * 72;
 
+        app()->setLocale('id');
+\Carbon\Carbon::setLocale('id');
+\Illuminate\Support\Carbon::setLocale('id');
+setlocale(LC_TIME, 'id_ID.UTF-8', 'id_ID', 'id', 'Indonesian');
+
+
         $pdf = Pdf::loadView('admin.assessments.certificate-pdf', [
             'student' => $user,
             'assessment' => $assessment,
