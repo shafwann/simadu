@@ -44,6 +44,9 @@ class AboutSetting extends Model
         'agency_name',
         'app_description',
         'logo_path',
+        'running_text',
+        'hero_image_path',
+    
 
         // bidang (json)
         'bidang_options',

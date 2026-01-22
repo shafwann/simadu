@@ -127,19 +127,28 @@ class AdminAboutController extends Controller
                     'whatsapp_number'   => ['nullable', 'string', 'max:20'],
                     'links_label'       => ['nullable', 'array'],
                     'links_url'         => ['nullable', 'array'],
+                    // Kalau jam_operasional memang mau diubah dari footer form, biarkan:
+                    'jam_operasional'   => ['nullable', 'string', 'max:255'],
                 ]);
 
                 // Proses custom links (label/url)
                 $customLinks = [];
-                if ($request->has('links_label') && $request->has('links_url')) {
-                    foreach ($request->links_label as $i => $label) {
-                        $url = $request->links_url[$i] ?? null;
-                        if (!empty($label) && !empty($url)) {
-                            $customLinks[] = ['label' => $label, 'url' => $url];
-                        }
+                $labels = $request->input('links_label', []);
+                $urls   = $request->input('links_url', []);
+
+                foreach ($labels as $i => $label) {
+                    $label = trim((string)$label);
+                    $url   = trim((string)($urls[$i] ?? ''));
+
+                    if ($label !== '' && $url !== '') {
+                        $customLinks[] = ['label' => $label, 'url' => $url];
                     }
                 }
-                $data['custom_links'] = !empty($customLinks) ? json_encode($customLinks, JSON_UNESCAPED_UNICODE) : null;
+
+                $data['custom_links'] = !empty($customLinks)
+                    ? json_encode($customLinks, JSON_UNESCAPED_UNICODE)
+                    : null;
+
                 unset($data['links_label'], $data['links_url']);
                 break;
 
@@ -179,14 +188,21 @@ class AdminAboutController extends Controller
         if ($section === 'jadwal') {
             foreach ($data as $key => $val) {
                 $val = str_replace('.', ':', (string)$val); // dukung 09.00
-                // terima HH:MM atau HH:MM:SS
                 if (preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $val)) {
                     $data[$key] = substr($val, 0, 5); // simpan HH:MM
                 }
             }
         }
 
-        // Simpan per kategori instansi
+        // Handle Lokasi (GPS gabungan)
+        if ($section === 'lokasi') {
+            $gps = explode(',', (string)($request->office_gps ?? ''));
+            $data['office_latitude']  = trim((string)($gps[0] ?? '')) ?: null;
+            $data['office_longitude'] = trim((string)($gps[1] ?? '')) ?: null;
+            $data['radius_meter']     = $request->radius_meter;
+            $data['office_name']      = $request->office_name;
+        }
+
         AboutSetting::updateOrCreate(
             ['kategori_instansi' => $kategori],
             $data

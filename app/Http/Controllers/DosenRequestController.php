@@ -95,6 +95,16 @@ class DosenRequestController extends Controller
                     'status'   => 'aktif',
                 ]);
             }
+            // 🔥 SINKRON DATA DOSEN DARI MAHASISWA
+            $mahasiswa = $req->mahasiswa;
+
+            $dosen->instansi  = $mahasiswa->instansi;
+            $dosen->prodi     = $mahasiswa->prodi;
+            $dosen->fakultas  = $mahasiswa->fakultas;
+            $dosen->bidang    = $mahasiswa->bidang;
+            $dosen->nidn      = $req->nidn; // dari form request mahasiswa
+
+            $dosen->save();
 
             // 4️⃣ HUBUNGKAN DOSEN ↔ MAHASISWA
             $req->mahasiswa

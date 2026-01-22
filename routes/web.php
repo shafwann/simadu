@@ -75,23 +75,57 @@ Route::get('/', function (Request $request) {
         $about = AboutSetting::where('kategori_instansi', $filterInstansi)->first();
     }
 
-    // 2. Jika tidak ada filter, atau data filter tidak ketemu -> Cari MASTER (Buat jika belum ada)
-    if (!$about) {
-        $about = AboutSetting::firstOrCreate(
-            ['kategori_instansi' => 'MASTER'],
-            [
-                'app_name' => 'SISTEM MAGANG KARANGANYAR', // Default Title
-                'agency_name' => 'PEMERINTAH KAB. KARANGANYAR',
-                'app_description' => 'Portal Magang Kabupaten Karanganyar',
-                'nama_instansi' => 'Pusat',
-                'jam_operasional' => 'Senin-Jumat: 08.00-16.00',
-                'radius_meter' => 50
-            ]
-        );
-    }
+   // 2. Jika tidak ada filter, atau data filter tidak ketemu -> Cari MASTER
+if (!$about) {
+    $about = AboutSetting::firstOrCreate(
+        ['kategori_instansi' => 'MASTER'],
+        [
+            'app_name' => 'SISTEM MAGANG KARANGAYAR',
+            'agency_name' => 'PEMERINTAH KAB. KARANGANYAR',
+            'app_description' => 'Portal Magang Kabupaten Karanganyar',
+            'nama_instansi' => 'Pusat',
+            'jam_operasional' => 'Senin-Jumat: 08.00-16.00',
+            'radius_meter' => 50
+        ]
+    );
+}
 
-    return view('welcome', compact('total', 'mahasiswa', 'marquee', 'about'));
+// ✅ TAMBAHKAN INI
+$aboutMaster = AboutSetting::firstOrCreate(
+    ['kategori_instansi' => 'MASTER'],
+    [
+        'app_name' => 'SISTEM MAGANG KARANGAYAR',
+        'agency_name' => 'PEMERINTAH KAB. KARANGANYAR',
+        'app_description' => 'Portal Magang Kabupaten Karanganyar',
+        'nama_instansi' => 'Pusat',
+        'jam_operasional' => 'Senin-Jumat: 08.00-16.00',
+        'radius_meter' => 50
+    ]
+);
+
+// ✅ TAMBAHAN (AGAR instansiAktif ADA, tanpa mengurangi apapun)
+$instansiAktif = User::where('role', 'admin')
+    ->where('bidang', 'Administrator Sistem')
+    ->where('status', 'aktif')
+    ->whereNotNull('kategori_instansi')
+    ->where('kategori_instansi', '!=', 'MASTER')
+    ->select('kategori_instansi')
+    ->distinct()
+    ->orderBy('kategori_instansi')
+    ->get();
+
+    // ✅ TAMBAHAN: JUMLAH PESERTA MAGANG AKTIF PER INSTANSI
+$pesertaAktifPerInstansi = User::where('role', 'mahasiswa')
+    ->where('status', 'aktif')
+    ->whereNotNull('kategori_instansi')
+    ->select('kategori_instansi', DB::raw('COUNT(*) as total'))
+    ->groupBy('kategori_instansi')
+    ->orderByDesc('total')
+    ->get();
+
+return view('welcome', compact('total', 'mahasiswa', 'marquee', 'about', 'aboutMaster', 'instansiAktif', 'pesertaAktifPerInstansi'));
 });
+
 
 // ==========================================
 // 2. LOBBY UTAMA (PENGALIH ARUS)
