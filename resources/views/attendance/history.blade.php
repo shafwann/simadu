@@ -38,31 +38,87 @@
                         </thead>
                         <tbody class="divide-y divide-gray-50">
                             @forelse($attendances as $a)
-                                <tr class="hover:bg-blue-50/50 transition">
-                                    <td class="p-4 font-medium">{{ \Carbon\Carbon::parse($a->tanggal)->format('d M Y') }}</td>
-                                    <td class="p-4 font-mono text-gray-700">{{ $a->check_in ?? '-' }}</td>
-                                    <td class="p-4 font-mono text-gray-700">{{ $a->check_out ?? '-' }}</td>
-                                    <td class="p-4">
-                                        <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">
-                                            {{ $a->status ?? '-' }}
-                                        </span>
-                                    </td>
-                                    <td class="p-4 text-xs">
-                                        @if($a->location)
-                                            <a href="{{ $a->location }}" target="_blank" class="text-blue-600 font-bold hover:underline">
-                                                Buka Link Peta
-                                            </a>
-                                        @else
-                                            <span class="text-gray-400 italic text-[10px]">Lokasi Kosong</span>
-                                        @endif
-                                    </td>
-                                </tr>
+                            <tr class="hover:bg-blue-50/50 transition">
+                                <td class="p-4 font-medium">{{ \Carbon\Carbon::parse($a->tanggal)->format('d M Y') }}</td>
+                                <td class="p-4 font-mono text-gray-700">{{ $a->check_in ?? '-' }}</td>
+                                <td class="p-4 font-mono text-gray-700">{{ $a->check_out ?? '-' }}</td>
+                                <td class="p-4">
+                                    @php
+                                    $st = strtolower(trim($a->status ?? ''));
+                                    $ket = strtolower(trim($a->keterangan ?? ''));
+
+                                    // ===== KODE UTAMA =====
+                                    $code = '-';
+                                    if ($st === 'telat') $code = 'T';
+                                    elseif ($st === 'hadir') $code = 'H';
+                                    elseif (in_array($st, ['ijin','izin','i'])) $code = 'I';
+                                    elseif (in_array($st, ['sakit','s'])) $code = 'S';
+                                    elseif ($st === 'dinas luar') $code = 'DL';
+                                    elseif ($st === 'cuti') $code = 'CT';
+                                    elseif (in_array($st, ['tanpa keterangan','alpha','tk'])) $code = 'TK';
+
+                                    // ===== PC =====
+                                    $isPC = ($ket === 'pulang cepat');
+
+                                    // ===== TAP =====
+                                    $isTAP = false;
+                                    if (!empty($a->check_in) && empty($a->check_out)) {
+                                    $date = \Carbon\Carbon::parse($a->tanggal, 'Asia/Jakarta');
+                                    $dow = $date->dayOfWeekIso; // 1..7
+
+                                    // weekday only
+                                    if ($dow <= 5) {
+                                        $endStr=$checkoutEndMap[$dow] ?? null;
+
+                                        if (!empty($endStr)) {
+                                        // batas waktu checkout hari itu
+                                        $end=\Carbon\Carbon::parse($date->format('Y-m-d') . ' ' . $endStr, 'Asia/Jakarta');
+
+                                        // TAP jika sekarang sudah lewat batas checkout
+                                        $isTAP = now('Asia/Jakarta')->gt($end);
+                                        }
+                                        }
+                                        }
+                                        @endphp
+
+                                        <div class="flex items-center gap-2">
+                                            {{-- badge utama --}}
+                                            <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">
+                                                {{ $code }}
+                                            </span>
+
+                                            {{-- Pulang Cepat --}}
+                                            @if($isPC)
+                                            <span class="px-2 py-1 bg-orange-100 text-orange-700 rounded-md text-xs font-bold">
+                                                PC
+                                            </span>
+                                            @endif
+
+                                            {{-- Tidak Absen Pulang --}}
+                                            @if($isTAP)
+                                            <span class="px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs font-bold">
+                                                TAP
+                                            </span>
+                                            @endif
+                                        </div>
+                                </td>
+
+                                <td class="p-4 text-xs">
+                                    @if($a->location)
+                                    <a href="{{ $a->location }}" target="_blank" class="text-blue-600 font-bold hover:underline">
+                                        Buka Link Peta
+                                    </a>
+                                    @else
+                                    <span class="text-gray-400 italic text-[10px]">Lokasi Kosong</span>
+                                    @endif
+                                </td>
+                            </tr>
                             @empty
-                                <tr>
-                                    <td colspan="5" class="p-6 text-center italic text-gray-400">
-                                        Belum ada data presensi.
-                                    </td>
-                                </tr>
+                            <tr>
+                                <td colspan="5" class="p-6 text-center italic text-gray-400">
+                                    Belum ada data presensi.
+                                </td>
+                            </tr>
                             @endforelse
                         </tbody>
                     </table>

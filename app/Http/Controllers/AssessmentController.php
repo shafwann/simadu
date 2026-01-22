@@ -81,7 +81,7 @@ class AssessmentController extends Controller
                 'aspek_6' => (int)$validated['aspek_6'],
                 'total' => $total,
                 'average' => $avg,
-                'grade_letter' => $grade,
+                'grade_letter' => $grade, 
                 'assessed_at' => now(),
             ]
         );

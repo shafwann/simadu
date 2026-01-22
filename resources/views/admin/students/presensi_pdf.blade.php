@@ -3,7 +3,6 @@
 <head>
     <meta charset="utf-8">
     <style>
-        /* ✅ margin rapat biar muat 1 halaman */
         @page { margin: 14px 18px; }
 
         body {
@@ -41,7 +40,7 @@
 
 <body>
 
-    <div class="title" style="margin-top: 40px;">
+    <div class="title" style="margin-top: 10px;">
         <b>
             <div class="h1">DAFTAR HADIR MAGANG</div>
             <div class="h2">{{ strtoupper($about->nama_instansi ?? 'NAMA INSTANSI') }}</div>
@@ -83,7 +82,7 @@
         </tr>
     </table>
 
-    {{-- ✅ LEFT / RIGHT (2 tabel) --}}
+    {{-- LEFT / RIGHT --}}
     <table class="grid" cellpadding="0" cellspacing="0">
         <tr>
             <td class="col">@include('admin.students._presensi_table', ['rows' => $left])</td>
@@ -96,6 +95,10 @@
         <tr>
             <td class="note">
                 <div class="head"><b>Keterangan :</b></div>
+                <div>H = Hadir</div>
+                <div>T = Terlambat</div>
+                <div>PC = Pulang Cepat</div>
+                <div>TAP = Tidak Absen Pulang</div>
                 <div>I = Ijin</div>
                 <div>S = Sakit</div>
                 <div>DL = Dinas Luar</div>

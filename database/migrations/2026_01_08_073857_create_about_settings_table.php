@@ -10,12 +10,26 @@ return new class extends Migration {
         Schema::create('about_settings', function (Blueprint $table) {
             $table->id();
 
+            // ✅ KEY UTAMA PER INSTANSI
+            $table->string('kategori_instansi')->default('UMUM')->index();
+
+            // BRANDING
+            $table->string('app_name')->nullable();
+            $table->string('agency_name')->nullable();
+            $table->string('app_description')->nullable();
+            $table->string('logo_path')->nullable();
+
+            // IDENTITAS INSTANSI
             $table->string('nama_instansi')->nullable();
             $table->string('kepala_instansi')->nullable();
             $table->string('nip_kepala_instansi')->nullable();
             $table->string('jam_operasional')->nullable();
 
+            // BIDANG OPTIONS (JSON)
+            $table->longText('bidang_options')->nullable();
+
             // LOKASI
+            $table->string('office_name')->nullable();
             $table->decimal('office_latitude', 10, 7)->nullable();
             $table->decimal('office_longitude', 10, 7)->nullable();
             $table->integer('radius_meter')->default(50);
@@ -44,8 +58,22 @@ return new class extends Migration {
             $table->time('jumat_checkout_mulai')->nullable();
             $table->time('jumat_checkout_selesai')->nullable();
 
+            // FOOTER / SOSMED / MAP / WA / CUSTOM LINKS
+            $table->text('office_address')->nullable();
+            $table->string('office_phone')->nullable();
+            $table->string('office_email')->nullable();
+            $table->string('social_instagram')->nullable();
+            $table->string('social_facebook')->nullable();
+            $table->string('social_youtube')->nullable();
+            $table->string('social_x')->nullable();
+            $table->longText('google_maps_embed')->nullable();
+            $table->string('whatsapp_number')->nullable();
+            $table->longText('custom_links')->nullable();
 
             $table->timestamps();
+
+            // Opsional tapi bagus: pastikan 1 kategori cuma 1 record
+            $table->unique('kategori_instansi');
         });
     }
 
