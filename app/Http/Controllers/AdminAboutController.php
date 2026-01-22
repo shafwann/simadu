@@ -89,7 +89,6 @@ class AdminAboutController extends Controller
                     'nama_instansi'       => ['required', 'string', 'max:255'],
                     'kepala_instansi'     => ['required', 'string', 'max:255'],
                     'nip_kepala_instansi' => ['required', 'string', 'max:50'],
-                    'jam_operasional'     => ['required', 'string', 'max:255'],
                 ]);
                 break;
 
