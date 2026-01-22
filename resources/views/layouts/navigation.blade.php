@@ -4,37 +4,37 @@
             <div class="flex">
                 {{-- LOGO --}}
                 <div class="shrink-0 flex items-center">
-                            <a href="{{ Auth::user()->role === 'admin' ? route('admin.dashboard') : route('dashboard') }}" class="flex items-center gap-3 group">
+                    {{-- Logika Link Logo: Jika Admin ke admin.dashboard, Selain itu (Master/Mhs) ke dashboard utama --}}
+                    <a href="{{ Auth::user()->role === 'admin' ? route('admin.dashboard') : route('dashboard') }}" class="flex items-center gap-3 group">
 
-                                {{-- LOGO DINAMIS --}}
-                                @if(isset($globalAbout) && $globalAbout->logo_path)
-                                    <img src="{{ asset('storage/' . $globalAbout->logo_path) }}" alt="Logo" class="h-12 w-auto transition-transform group-hover:scale-105">
-                                @else
-                                    {{-- Fallback jika logo belum diupload --}}
-                                    <img src="{{ asset('img/logobaperlitbang.png') }}" alt="Logo Default" class="h-12 w-auto transition-transform group-hover:scale-105">
-                                @endif
+                        {{-- LOGO DINAMIS --}}
+                        @if(isset($globalAbout) && $globalAbout->logo_path)
+                            <img src="{{ asset('storage/' . $globalAbout->logo_path) }}" alt="Logo" class="h-12 w-auto transition-transform group-hover:scale-105">
+                        @else
+                            {{-- Fallback jika logo belum diupload --}}
+                            <img src="{{ asset('img/logobaperlitbang.png') }}" alt="Logo Default" class="h-12 w-auto transition-transform group-hover:scale-105">
+                        @endif
 
-                {{-- TEXT JUDUL (RESPONSIF) --}}
-                <div class="leading-tight">
-                    {{-- JUDUL UTAMA --}}
-                    <span class="block text-xs md:text-sm font-black text-gray-900 uppercase tracking-wider">
-                        {{ $globalAbout->app_name ?? 'Bapperida' }}
-                    </span>
+                        {{-- TEXT JUDUL (RESPONSIF) --}}
+                        <div class="leading-tight">
+                            {{-- JUDUL UTAMA --}}
+                            <span class="block text-xs md:text-sm font-black text-gray-900 uppercase tracking-wider">
+                                {{ $globalAbout->app_name ?? 'Bapperida' }}
+                            </span>
 
-                    {{-- SUB JUDUL --}}
-                    <span class="block text-[8px] md:text-[10px] font-bold text-gray-900 uppercase tracking-tight">
-                        {{ $globalAbout->agency_name ?? 'Kab. Karanganyar' }}
-                    </span>
+                            {{-- SUB JUDUL --}}
+                            <span class="block text-[8px] md:text-[10px] font-bold text-gray-900 uppercase tracking-tight">
+                                {{ $globalAbout->agency_name ?? 'Kab. Karanganyar' }}
+                            </span>
 
-                    {{-- DESKRIPSI SINGKAT --}}
-                    @if(!empty($globalAbout->app_description))
-                        {{-- Sembunyikan deskripsi panjang di HP agar tidak merusak layout, tampilkan di md ke atas --}}
-                        <span class="hidden md:block text-[9px] font-medium text-gray-500 tracking-wide mt-0.5">
-                            {{ $globalAbout->app_description }}
-                        </span>
-                    @endif
-                </div>
-                            </a>
+                            {{-- DESKRIPSI SINGKAT --}}
+                            @if(!empty($globalAbout->app_description))
+                                <span class="hidden md:block text-[9px] font-medium text-gray-500 tracking-wide mt-0.5">
+                                    {{ $globalAbout->app_description }}
+                                </span>
+                            @endif
+                        </div>
+                    </a>
                 </div>
 
                 {{-- MENU DESKTOP --}}
@@ -54,7 +54,6 @@
                             {{ __('Logbook') }}
                         </x-nav-link>
 
-                        {{-- Laporan: Hapus text-green-600, ganti text-gray-900 --}}
                         <x-nav-link :href="route('laporan.index')" :active="request()->routeIs('laporan.*')" class="font-bold text-gray-900">
                             {{ __('Laporan') }}
                         </x-nav-link>
@@ -62,7 +61,6 @@
 
                     {{-- 2. MENU ADMIN --}}
                     @if(Auth::user()->role === 'admin')
-                        {{-- Panel Admin: Hapus text-blue-600 --}}
                         <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" class="font-bold text-gray-900">
                             <span class="flex items-center gap-1">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
@@ -70,7 +68,6 @@
                             </span>
                         </x-nav-link>
 
-                        {{-- Data Mahasiswa: Hapus hover:text-blue-600 --}}
                         <x-nav-link :href="route('admin.students.index')" :active="request()->routeIs('admin.students.*')" class="font-bold text-gray-900 hover:text-black">
                             <span class="flex items-center gap-1">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
@@ -78,7 +75,6 @@
                             </span>
                         </x-nav-link>
 
-                        {{-- Manajemen Dosen: Hapus text-indigo-600 --}}
                         <x-nav-link :href="route('admin.dosen.index')" :active="request()->routeIs('admin.dosen.*')" class="font-bold text-gray-900 hover:text-black">
                             <span class="flex items-center gap-1">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -89,7 +85,6 @@
                             </span>
                         </x-nav-link>
 
-                        {{-- Data Admin: Hapus text-purple-600 --}}
                         @if(Auth::user()->bidang === 'Administrator Sistem')
                             <x-nav-link :href="route('admin.manage.index')" :active="request()->routeIs('admin.manage.*')" class="font-bold text-gray-900 hover:text-black">
                                 <span class="flex items-center gap-1">
@@ -98,7 +93,6 @@
                                 </span>
                             </x-nav-link>
 
-                            {{-- About --}}
                             <x-nav-link :href="route('admin.about.index')" :active="request()->routeIs('admin.about.*')" class="font-bold text-gray-900 hover:text-black">
                                 <span class="flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,13 +105,21 @@
                         @endif
                     @endif
 
-                    {{-- MENU MASTER --}}
-                    @if(Auth::user()->role === 'master')
+                    {{-- 3. MENU MASTER ADMIN --}}
+                    @if(Auth::user()->role === 'master' || Auth::user()->role === 'super_admin')
+
+                        {{-- Dashboard Master (TAMBAHAN BARU) --}}
+                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="font-bold text-gray-900">
+                             <span class="flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                                {{ __('Dashboard Master') }}
+                             </span>
+                        </x-nav-link>
+
                         <x-nav-link :href="route('master.agencies.index')" :active="request()->routeIs('master.agencies.*')" class="font-bold text-gray-900">
                             {{ __('Kelola Instansi') }}
                         </x-nav-link>
 
-                        {{-- TAMBAHAN MENU --}}
                         <x-nav-link :href="route('master.settings.index')" :active="request()->routeIs('master.settings.*')" class="font-bold text-gray-900">
                             {{ __('Global Branding') }}
                         </x-nav-link>
@@ -169,6 +171,7 @@
         </div>
     </div>
 
+    {{-- MOBILE MENU --}}
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden bg-white border-t border-gray-100 shadow-lg">
         <div class="pt-2 pb-3 space-y-1">
             {{-- MENU MOBILE MAHASISWA --}}
@@ -192,7 +195,6 @@
                 <x-responsive-nav-link :href="route('mahasiswa.bidang.show')" :active="request()->routeIs('mahasiswa.bidang.show')" class="text-gray-900 font-bold">
                     {{ __('Bidang/Divisi') }}
                 </x-responsive-nav-link>
-
             @endif
 
             {{-- MENU MOBILE ADMIN --}}
@@ -205,7 +207,10 @@
                     {{ __('Data Mahasiswa') }}
                 </x-responsive-nav-link>
 
-                {{-- MENU MOBILE MANAJEMEN ADMIN --}}
+                <x-responsive-nav-link :href="route('admin.dosen.index')" :active="request()->routeIs('admin.dosen.*')" class="text-gray-900 font-bold">
+                    {{ __('Manajemen Dosen') }}
+                </x-responsive-nav-link>
+
                 @if(Auth::user()->bidang === 'Administrator Sistem')
                     <x-responsive-nav-link :href="route('admin.manage.index')" :active="request()->routeIs('admin.manage.*')" class="text-gray-900 font-bold">
                         <span class="flex items-center gap-1">
@@ -224,6 +229,24 @@
                         </span>
                     </x-responsive-nav-link>
                 @endif
+            @endif
+
+            {{-- MENU MOBILE MASTER (TAMBAHAN BARU) --}}
+            @if(Auth::user()->role === 'master' || Auth::user()->role === 'super_admin')
+                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-gray-900 font-bold">
+                     <span class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        {{ __('Dashboard Master') }}
+                     </span>
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('master.agencies.index')" :active="request()->routeIs('master.agencies.*')" class="text-gray-900 font-bold">
+                    {{ __('Kelola Instansi') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('master.settings.index')" :active="request()->routeIs('master.settings.*')" class="text-gray-900 font-bold">
+                    {{ __('Global Branding') }}
+                </x-responsive-nav-link>
             @endif
         </div>
 

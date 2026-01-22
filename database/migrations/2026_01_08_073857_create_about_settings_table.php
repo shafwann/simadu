@@ -10,23 +10,23 @@ return new class extends Migration {
         Schema::create('about_settings', function (Blueprint $table) {
             $table->id();
 
-            // ✅ KEY UTAMA PER INSTANSI
+            // KEY UTAMA PER INSTANSI
             $table->string('kategori_instansi')->default('UMUM')->index();
 
             // BRANDING
-            $table->string('app_name')->nullable();
-            $table->string('agency_name')->nullable();
-            $table->string('app_description')->nullable();
+            $table->string('app_name')->nullable()->default('Bapperida');
+            $table->string('agency_name')->nullable()->default('Kab. Karanganyar');
+            $table->text('app_description')->nullable();
             $table->string('logo_path')->nullable();
+
+            // BIDANG OPTIONS (JSON)
+            $table->longText('bidang_options')->nullable();
 
             // IDENTITAS INSTANSI
             $table->string('nama_instansi')->nullable();
             $table->string('kepala_instansi')->nullable();
             $table->string('nip_kepala_instansi')->nullable();
             $table->string('jam_operasional')->nullable();
-
-            // BIDANG OPTIONS (JSON)
-            $table->longText('bidang_options')->nullable();
 
             // LOKASI
             $table->string('office_name')->nullable();
@@ -72,7 +72,7 @@ return new class extends Migration {
 
             $table->timestamps();
 
-            // Opsional tapi bagus: pastikan 1 kategori cuma 1 record
+            // 1 instansi = 1 record
             $table->unique('kategori_instansi');
         });
     }

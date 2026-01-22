@@ -22,7 +22,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminAboutController;
 use App\Http\Controllers\AdminPresensiPdfController;
 use App\Http\Controllers\DosenRequestController;
-use App\Http\Controllers\MasterAgencyController; // Pastikan Controller ini ada
+use App\Http\Controllers\MasterAgencyController; // Pastikan Controller ini ada\
+use Illuminate\Support\Facades\DB; // <--- WAJIB DITAMBAHKAN
 
 use App\Models\AboutSetting;
 use App\Models\User;
