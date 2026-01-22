@@ -71,25 +71,15 @@ class AssessmentController extends Controller
             [
                 'certificate_no' => $validated['certificate_no'],
                 'certificate_date' => $validated['certificate_date'],
-
                 'aspek_1' => (int)$validated['aspek_1'],
                 'aspek_2' => (int)$validated['aspek_2'],
                 'aspek_3' => (int)$validated['aspek_3'],
                 'aspek_4' => (int)$validated['aspek_4'],
                 'aspek_5' => (int)$validated['aspek_5'],
                 'aspek_6' => (int)$validated['aspek_6'],
-
                 'total' => $total,
                 'average' => $avg,
-<<<<<<< HEAD
-                'grade_letter' => $grade,
-
-                // ✅ SIMPAN apresiasi khusus
-                'apresiasi_khusus' => $validated['apresiasi_khusus'] ?? null,
-
-=======
                 'grade_letter' => $grade, 
->>>>>>> 4d2568c19a49caba96511ea18f5d93dc11990244
                 'assessed_at' => now(),
             ]
         );
