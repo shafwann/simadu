@@ -220,9 +220,12 @@
     </div>
 
     <div class="bg-white border border-gray-200 rounded-2xl p-4">
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 justify-items-center">
+    <!-- WRAPPER SCROLL -->
+    <div class="w-full overflow-x-auto md:overflow-visible">
+        <!-- CONTAINER CHIP -->
+        <div class="flex gap-3 md:flex-wrap flex-nowrap min-w-max md:min-w-0">
             @foreach($pesertaAktifPerInstansi as $item)
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white shadow-sm">
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white shadow-sm whitespace-nowrap">
                     <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
 
                     <span class="text-xs font-bold uppercase text-gray-700">
@@ -237,6 +240,7 @@
         </div>
     </div>
 </div>
+
 
 
                 {{-- Background Decoration --}}
