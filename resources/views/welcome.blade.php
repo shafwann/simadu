@@ -208,43 +208,39 @@
                     </div>
                 </div>
 
-                {{-- PESERTA MAGANG AKTIF PER INSTANSI --}}
-<div class="mt-8 max-w-5xl mx-auto">
-    <div class="flex items-center justify-between mb-4">
-        <h3 class="text-sm font-black uppercase tracking-wider text-gray-800">
-            Peserta Magang Aktif per Instansi
-        </h3>
-        <span class="text-[10px] font-bold text-green-600 uppercase">
-            Live Data
-        </span>
-    </div>
+        {{-- PESERTA MAGANG AKTIF PER INSTANSI --}}
+        {{-- PERBAIKAN: Ubah max-w-5xl jadi max-w-7xl dan tambahkan padding (px-4...) agar lurus sama atasnya --}}
+        <div class="mt-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-    <div class="bg-white border border-gray-200 rounded-2xl p-4">
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 justify-items-center">
-            @foreach($pesertaAktifPerInstansi as $item)
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white shadow-sm">
-                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-black uppercase tracking-wider text-gray-800">
+                    Peserta Magang Aktif per Instansi
+                </h3>
+                <span class="text-[10px] font-bold text-green-600 uppercase bg-green-50 px-2 py-1 rounded-full border border-green-100">
+                    Live Data
+                </span>
+            </div>
 
-                    <span class="text-xs font-bold uppercase text-gray-700">
-                        {{ $item->kategori_instansi }}
-                    </span>
+            <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                <div class="w-full overflow-x-auto md:overflow-visible pb-2 md:pb-0 custom-scrollbar">
+                    <div class="flex gap-3 md:flex-wrap flex-nowrap min-w-max md:min-w-0">
+                        @foreach($pesertaAktifPerInstansi as $item)
+                            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-100 bg-gray-50 hover:bg-white hover:border-blue-200 transition-colors shadow-sm whitespace-nowrap group">
+                                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
 
-                    <span class="text-xs font-black text-blue-600">
-                        {{ $item->total }}
-                    </span>
-                </div>
-            @endforeach
-        </div>
-    </div>
-</div>
+                                <span class="text-xs font-bold uppercase text-gray-700 group-hover:text-blue-700">
+                                    {{ $item->kategori_instansi }}
+                                </span>
 
-
-                {{-- Background Decoration --}}
-                <div class="absolute top-0 left-1/2 w-full -translate-x-1/2 h-full z-0 pointer-events-none">
-                    <div class="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-                    <div class="absolute top-20 right-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+                                <span class="ml-1 text-xs font-black text-white bg-blue-600 px-1.5 py-0.5 rounded-md">
+                                    {{ $item->total }}
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             </div>
+        </div>
 
         </main>
 
