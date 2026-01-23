@@ -22,7 +22,7 @@ class AdminPresensiPdfController extends Controller
         if ($year < 2000 || $year > 2100) $year = now()->year;
 
         $student = User::findOrFail($id);
-        $about   = AboutSetting::first();
+        $about = AboutSetting::where('kategori_instansi', $student->kategori_instansi)->first() ?? abort(500, 'Setting instansi belum dikonfigurasi.');
 
         $start = Carbon::create($year, $month, 1, 0, 0, 0, 'Asia/Jakarta');
         $daysInMonth = $start->daysInMonth;

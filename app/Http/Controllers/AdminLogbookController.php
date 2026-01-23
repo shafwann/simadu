@@ -17,7 +17,7 @@ class AdminLogbookController extends Controller
         // sesuaikan model: kalau mahasiswa itu User, pakai User::findOrFail
         $student = User::findOrFail($student);
 
-        $about = AboutSetting::first();
+        $about = AboutSetting::where('kategori_instansi', $student->kategori_instansi)->first() ?? abort(500, 'Setting instansi belum dikonfigurasi.');
 
         // default bulan & tahun sekarang
         $bulan = (int) $request->get('month', now()->month);
