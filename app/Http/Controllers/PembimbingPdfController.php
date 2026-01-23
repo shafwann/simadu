@@ -41,7 +41,7 @@ class PembimbingPdfController extends Controller
         $student = User::findOrFail($id);
         $this->ensureMahasiswaBimbingan($student);
 
-        $about = AboutSetting::first();
+        $about = AboutSetting::where('kategori_instansi', $student->kategori_instansi)->first() ?? abort(500, 'Setting instansi belum dikonfigurasi.');
 
         $start = Carbon::create($year, $month, 1, 0, 0, 0, 'Asia/Jakarta');
         $daysInMonth = $start->daysInMonth;
@@ -152,7 +152,8 @@ class PembimbingPdfController extends Controller
         $student = User::findOrFail($id);
         $this->ensureMahasiswaBimbingan($student);
 
-        $about = AboutSetting::first();
+        $about = AboutSetting::where('kategori_instansi', $student->kategori_instansi)->first() ?? abort(500, 'Setting instansi belum dikonfigurasi.');
+
 
         $logbooks = Logbook::where('user_id', $student->id)
             ->whereMonth('tanggal', $month)

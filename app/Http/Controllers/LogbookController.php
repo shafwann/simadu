@@ -67,7 +67,7 @@ class LogbookController extends Controller
         public function exportPdf(Request $request)
         {
             $user = Auth::user();          // mahasiswa login
-            $about = AboutSetting::first(); // data instansi
+            $about = AboutSetting::where('kategori_instansi', $user->kategori_instansi)->first() ?? abort(500, 'Setting instansi belum dikonfigurasi.'); // data instansi
 
             // Filter bulan & tahun, default bulan ini & tahun ini
             $bulan = $request->get('bulan', date('m'));
