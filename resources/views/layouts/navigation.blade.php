@@ -192,9 +192,9 @@
                     {{ __('Laporan') }}
                 </x-responsive-nav-link>
 
-                <x-responsive-nav-link :href="route('mahasiswa.bidang.show')" :active="request()->routeIs('mahasiswa.bidang.show')" class="text-gray-900 font-bold">
+                {{-- <x-responsive-nav-link :href="route('mahasiswa.bidang.show')" :active="request()->routeIs('mahasiswa.bidang.show')" class="text-gray-900 font-bold">
                     {{ __('Bidang/Divisi') }}
-                </x-responsive-nav-link>
+                </x-responsive-nav-link> --}}
             @endif
 
             {{-- MENU MOBILE ADMIN --}}
