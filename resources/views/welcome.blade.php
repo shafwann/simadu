@@ -289,7 +289,7 @@
         </main>
 
         {{-- FOOTER --}}
-        <footer class="bg-white border-t border-gray-200 pt-10 pb-6">
+        <footer style="background: linear-gradient(231deg, rgb(6, 147, 227) 0%, rgb(155, 81, 224) 94%);" class="text-white py-8 px-4 lg:px-8">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                     <div>
@@ -297,29 +297,29 @@
                             @if(isset($about) && $about->logo_path)
                                 <img src="{{ asset('storage/' . $about->logo_path) }}" class="h-8 w-auto grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition">
                             @endif
-                            <span class="font-bold text-gray-700">{{ $about->app_name ?? 'SISTEM MAGANG' }}</span>
+                            <span class="font-bold text-white">{{ $about->app_name ?? 'SISTEM MAGANG' }}</span>
                         </div>
-                        <p class="text-xs text-gray-500 leading-relaxed">
+                        <p class="text-xs text-white leading-relaxed">
                             {{ $about->office_address ?? 'Alamat kantor belum disetting.' }}
                         </p>
                     </div>
                     <div>
-                        <h4 class="font-bold text-gray-900 text-sm mb-4">Tautan</h4>
-                        <ul class="space-y-2 text-xs text-gray-500">
+                        <h4 class="font-bold text-white text-sm mb-4">Tautan</h4>
+                        <ul class="space-y-2 text-xs text-white">
                             <li><a href="{{ route('login') }}" class="hover:text-blue-600">Login Peserta</a></li>
                             <li><a href="#" class="hover:text-blue-600">Panduan Magang</a></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="font-bold text-gray-900 text-sm mb-4">Kontak</h4>
-                        <ul class="space-y-2 text-xs text-gray-500">
+                        <h4 class="font-bold text-white text-sm mb-4">Kontak</h4>
+                        <ul class="space-y-2 text-xs text-white">
                             <li>{{ $about->office_phone ?? '-' }}</li>
                             <li>{{ $about->office_email ?? '-' }}</li>
                         </ul>
                     </div>
                 </div>
                 <div class="border-t border-gray-100 pt-6 text-center">
-                    <p class="text-xs text-gray-400">
+                    <p class="text-xs text-white-400">
                         &copy; {{ date('Y') }} {{ $about->agency_name ?? 'Pemerintah Kabupaten Karanganyar' }}. All rights reserved.
                     </p>
                 </div>
