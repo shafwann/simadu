@@ -319,7 +319,44 @@
 
                             {{-- Peta dengan Live Preview --}}
                             <div x-data="{ mapUrl: '{{ old('google_maps_embed', $about->google_maps_embed) }}' }">
-                                <x-input-label value="Link Embed Google Maps (Src)" />
+                                    {{-- Label + Tooltip --}}
+    <div class="flex items-center gap-1 mb-1">
+        <x-input-label value="Link Peta Google Maps" />
+
+<div class="relative"
+     x-data="{ open: false }"
+     @mouseenter="open = true"
+     @mouseleave="open = false">
+
+    <button type="button"
+            class="text-gray-400 hover:text-blue-600 text-xs font-bold border border-gray-300 rounded-full w-4 h-4 flex items-center justify-center">
+        ?
+    </button>
+
+<div x-show="open"
+     x-transition
+     class="absolute left-6 top-0 w-72 text-xs text-gray-700 bg-white border rounded-lg shadow p-3 z-50">
+    
+    <b>Cara mendapatkan embed Google Maps:</b>
+
+    <ol class="list-decimal ml-4 mt-2 space-y-1">
+        <li>Buka <b>Google Maps</b></li>
+        <li>Cari lokasi yang ingin ditampilkan</li>
+        <li>Klik tombol <b>Share</b></li>
+        <li>Pilih tab <b>Embed a map</b></li>
+        <li>Klik <b>Copy HTML</b></li>
+        <li>Tempelkan hasilnya ke kolom ini</li>
+    </ol>
+
+<p class="mt-2 text-gray-500">
+    Hapus bagian <code>&lt;iframe src="</code> di awal, lalu tempelkan URL peta saja agar preview dapat ditampilkan.
+</p>
+
+</div>
+
+
+        </div>
+    </div>
                                 <x-text-input name="google_maps_embed" class="w-full" x-model="mapUrl" placeholder="http://googleusercontent.com/..." />
                                 <p class="text-[10px] text-gray-400 mt-1 mb-2">Copy URL dari menu 'Embed a map' di Google Maps.</p>
                                 <div class="w-full h-40 bg-gray-100 rounded border flex items-center justify-center overflow-hidden">
