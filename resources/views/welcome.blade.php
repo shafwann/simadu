@@ -209,36 +209,80 @@
                 </div>
 
         {{-- PESERTA MAGANG AKTIF PER INSTANSI --}}
-        {{-- PERBAIKAN: Ubah max-w-5xl jadi max-w-7xl dan tambahkan padding (px-4...) agar lurus sama atasnya --}}
-        <div class="mt-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="mt-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-sm font-black uppercase tracking-wider text-gray-800">
-                    Peserta Magang Aktif per Instansi
-                </h3>
-                <span class="text-[10px] font-bold text-green-600 uppercase bg-green-50 px-2 py-1 rounded-full border border-green-100">
+            {{-- HEADER SECTION --}}
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+                <div>
+                    <h3 class="text-base font-black uppercase tracking-wider text-gray-900 leading-tight">
+                        Peserta Magang Aktif
+                    </h3>
+                    <p class="text-sm text-gray-500 mt-1 hidden sm:block">
+                        Distribusi peserta berdasarkan instansi penempatan saat ini.
+                    </p>
+                </div>
+
+                <span class="inline-flex items-center gap-2 bg-green-50 text-green-700 text-[10px] font-bold uppercase px-3 py-1.5 rounded-full border border-green-200 shadow-sm whitespace-nowrap">
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-600"></span>
+                    </span>
                     Live Data
                 </span>
             </div>
 
-            <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-                <div class="w-full overflow-x-auto md:overflow-visible pb-2 md:pb-0 custom-scrollbar">
-                    <div class="flex gap-3 md:flex-wrap flex-nowrap min-w-max md:min-w-0">
+            {{-- CONTENT SECTION --}}
+            <div class="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+
+                @if($pesertaAktifPerInstansi->count() > 0)
+
+                    {{--
+                    LOGIKA TAMPILAN BARU:
+                    1. Mobile: 'flex' & 'overflow-x-auto' (Scrolling Samping Kiri-Kanan)
+                    2. Desktop (md+): 'flex-wrap' & 'justify-center' (Tumpuk Rata Tengah)
+                    --}}
+                    <div class="
+                        flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 snap-x             {{-- Style HP: Scrolling --}}
+                        md:flex-wrap md:justify-center md:pb-0 md:mx-0 md:px-0 md:overflow-visible {{-- Style PC: Center Wrap --}}
+                        custom-scrollbar
+                    ">
                         @foreach($pesertaAktifPerInstansi as $item)
-                            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-100 bg-gray-50 hover:bg-white hover:border-blue-200 transition-colors shadow-sm whitespace-nowrap group">
-                                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                            <div class="
+                                flex-shrink-0 snap-center min-w-[150px] w-[40vw] md:w-auto md:min-w-[180px]
+                                group flex items-center justify-between p-3
+                                bg-gray-50 rounded-xl border border-gray-100
+                                hover:bg-white hover:border-blue-200 hover:shadow-md
+                                transition-all duration-200 cursor-default
+                            ">
 
-                                <span class="text-xs font-bold uppercase text-gray-700 group-hover:text-blue-700">
-                                    {{ $item->kategori_instansi }}
-                                </span>
+                                <div class="flex items-center gap-3 overflow-hidden">
+                                    {{-- Indikator Bulat --}}
+                                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <span class="text-blue-600 font-black text-xs">
+                                            {{ substr($item->kategori_instansi, 0, 1) }}
+                                        </span>
+                                    </div>
 
-                                <span class="ml-1 text-xs font-black text-white bg-blue-600 px-1.5 py-0.5 rounded-md">
+                                    {{-- Nama Instansi --}}
+                                    <span class="text-xs font-bold uppercase text-gray-700 group-hover:text-blue-800 transition-colors whitespace-nowrap">
+                                        {{ $item->kategori_instansi }}
+                                    </span>
+                                </div>
+
+                                {{-- Total Count Badge --}}
+                                <span class="flex-shrink-0 ml-3 inline-flex items-center justify-center bg-blue-600 text-white text-[10px] font-black h-5 min-w-[20px] px-1 rounded-md shadow-sm group-hover:bg-blue-700 group-hover:scale-105 transition-all">
                                     {{ $item->total }}
                                 </span>
                             </div>
                         @endforeach
                     </div>
-                </div>
+                @else
+                    {{-- State Kosong --}}
+                    <div class="text-center py-8 text-gray-400">
+                        <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Belum ada data peserta aktif.
+                    </div>
+                @endif
             </div>
         </div>
 
