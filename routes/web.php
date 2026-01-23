@@ -4,8 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
-// Controllers
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\LogbookController;
@@ -22,7 +22,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminAboutController;
 use App\Http\Controllers\AdminPresensiPdfController;
 use App\Http\Controllers\DosenRequestController;
-use App\Http\Controllers\MasterAgencyController; // Pastikan Controller ini ada
+use App\Http\Controllers\MasterAgencyController;
+use App\Http\Controllers\MasterSettingController;
 
 use App\Models\AboutSetting;
 use App\Models\User;
@@ -37,7 +38,7 @@ use App\Models\User;
 // 1. LANDING PAGE (PUBLIC)
 // ==========================================
 Route::get('/', function (Request $request) {
-    // Fitur Filter Publik: /?instansi=BAPPERIDA
+
     $filterInstansi = $request->query('instansi');
 
     $query = User::where('role', 'mahasiswa');
@@ -48,110 +49,104 @@ Route::get('/', function (Request $request) {
 
     $total = (clone $query)->count();
 
-    // ✅ PERBAIKAN 1: Tambahkan kolom nim, prodi, bidang, status
     $mahasiswa = (clone $query)
         ->select(
             'name',
             'instansi',
             'kategori_instansi',
-            'nim',      // Tambahan
-            'prodi',    // Tambahan
-            'bidang',   // Tambahan
-            'status'    // Tambahan
+            'nim',
+            'prodi',
+            'bidang',
+            'status'
         )
         ->latest()
         ->paginate(7);
 
-    // ✅ PERBAIKAN 2: Marquee butuh kategori_instansi
     $marquee = (clone $query)
         ->select('name', 'instansi', 'kategori_instansi')
         ->latest()
         ->take(100)
         ->get();
 
-    // 1. Coba Cari Berdasarkan Filter URL
     $about = null;
     if ($filterInstansi) {
         $about = AboutSetting::where('kategori_instansi', $filterInstansi)->first();
     }
 
-   // 2. Jika tidak ada filter, atau data filter tidak ketemu -> Cari MASTER
-if (!$about) {
-    $about = AboutSetting::firstOrCreate(
+    if (!$about) {
+        $about = AboutSetting::firstOrCreate(
+            ['kategori_instansi' => 'MASTER'],
+            [
+                'app_name'        => 'SISTEM MAGANG KARANGAYAR',
+                'agency_name'     => 'PEMERINTAH KAB. KARANGANYAR',
+                'app_description' => 'Portal Magang Kabupaten Karanganyar',
+                'nama_instansi'   => 'Pusat',
+                'jam_operasional' => 'Senin-Jumat: 08.00-16.00',
+                'radius_meter'    => 50
+            ]
+        );
+    }
+
+    $aboutMaster = AboutSetting::firstOrCreate(
         ['kategori_instansi' => 'MASTER'],
         [
-            'app_name' => 'SISTEM MAGANG KARANGAYAR',
-            'agency_name' => 'PEMERINTAH KAB. KARANGANYAR',
+            'app_name'        => 'SISTEM MAGANG KARANGAYAR',
+            'agency_name'     => 'PEMERINTAH KAB. KARANGANYAR',
             'app_description' => 'Portal Magang Kabupaten Karanganyar',
-            'nama_instansi' => 'Pusat',
+            'nama_instansi'   => 'Pusat',
             'jam_operasional' => 'Senin-Jumat: 08.00-16.00',
-            'radius_meter' => 50
+            'radius_meter'    => 50
         ]
     );
-}
 
-// ✅ TAMBAHKAN INI
-$aboutMaster = AboutSetting::firstOrCreate(
-    ['kategori_instansi' => 'MASTER'],
-    [
-        'app_name' => 'SISTEM MAGANG KARANGAYAR',
-        'agency_name' => 'PEMERINTAH KAB. KARANGANYAR',
-        'app_description' => 'Portal Magang Kabupaten Karanganyar',
-        'nama_instansi' => 'Pusat',
-        'jam_operasional' => 'Senin-Jumat: 08.00-16.00',
-        'radius_meter' => 50
-    ]
-);
+    $instansiAktif = User::where('role', 'admin')
+        ->where('bidang', 'Administrator Sistem')
+        ->where('status', 'aktif')
+        ->whereNotNull('kategori_instansi')
+        ->where('kategori_instansi', '!=', 'MASTER')
+        ->select('kategori_instansi')
+        ->distinct()
+        ->orderBy('kategori_instansi')
+        ->get();
 
-// ✅ TAMBAHAN (AGAR instansiAktif ADA, tanpa mengurangi apapun)
-$instansiAktif = User::where('role', 'admin')
-    ->where('bidang', 'Administrator Sistem')
-    ->where('status', 'aktif')
-    ->whereNotNull('kategori_instansi')
-    ->where('kategori_instansi', '!=', 'MASTER')
-    ->select('kategori_instansi')
-    ->distinct()
-    ->orderBy('kategori_instansi')
-    ->get();
+    $pesertaAktifPerInstansi = User::where('role', 'mahasiswa')
+        ->where('status', 'aktif')
+        ->whereNotNull('kategori_instansi')
+        ->select('kategori_instansi', DB::raw('COUNT(*) as total'))
+        ->groupBy('kategori_instansi')
+        ->orderByDesc('total')
+        ->get();
 
-    // ✅ TAMBAHAN: JUMLAH PESERTA MAGANG AKTIF PER INSTANSI
-$pesertaAktifPerInstansi = User::where('role', 'mahasiswa')
-    ->where('status', 'aktif')
-    ->whereNotNull('kategori_instansi')
-    ->select('kategori_instansi', DB::raw('COUNT(*) as total'))
-    ->groupBy('kategori_instansi')
-    ->orderByDesc('total')
-    ->get();
-
-return view('welcome', compact('total', 'mahasiswa', 'marquee', 'about', 'aboutMaster', 'instansiAktif', 'pesertaAktifPerInstansi'));
+    return view('welcome', compact(
+        'total',
+        'mahasiswa',
+        'marquee',
+        'about',
+        'aboutMaster',
+        'instansiAktif',
+        'pesertaAktifPerInstansi'
+    ));
 });
-
 
 // ==========================================
 // 2. LOBBY UTAMA (PENGALIH ARUS)
 // ==========================================
-// Route ini yang menentukan user akan dilempar kemana (Admin/Mahasiswa/Master)
-// Pastikan logic di DashboardController sudah benar seperti diskusi sebelumnya.
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-
 // ==========================================
 // 3. GROUP: AUTHENTICATED USERS (SHARED)
 // ==========================================
-// Hanya fitur umum seperti Profile yang ditaruh disini.
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-
 // ==========================================
 // 4. GROUP: MAHASISWA ONLY
 // ==========================================
-// Semua fitur yang HANYA boleh diakses mahasiswa masuk sini.
 Route::middleware(['auth', 'role:mahasiswa'])->group(function () {
 
     // Certificate
@@ -161,7 +156,7 @@ Route::middleware(['auth', 'role:mahasiswa'])->group(function () {
         return app(AssessmentController::class)->certificate($user);
     })->name('certificate.download');
 
-    // Attendance (Absen)
+    // Attendance
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.checkin');
     Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkout');
@@ -173,7 +168,7 @@ Route::middleware(['auth', 'role:mahasiswa'])->group(function () {
     Route::post('/logbook', [LogbookController::class, 'store'])->name('logbook.store');
     Route::get('/logbook/pdf', [LogbookController::class, 'exportPdf'])->name('logbook.export.pdf');
 
-    // Laporan (CRUD Mahasiswa)
+    // Laporan
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
     Route::post('/laporan/upload', [LaporanController::class, 'upload'])->name('laporan.upload');
     Route::get('/laporan/download/{laporan}', [LaporanController::class, 'download'])->name('laporan.download');
@@ -182,8 +177,7 @@ Route::middleware(['auth', 'role:mahasiswa'])->group(function () {
     Route::put('/laporan/{laporan}', [LaporanController::class, 'update'])->name('laporan.update');
     Route::delete('/laporan/{laporan}', [LaporanController::class, 'destroy'])->name('laporan.destroy');
 
-
-    // Data Diri & Bidang
+    // Bidang
     Route::get('/bidang-divisi', [ProfileController::class, 'showBidang'])->name('mahasiswa.bidang.show');
     Route::patch('/mahasiswa/bidang', [ProfileController::class, 'updateBidang'])->name('mahasiswa.bidang.update');
 
@@ -191,17 +185,26 @@ Route::middleware(['auth', 'role:mahasiswa'])->group(function () {
     Route::get('/pembimbing/request', [DosenRequestController::class, 'create'])->name('mahasiswa.pembimbing.request.create');
     Route::post('/pembimbing/request', [DosenRequestController::class, 'store'])->name('mahasiswa.pembimbing.request.store');
 
-    // Export Data Pribadi (CSV)
+    // Export
     Route::get('/export-presensi', function () {
         $data = \App\Models\Attendance::where('user_id', Auth::id())->with('user')->get();
         return response()->stream(function () use ($data) {
             $file = fopen('php://output', 'w');
             fputcsv($file, ['Nama', 'Tanggal', 'Masuk', 'Status', 'Lokasi']);
             foreach ($data as $row) {
-                fputcsv($file, [$row->user->name, Carbon::parse($row->tanggal)->format('d/m/Y'), $row->check_in, $row->status, $row->location ?? '-']);
+                fputcsv($file, [
+                    $row->user->name,
+                    Carbon::parse($row->tanggal)->format('d/m/Y'),
+                    $row->check_in,
+                    $row->status,
+                    $row->location ?? '-'
+                ]);
             }
             fclose($file);
-        }, 200, ["Content-type" => "text/csv", "Content-Disposition" => "attachment; filename=presensi-pribadi.csv"]);
+        }, 200, [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=presensi-pribadi.csv"
+        ]);
     })->name('attendance.export');
 
     Route::get('/export-logbook', function () {
@@ -210,23 +213,28 @@ Route::middleware(['auth', 'role:mahasiswa'])->group(function () {
             $file = fopen('php://output', 'w');
             fputcsv($file, ['Tanggal', 'Kegiatan', 'Status Validasi']);
             foreach ($data as $row) {
-                fputcsv($file, [Carbon::parse($row->tanggal)->format('d/m/Y'), $row->kegiatan, $row->is_validated ? 'Valid' : 'Pending']);
+                fputcsv($file, [
+                    Carbon::parse($row->tanggal)->format('d/m/Y'),
+                    $row->kegiatan,
+                    $row->is_validated ? 'Valid' : 'Pending'
+                ]);
             }
             fclose($file);
-        }, 200, ["Content-type" => "text/csv", "Content-Disposition" => "attachment; filename=logbook-pribadi.csv"]);
+        }, 200, [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=logbook-pribadi.csv"
+        ]);
     })->name('logbook.export');
 });
 
-
 // ==========================================
-// 5. GROUP: ADMIN ONLY (ISOLASI BERLAKU)
+// 5. GROUP: ADMIN ONLY
 // ==========================================
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
 
-        // Dashboard Admin
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
 
         // Validasi
@@ -234,8 +242,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/laporan/{id}/validate', [LaporanController::class, 'validateLaporan'])->name('laporan.validate');
         Route::post('/logbook/validate-all', [AdminController::class, 'validateAllLogbook'])->name('logbook.validateAll');
 
-        // Laporan (View Admin)
-        // ✅ FIX: {id} -> {laporan} supaya Route Model Binding cocok dengan controller (Laporan $laporan)
+        // Laporan (Admin View)
         Route::get('/laporan/{laporan}/preview', [LaporanController::class, 'preview'])->name('laporan.preview');
         Route::get('/laporan/{laporan}/download', [LaporanController::class, 'download'])->name('laporan.download');
 
@@ -247,11 +254,12 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/students/{id}/presensi-pdf', [AdminPresensiPdfController::class, 'download'])->name('students.presensi.pdf');
         Route::get('/students/{student}/logbook/pdf', [AdminLogbookController::class, 'exportPdf'])->name('students.logbook.pdf');
 
-        // Dosen Request & CRUD
+        // Dosen Request
         Route::get('/pembimbing-requests', [DosenRequestController::class, 'index'])->name('pembimbing-requests.requests');
         Route::post('/pembimbing-requests/{id}/approve', [DosenRequestController::class, 'approve'])->name('pembimbing-requests.approve');
         Route::post('/pembimbing-requests/{id}/reject', [DosenRequestController::class, 'reject'])->name('pembimbing-requests.reject');
 
+        // Dosen
         Route::get('/dosen', [AdminDosenController::class, 'index'])->name('dosen.index');
         Route::get('/dosen/create', [AdminDosenController::class, 'create'])->name('dosen.create');
         Route::post('/dosen', [AdminDosenController::class, 'store'])->name('dosen.store');
@@ -266,7 +274,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/attendance/{id}/edit', [AdminAttendanceController::class, 'edit'])->name('attendance.edit');
         Route::put('/attendance/{id}', [AdminAttendanceController::class, 'update'])->name('attendance.update');
 
-        // Assessment / Sertifikat
+        // Assessment (Tidak ada GET /admin/assessment/{id})
         Route::prefix('assessment')->name('assessment.')->group(function () {
             Route::post('/{user}', [AssessmentController::class, 'store'])->name('store');
             Route::patch('/{assessment}', [AssessmentController::class, 'update'])->name('update');
@@ -282,7 +290,7 @@ Route::middleware(['auth', 'role:admin'])
             Route::delete('/{id}', [AdminManagementController::class, 'destroy'])->name('destroy');
         });
 
-        // About Setting (Hanya mengubah setting instansinya sendiri)
+        // About Setting
         Route::get('/about', [AdminAboutController::class, 'index'])->name('about.index');
         Route::put('/about', [AdminAboutController::class, 'update'])->name('about.update');
 
@@ -293,7 +301,7 @@ Route::middleware(['auth', 'role:admin'])
 
             return response()->stream(function () use ($mahasiswa) {
                 $file = fopen('php://output', 'w');
-                fputs($file, "\xEF\xBB\xBF"); // BOM
+                fputs($file, "\xEF\xBB\xBF");
                 fputs($file, "sep=;\n");
                 fputcsv($file, ['DATA MAGANG ' . (Auth::user()->kategori_instansi ?? '') . ' ' . date('Y')], ';');
                 fputcsv($file, [], ';');
@@ -306,16 +314,21 @@ Route::middleware(['auth', 'role:admin'])
                         "'" . $u->nim,
                         strtoupper($u->prodi),
                         strtoupper($u->instansi),
-                        ($u->tanggal_masuk && $u->tanggal_selesai ? Carbon::parse($u->tanggal_masuk)->format('d/m/Y') . ' - ' . Carbon::parse($u->tanggal_selesai)->format('d/m/Y') : '-'),
+                        ($u->tanggal_masuk && $u->tanggal_selesai
+                            ? Carbon::parse($u->tanggal_masuk)->format('d/m/Y') . ' - ' . Carbon::parse($u->tanggal_selesai)->format('d/m/Y')
+                            : '-'
+                        ),
                         strtoupper($u->bidang ?? ''),
-                        ucfirst($u->status)
+                        ucfirst($u->status),
                     ], ';');
                 }
                 fclose($file);
-            }, 200, ["Content-type" => "text/csv", "Content-Disposition" => "attachment; filename=" . $filename]);
+            }, 200, [
+                "Content-type" => "text/csv",
+                "Content-Disposition" => "attachment; filename=" . $filename
+            ]);
         })->name('export.mahasiswa');
     });
-
 
 // ==========================================
 // 6. GROUP: PEMBIMBING ONLY
@@ -330,9 +343,8 @@ Route::middleware(['auth', 'role:pembimbing'])
         Route::get('/mahasiswa/{id}/logbook-pdf', [PembimbingPdfController::class, 'logbookPdf'])->name('mahasiswa.logbook.pdf');
     });
 
-
 // ==========================================
-// GROUP: MASTER ADMIN ONLY
+// 7. GROUP: MASTER ONLY
 // ==========================================
 Route::middleware(['auth', 'role:master'])
     ->prefix('master')
@@ -342,15 +354,12 @@ Route::middleware(['auth', 'role:master'])
         Route::get('/agencies/create', [MasterAgencyController::class, 'create'])->name('agencies.create');
         Route::post('/agencies', [MasterAgencyController::class, 'store'])->name('agencies.store');
 
-        // ✅ TAMBAHAN: Route Edit & Update
         Route::get('/agencies/{id}/edit', [MasterAgencyController::class, 'edit'])->name('agencies.edit');
         Route::put('/agencies/{id}', [MasterAgencyController::class, 'update'])->name('agencies.update');
-
         Route::delete('/agencies/{id}', [MasterAgencyController::class, 'destroy'])->name('agencies.destroy');
 
-        //Setting Global Branding & Footer
-        Route::get('/settings', [App\Http\Controllers\MasterSettingController::class, 'index'])->name('settings.index');
-        Route::put('/settings', [App\Http\Controllers\MasterSettingController::class, 'update'])->name('settings.update');
+        Route::get('/settings', [MasterSettingController::class, 'index'])->name('settings.index');
+        Route::put('/settings', [MasterSettingController::class, 'update'])->name('settings.update');
     });
 
 require __DIR__ . '/auth.php';

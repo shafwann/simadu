@@ -11,13 +11,13 @@
 
                 {{-- Badge Status di Header --}}
                 @if($student->status === 'aktif')
-                    <span class="px-4 py-2 bg-green-100 text-green-700 font-bold rounded-xl text-sm flex items-center gap-2">
-                        <span class="w-2 h-2 bg-green-600 rounded-full animate-pulse"></span> Aktif
-                    </span>
+                <span class="px-4 py-2 bg-green-100 text-green-700 font-bold rounded-xl text-sm flex items-center gap-2">
+                    <span class="w-2 h-2 bg-green-600 rounded-full animate-pulse"></span> Aktif
+                </span>
                 @else
-                    <span class="px-4 py-2 bg-gray-100 text-gray-600 font-bold rounded-xl text-sm">
-                        Nonaktif / Selesai
-                    </span>
+                <span class="px-4 py-2 bg-gray-100 text-gray-600 font-bold rounded-xl text-sm">
+                    Nonaktif / Selesai
+                </span>
                 @endif
             </div>
 
@@ -74,25 +74,24 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="md:col-span-2">
-                           <x-input-label for="kegiatan" :value="__('Jenis Kegiatan')" />
+                            <x-input-label for="kegiatan" :value="__('Jenis Kegiatan')" />
 
-<input
-    type="text"
-    name="kegiatan"
-    id="kegiatan"
-    list="kegiatanList"
-    value="{{ old('kegiatan', $student->kegiatan ?? '') }}"
-    class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm focus:border-purple-500 focus:ring-purple-500"
-    placeholder="Ketik manual atau pilih dari daftar..."
-    required
->
+                            <input
+                                type="text"
+                                name="kegiatan"
+                                id="kegiatan"
+                                list="kegiatanList"
+                                value="{{ old('kegiatan', $student->kegiatan ?? '') }}"
+                                class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                                placeholder="Ketik manual atau pilih dari daftar..."
+                                required>
 
-<datalist id="kegiatanList">
-    <option value="Magang Reguler">
-    <option value="Praktik Kerja Lapangan (PKL)">
-    <option value="Penelitian Skripsi">
-    <option value="MBKM">
-</datalist>
+                            <datalist id="kegiatanList">
+                                <option value="Magang Reguler">
+                                <option value="Praktik Kerja Lapangan (PKL)">
+                                <option value="Penelitian Skripsi">
+                                <option value="MBKM">
+                            </datalist>
 
                         </div>
 
@@ -138,31 +137,30 @@
                         </div>
 
                         {{-- Bidang --}}
-<div class="md:col-span-2 border-t pt-4 mt-2">
-    <x-input-label for="bidang" :value="__('Divisi / Bidang Penempatan')" />
+                        <div class="md:col-span-2 border-t pt-4 mt-2">
+                            <x-input-label for="bidang" :value="__('Divisi / Bidang Penempatan')" />
 
-    <input
-        type="text"
-        name="bidang"
-        id="bidang"
-        list="bidangList"
-        value="{{ old('bidang', $student->bidang) }}"
-        class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm
+                            <input
+                                type="text"
+                                name="bidang"
+                                id="bidang"
+                                list="bidangList"
+                                value="{{ old('bidang', $student->bidang) }}"
+                                class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm
                focus:border-blue-500 focus:ring-blue-500 bg-gray-50"
-        placeholder="Ketik manual atau pilih dari daftar..."
-        required
-    >
+                                placeholder="Ketik manual atau pilih dari daftar..."
+                                required>
 
-    <datalist id="bidangList">
-        @foreach($bidangOptions as $bidang)
-            <option value="{{ $bidang }}">
-        @endforeach
-    </datalist>
+                            <datalist id="bidangList">
+                                @foreach($bidangOptions as $bidang)
+                                <option value="{{ $bidang }}">
+                                    @endforeach
+                            </datalist>
 
-    <p class="text-xs text-gray-500 mt-1">
-        Mengubah bidang akan memindahkan mahasiswa ke admin bidang tersebut.
-    </p>
-</div>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Mengubah bidang akan memindahkan mahasiswa ke admin bidang tersebut.
+                            </p>
+                        </div>
 
 
                         {{-- TAMBAHAN: Pembimbing Lapangan --}}
@@ -174,8 +172,7 @@
                                 type="text"
                                 name="jabatan_pembimbing"
                                 value="{{ old('jabatan_pembimbing', $student->jabatan_pembimbing) }}"
-                                required
-                            />
+                                required />
                             <x-input-error :messages="$errors->get('jabatan_pembimbing')" class="mt-2" />
                         </div>
 
@@ -187,8 +184,7 @@
                                 type="text"
                                 name="nama_pembimbing"
                                 value="{{ old('nama_pembimbing', $student->nama_pembimbing) }}"
-                                required
-                            />
+                                required />
                             <x-input-error :messages="$errors->get('nama_pembimbing')" class="mt-2" />
                         </div>
 
@@ -200,8 +196,7 @@
                                 type="text"
                                 name="nip_pembimbing"
                                 value="{{ old('nip_pembimbing', $student->nip_pembimbing) }}"
-                                required
-                            />
+                                required />
                             <x-input-error :messages="$errors->get('nip_pembimbing')" class="mt-2" />
                         </div>
                         {{-- END TAMBAHAN --}}

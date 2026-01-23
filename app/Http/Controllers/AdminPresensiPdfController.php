@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Attendance;
 use App\Models\AboutSetting;
+use App\Support\AttendanceStatus;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -21,7 +22,7 @@ class AdminPresensiPdfController extends Controller
         if ($year < 2000 || $year > 2100) $year = now()->year;
 
         $student = User::findOrFail($id);
-        $about   = AboutSetting::first();
+        $about = AboutSetting::where('kategori_instansi', $student->kategori_instansi)->first() ?? abort(500, 'Setting instansi belum dikonfigurasi.');
 
         $start = Carbon::create($year, $month, 1, 0, 0, 0, 'Asia/Jakarta');
         $daysInMonth = $start->daysInMonth;
@@ -32,8 +33,16 @@ class AdminPresensiPdfController extends Controller
             ->get()
             ->keyBy(fn ($a) => Carbon::parse($a->tanggal)->format('Y-m-d'));
 
-        // libur nasional + cuti bersama (manual lengkap, fallback API)
         $holidays = $this->getIndonesiaHolidaysRealtime($year);
+
+        // jam checkout selesai per hari (untuk TAP)
+        $checkoutEndMap = [
+            1 => $about?->senin_checkout_selesai,
+            2 => $about?->selasa_checkout_selesai,
+            3 => $about?->rabu_checkout_selesai,
+            4 => $about?->kamis_checkout_selesai,
+            5 => $about?->jumat_checkout_selesai,
+        ];
 
         $rows = [];
         for ($d = 1; $d <= $daysInMonth; $d++) {
@@ -41,38 +50,43 @@ class AdminPresensiPdfController extends Controller
             $key  = $date->format('Y-m-d');
 
             $isHoliday = $date->isWeekend() || isset($holidays[$key]);
-
             $a = $attendances[$key] ?? null;
 
-            // status
-            $status = $a?->status ?? '-';
-            if ($status === 'Alpha') $status = 'TK';
-            if ($status === 'Izin')  $status = 'I';
-
-            // checkin / checkout kolom sendiri
             $checkin  = (!empty($a?->check_in))  ? Carbon::parse($a->check_in)->format('H:i')  : '-';
             $checkout = (!empty($a?->check_out)) ? Carbon::parse($a->check_out)->format('H:i') : '-';
 
-            // tanggal label seperti contoh
+            // ===== STATUS FINAL (H/T + PC + TAP) =====
+            $main = AttendanceStatus::mainCode($a?->status);
+            $pc   = AttendanceStatus::isPC($a?->keterangan);
+
+            $dow = $date->dayOfWeekIso; // 1..7
+            $checkoutEnd = ($dow <= 5) ? ($checkoutEndMap[$dow] ?? null) : null;
+
+            $tap = AttendanceStatus::isTAP(
+                $a?->check_in,
+                $a?->check_out,
+                $checkoutEnd,
+                $key,
+                'Asia/Jakarta'
+            );
+
+            $statusFinal = AttendanceStatus::buildFinal($main, $pc, $tap);
+
             $tanggalLabel = $date->translatedFormat('d M Y');
 
-            // --- LOGIKA BARU UNTUK PDF ---
+            // ===== LOKASI (sama konsep sebelumnya) =====
             $lokasiText = '-';
             $lokasiUrl  = null;
 
             if ($a) {
-                // 1. Tentukan TEKS yang tampil (Nama Lokasi)
                 if (!empty($a->location_name)) {
                     $lokasiText = $a->location_name;
-                }
-                elseif (in_array($a->status, ['Hadir', 'Telat'])) {
+                } elseif (in_array($a->status, ['Hadir', 'Telat'], true)) {
                     $lokasiText = 'KANTOR BAPPERIDA';
-                }
-                else {
-                    $lokasiText = strtoupper($a->status);
+                } else {
+                    $lokasiText = $statusFinal;
                 }
 
-                // 2. Tentukan URL LINK (Link Maps dari kolom location)
                 if (!empty($a->location) && (str_contains($a->location, 'http') || str_contains($a->location, 'maps'))) {
                     $lokasiUrl = $a->location;
                 }
@@ -82,40 +96,43 @@ class AdminPresensiPdfController extends Controller
                 'tanggal_label'  => $tanggalLabel,
                 'checkin_label'  => $checkin,
                 'checkout_label' => $checkout,
-                'status'         => $status,
-                'status_label'   => $status,
+                'status'         => $statusFinal,
+                'status_label'   => $statusFinal,
 
-                // ✅ Update disini
                 'location_text'  => $lokasiText,
                 'location_url'   => $lokasiUrl,
-                'location'       => $lokasiText, // Fallback key
+                'location'       => $lokasiText,
 
                 'isHoliday'      => $isHoliday,
             ];
         }
 
-        // ✅ tetap left / right (agar 1 halaman, 31 hari jadi 16 + sisanya)
         $left  = array_slice($rows, 0, 16);
         $right = array_slice($rows, 16);
 
         $bulanLabel = $this->bulanIndo($month);
 
-        // ✅ F4 = 210mm x 330mm -> points: 595.28 x 935.43
+        // ✅ F4 points: 595.28 x 935.43
         $f4 = [0, 0, 595.28, 935.43];
 
         return Pdf::loadView('admin.students.presensi_pdf', compact(
-            'student','about','year','bulanLabel','left','right'
+            'student', 'about', 'year', 'bulanLabel', 'left', 'right'
         ))
-        ->setPaper($f4, 'portrait')
-        ->download("DAFTAR-HADIR-MAGANG-{$student->nim}-{$bulanLabel}-{$year}.pdf");
+            ->setPaper($f4, 'portrait')
+            ->download("DAFTAR-HADIR-MAGANG-{$student->nim}-{$bulanLabel}-{$year}.pdf");
     }
 
     private function getIndonesiaHolidaysRealtime(int $year): array
     {
-        // ... (kode sama, tidak berubah) ...
-        $manual = require app_path('Support/IndonesianHolidays.php');
-        if (isset($manual[$year])) return $manual[$year];
+        // 1) manual file (kalau ada)
+        try {
+            $manual = require app_path('Support/IndonesianHolidays.php');
+            if (isset($manual[$year])) return $manual[$year];
+        } catch (\Throwable $e) {
+            // ignore
+        }
 
+        // 2) fallback API
         try {
             $res = Http::timeout(10)->get("https://date.nager.at/api/v3/PublicHolidays/$year/ID");
             if (!$res->ok()) return [];
@@ -136,6 +153,6 @@ class AdminPresensiPdfController extends Controller
             1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',
             5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',
             9=>'September',10=>'Oktober',11=>'November',12=>'Desember'
-        ][$m];
+        ][$m] ?? '-';
     }
 }

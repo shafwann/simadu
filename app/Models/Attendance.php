@@ -17,9 +17,8 @@ class Attendance extends Model
         'location_name',
     ];
 
-    // Relasi balik ke User
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(\App\Models\User::class);
     }
 }

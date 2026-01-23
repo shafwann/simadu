@@ -19,25 +19,34 @@ class AdminAboutController extends Controller
     public function index()
     {
         $this->checkAccess();
+
         $user = Auth::user();
         $kategori = $user->kategori_instansi ?? 'UMUM';
 
-        // Gunakan firstOrCreate agar data muncul di form pertama kali
+        // Pastikan record per kategori ada
         $about = AboutSetting::firstOrCreate(
             ['kategori_instansi' => $kategori],
             [
-                'app_name' => $kategori,
-                'agency_name' => 'Pemkab Karanganyar',
-                'nama_instansi' => 'Dinas ' . $kategori,
+                // Branding default
+                'app_name'        => $kategori,
+                'agency_name'     => 'Pemkab Karanganyar',
                 'app_description' => 'Sistem Informasi Magang ' . $kategori,
-                'kepala_instansi' => '-',
-                'nip_kepala_instansi' => '-',
-                'jam_operasional' => 'Senin-Jumat: 08.00-16.00',
-                'radius_meter' => 50
+
+                // Identitas default
+                'nama_instansi'        => 'Dinas ' . $kategori,
+                'kepala_instansi'      => '-',
+                'nip_kepala_instansi'  => '-',
+                'jam_operasional'      => 'Senin-Jumat: 08.00-16.00',
+
+                // Lokasi default
+                'office_name'      => null,
+                'office_latitude'  => null,
+                'office_longitude' => null,
+                'radius_meter'     => 50,
             ]
         );
 
-        // Konversi JSON bidang_options
+        // Konversi JSON bidang_options -> teks multi baris
         $bidangOptionsText = '';
         if (!empty($about->bidang_options)) {
             $arr = json_decode($about->bidang_options, true);
@@ -52,43 +61,43 @@ class AdminAboutController extends Controller
     public function update(Request $request)
     {
         $this->checkAccess();
+
         $user = Auth::user();
         $kategori = $user->kategori_instansi ?? 'UMUM';
 
-        // Validasi Input
         $section = $request->input('section');
         $data = [];
 
-        // --- VALIDASI (Sama seperti sebelumnya) ---
         switch ($section) {
             case 'branding':
                 $data = $request->validate([
-                    'app_name' => ['nullable', 'string', 'max:50'],
-                    'agency_name' => ['nullable', 'string', 'max:50'],
+                    'app_name'        => ['nullable', 'string', 'max:50'],
+                    'agency_name'     => ['nullable', 'string', 'max:50'],
                     'app_description' => ['nullable', 'string', 'max:100'],
-                    'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:5048'],
+                    'logo'            => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:5048'],
                 ]);
                 break;
 
             case 'bidang':
-                $data = $request->validate(['bidang_options' => ['nullable', 'string']]);
+                $data = $request->validate([
+                    'bidang_options' => ['nullable', 'string'],
+                ]);
                 break;
 
             case 'instansi':
                 $data = $request->validate([
-                    'nama_instansi' => ['required', 'string', 'max:255'],
-                    'kepala_instansi' => ['required', 'string', 'max:255'],
+                    'nama_instansi'       => ['required', 'string', 'max:255'],
+                    'kepala_instansi'     => ['required', 'string', 'max:255'],
                     'nip_kepala_instansi' => ['required', 'string', 'max:50'],
-                    'jam_operasional' => ['required', 'string', 'max:255'],
                 ]);
                 break;
 
             case 'lokasi':
                 $data = $request->validate([
-                    'office_name' => ['nullable', 'string', 'max:255'],
-                    'office_latitude' => ['nullable', 'numeric', 'between:-90,90'],
+                    'office_name'      => ['nullable', 'string', 'max:255'],
+                    'office_latitude'  => ['nullable', 'numeric', 'between:-90,90'],
                     'office_longitude' => ['nullable', 'numeric', 'between:-180,180'],
-                    'radius_meter' => ['required', 'integer', 'min:10', 'max:100000'],
+                    'radius_meter'     => ['required', 'integer', 'min:10', 'max:100000'],
                 ]);
                 break;
 
@@ -96,9 +105,9 @@ class AdminAboutController extends Controller
                 $rules = [];
                 $days = ['senin', 'selasa', 'rabu', 'kamis', 'jumat'];
                 foreach ($days as $day) {
-                    $rules["{$day}_mulai"] = ['required'];
-                    $rules["{$day}_selesai"] = ['required'];
-                    $rules["{$day}_checkout_mulai"] = ['required'];
+                    $rules["{$day}_mulai"]            = ['required'];
+                    $rules["{$day}_selesai"]          = ['required'];
+                    $rules["{$day}_checkout_mulai"]   = ['required'];
                     $rules["{$day}_checkout_selesai"] = ['required'];
                 }
                 $data = $request->validate($rules);
@@ -106,31 +115,39 @@ class AdminAboutController extends Controller
 
             case 'footer':
                 $data = $request->validate([
-                    'office_address' => ['nullable', 'string'],
-                    'office_phone' => ['nullable', 'string', 'max:20'],
-                    'office_email' => ['nullable', 'email'],
-                    'social_instagram' => ['nullable', 'string', 'max:255'],
-                    'social_facebook' => ['nullable', 'string', 'max:255'],
-                    'social_youtube' => ['nullable', 'string', 'max:255'],
-                    'social_x' => ['nullable', 'string', 'max:255'],
+                    'office_address'    => ['nullable', 'string'],
+                    'office_phone'      => ['nullable', 'string', 'max:20'],
+                    'office_email'      => ['nullable', 'email'],
+                    'social_instagram'  => ['nullable', 'string', 'max:255'],
+                    'social_facebook'   => ['nullable', 'string', 'max:255'],
+                    'social_youtube'    => ['nullable', 'string', 'max:255'],
+                    'social_x'          => ['nullable', 'string', 'max:255'],
                     'google_maps_embed' => ['nullable', 'string'],
-                    'whatsapp_number' => ['nullable', 'string', 'max:20'],
-                    'links_label' => ['nullable', 'array'],
-                    'links_url' => ['nullable', 'array'],
-                    'jam_operasional' => ['nullable', 'string'], 
+                    'whatsapp_number'   => ['nullable', 'string', 'max:20'],
+                    'links_label'       => ['nullable', 'array'],
+                    'links_url'         => ['nullable', 'array'],
+                    // Kalau jam_operasional memang mau diubah dari footer form, biarkan:
+                    'jam_operasional'   => ['nullable', 'string', 'max:255'],
                 ]);
 
-
-                // Proses Link Dinamis
+                // Proses custom links (label/url)
                 $customLinks = [];
-                if ($request->has('links_label') && $request->has('links_url')) {
-                    foreach ($request->links_label as $index => $label) {
-                        if (!empty($label) && !empty($request->links_url[$index])) {
-                            $customLinks[] = ['label' => $label, 'url' => $request->links_url[$index]];
-                        }
+                $labels = $request->input('links_label', []);
+                $urls   = $request->input('links_url', []);
+
+                foreach ($labels as $i => $label) {
+                    $label = trim((string)$label);
+                    $url   = trim((string)($urls[$i] ?? ''));
+
+                    if ($label !== '' && $url !== '') {
+                        $customLinks[] = ['label' => $label, 'url' => $url];
                     }
                 }
-                $data['custom_links'] = !empty($customLinks) ? json_encode($customLinks) : null;
+
+                $data['custom_links'] = !empty($customLinks)
+                    ? json_encode($customLinks, JSON_UNESCAPED_UNICODE)
+                    : null;
+
                 unset($data['links_label'], $data['links_url']);
                 break;
 
@@ -138,57 +155,56 @@ class AdminAboutController extends Controller
                 return back()->with('error', 'Kategori penyimpanan tidak dikenali.');
         }
 
-        // --- PROSES DATA ---
-
-        // 1. Ambil Data Lama (Penting untuk hapus logo lama)
-        // Gunakan firstOrNew agar jika belum ada tidak error
+        // Ambil data lama untuk hapus logo lama
         $about = AboutSetting::firstOrNew(['kategori_instansi' => $kategori]);
 
         // Handle Logo Upload
         if ($section === 'branding' && $request->hasFile('logo')) {
-            // Hapus logo lama jika ada & file eksis
             if ($about->exists && $about->logo_path && Storage::disk('public')->exists($about->logo_path)) {
                 Storage::disk('public')->delete($about->logo_path);
             }
 
             $folderName = 'uploads/logo/' . ($kategori ?? 'umum');
             $path = $request->file('logo')->store($folderName, 'public');
+
             $data['logo_path'] = $path;
             unset($data['logo']);
         }
 
         // Handle JSON Bidang
-        if ($section === 'bidang' && isset($data['bidang_options'])) {
-            $raw = $data['bidang_options'];
-            $arr = collect(preg_split("/\r\n|\n|\r/", (string) $raw))
-                ->map(fn ($x) => trim($x))->filter()->values()->all();
+        if ($section === 'bidang' && array_key_exists('bidang_options', $data)) {
+            $raw = (string)($data['bidang_options'] ?? '');
+            $arr = collect(preg_split("/\r\n|\n|\r/", $raw))
+                ->map(fn ($x) => trim((string)$x))
+                ->filter()
+                ->values()
+                ->all();
+
             $data['bidang_options'] = json_encode($arr, JSON_UNESCAPED_UNICODE);
         }
 
-        // Handle Time (Jadwal)
+        // Handle Time Jadwal: dukung "09:00", "09:00:00" bahkan "09.00"
         if ($section === 'jadwal') {
             foreach ($data as $key => $val) {
-                if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $val)) $data[$key] = substr($val, 0, 5);
+                $val = str_replace('.', ':', (string)$val); // dukung 09.00
+                if (preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $val)) {
+                    $data[$key] = substr($val, 0, 5); // simpan HH:MM
+                }
             }
-            // (Validasi manual jam mulai < selesai bisa ditambahkan di sini)
         }
 
-        //pemisah koma
+        // Handle Lokasi (GPS gabungan)
         if ($section === 'lokasi') {
-            // Ambil data GPS yang digabung
-            $gps = explode(',', $request->office_gps ?? '');
-            $data['office_latitude']  = trim($gps[0] ?? null);
-            $data['office_longitude'] = trim($gps[1] ?? null);
+            $gps = explode(',', (string)($request->office_gps ?? ''));
+            $data['office_latitude']  = trim((string)($gps[0] ?? '')) ?: null;
+            $data['office_longitude'] = trim((string)($gps[1] ?? '')) ?: null;
             $data['radius_meter']     = $request->radius_meter;
             $data['office_name']      = $request->office_name;
         }
 
-        // ✅ INI PERBAIKANNYA: Pakai updateOrCreate
-        // Ini memastikan data diupdate jika ketemu kategori_instansi yang sama,
-        // atau dibuat baru jika belum ada.
         AboutSetting::updateOrCreate(
-            ['kategori_instansi' => $kategori], // Cari berdasarkan ini
-            $data // Update dengan data ini
+            ['kategori_instansi' => $kategori],
+            $data
         );
 
         return back()->with('success', 'Pengaturan berhasil diperbarui.');

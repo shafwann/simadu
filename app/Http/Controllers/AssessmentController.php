@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Assessment;
 use App\Models\User;
-use App\Models\AboutSetting;              // <-- TAMBAH
+use App\Models\AboutSetting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -51,8 +51,6 @@ class AssessmentController extends Controller
     {
         $validated = $request->validate([
             'certificate_no' => ['required', 'string', 'max:100'],
-
-            // ✅ TAMBAHAN SAJA: tanggal sertifikat
             'certificate_date' => ['required', 'date'],
 
             'aspek_1' => ['required', 'integer', 'min:0', 'max:100'],
@@ -61,16 +59,17 @@ class AssessmentController extends Controller
             'aspek_4' => ['required', 'integer', 'min:0', 'max:100'],
             'aspek_5' => ['required', 'integer', 'min:0', 'max:100'],
             'aspek_6' => ['required', 'integer', 'min:0', 'max:100'],
+
+            // ✅ TAMBAHAN: apresiasi khusus (opsional)
+            'apresiasi_khusus' => ['nullable', 'string', 'max:500'],
         ]);
 
         [$total, $avg, $grade] = $this->computeTotalAvgGrade($validated);
 
-        $assessment = Assessment::updateOrCreate(
+        Assessment::updateOrCreate(
             ['user_id' => $user->id],
             [
                 'certificate_no' => $validated['certificate_no'],
-
-                // ✅ TAMBAHAN SAJA: simpan tanggal sertifikat
                 'certificate_date' => $validated['certificate_date'],
 
                 'aspek_1' => (int)$validated['aspek_1'],
@@ -79,13 +78,19 @@ class AssessmentController extends Controller
                 'aspek_4' => (int)$validated['aspek_4'],
                 'aspek_5' => (int)$validated['aspek_5'],
                 'aspek_6' => (int)$validated['aspek_6'],
+
                 'total' => $total,
                 'average' => $avg,
                 'grade_letter' => $grade,
+
+                // ✅ SIMPAN apresiasi khusus (INI YANG KURANG DI KODE KAMU)
+                'apresiasi_khusus' => $validated['apresiasi_khusus'] ?? null,
+
                 'assessed_at' => now(),
             ]
         );
 
+        // logic lama: user jadi nonaktif setelah dinilai
         $user->update(['status' => 'nonaktif']);
 
         return back()->with('success', 'Penilaian berhasil disimpan & mahasiswa ditandai selesai magang.');
@@ -96,8 +101,6 @@ class AssessmentController extends Controller
     {
         $validated = $request->validate([
             'certificate_no' => ['required', 'string', 'max:100'],
-
-            // ✅ TAMBAHAN SAJA: tanggal sertifikat
             'certificate_date' => ['required', 'date'],
 
             'aspek_1' => ['required', 'integer', 'min:0', 'max:100'],
@@ -106,14 +109,15 @@ class AssessmentController extends Controller
             'aspek_4' => ['required', 'integer', 'min:0', 'max:100'],
             'aspek_5' => ['required', 'integer', 'min:0', 'max:100'],
             'aspek_6' => ['required', 'integer', 'min:0', 'max:100'],
+
+            // ✅ TAMBAHAN: apresiasi khusus (opsional)
+            'apresiasi_khusus' => ['nullable', 'string', 'max:500'],
         ]);
 
         [$total, $avg, $grade] = $this->computeTotalAvgGrade($validated);
 
         $assessment->update([
             'certificate_no' => $validated['certificate_no'],
-
-            // ✅ TAMBAHAN SAJA: update tanggal sertifikat
             'certificate_date' => $validated['certificate_date'],
 
             'aspek_1' => (int)$validated['aspek_1'],
@@ -122,12 +126,18 @@ class AssessmentController extends Controller
             'aspek_4' => (int)$validated['aspek_4'],
             'aspek_5' => (int)$validated['aspek_5'],
             'aspek_6' => (int)$validated['aspek_6'],
+
             'total' => $total,
             'average' => $avg,
             'grade_letter' => $grade,
+
+            // ✅ UPDATE apresiasi khusus
+            'apresiasi_khusus' => $validated['apresiasi_khusus'] ?? null,
+
             'assessed_at' => now(),
         ]);
 
+        // logic lama: user jadi nonaktif setelah dinilai
         $assessment->user?->update(['status' => 'nonaktif']);
 
         return back()->with('success', 'Penilaian berhasil diperbarui.');
@@ -146,7 +156,7 @@ class AssessmentController extends Controller
         return back()->with('success', 'Penilaian berhasil dihapus.');
     }
 
-    // DOWNLOAD PDF 2 halaman (SUDAH DINAMIS DARI ABOUT)
+    // DOWNLOAD PDF (SUDAH DINAMIS DARI ABOUT)
     public function certificate(User $user)
     {
         $assessment = $user->assessment;
@@ -155,29 +165,39 @@ class AssessmentController extends Controller
             abort(404, 'Penilaian belum ada.');
         }
 
+        // logic lama: tetap ada
         $today = Carbon::now();
+
+        // label hasil dari grade_letter
         $hasilLabel = $this->labelFromGrade($assessment->grade_letter);
 
-        // ambil data about (1 row)
-        // karena AdminAboutController pakai firstOrCreate, harusnya pasti ada
-        $about = AboutSetting::where('kategori_instansi',$user->kategori_instansi)->first();
+        // ambil data about setting per kategori_instansi
+        $about = AboutSetting::where('kategori_instansi', $user->kategori_instansi)->first();
 
         // F4: 210 x 330 mm (landscape => 330 x 210)
         $w = 330 / 25.4 * 72;
         $h = 210 / 25.4 * 72;
 
+        // locale (logic lama)
         app()->setLocale('id');
-\Carbon\Carbon::setLocale('id');
-\Illuminate\Support\Carbon::setLocale('id');
-setlocale(LC_TIME, 'id_ID.UTF-8', 'id_ID', 'id', 'Indonesian');
-
+        \Carbon\Carbon::setLocale('id');
+        \Illuminate\Support\Carbon::setLocale('id');
+        setlocale(LC_TIME, 'id_ID.UTF-8', 'id_ID', 'id', 'Indonesian');
 
         $pdf = Pdf::loadView('admin.assessments.certificate-pdf', [
             'student' => $user,
             'assessment' => $assessment,
+
+            // tetap dikirim
             'today' => $today,
+
+            // tambahan (kalau view pakai) — tetap aman
+            'certificateDate' => $assessment->certificate_date
+                ? Carbon::parse($assessment->certificate_date)
+                : $today,
+
             'hasilLabel' => $hasilLabel,
-            'about' => $about, // <-- INI PENTING
+            'about' => $about,
         ])
             ->setPaper([0, 0, $w, $h], 'landscape')
             ->setOption('isHtml5ParserEnabled', true)

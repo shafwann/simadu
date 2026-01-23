@@ -162,16 +162,27 @@
             <div class="relative bg-white pt-16 pb-20 lg:pt-24 lg:pb-28 overflow-hidden">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
 
-                    <span class="inline-block py-1 px-3 rounded-full bg-blue-50 text-blue-600 text-xs font-bold tracking-widest uppercase mb-6 border border-blue-100">
-                        Sistem Informasi Manajemen Magang
-                    </span>
-
-                    <h1 class="text-4xl sm:text-6xl font-black text-gray-900 tracking-tight leading-none mb-6">
-                        Data Presensi & <br class="hidden sm:block">
-                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-                            Aktivitas Harian
+                    @if(isset($about) && $about->hero_image_path)
+                        <div class="mb-10 flex justify-center">
+                            <img
+                                src="{{ asset('storage/' . $about->hero_image_path) }}"
+                                alt="Welcome Image"
+                                class="w-full max-w-5xl rounded-2xl shadow-lg object-cover">
+                        </div>
+                    @else
+                        {{-- FALLBACK TEXT --}}
+                        <span class="inline-block py-1 px-3 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase mb-6">
+                            Sistem Informasi Manajemen Magang
                         </span>
-                    </h1>
+
+                        <h1 class="text-4xl sm:text-6xl font-black text-gray-900 mb-6">
+                            Data Presensi & <br>
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                                Aktivitas Harian
+                            </span>
+                        </h1>
+                    @endif
+
 
                     <p class="text-lg text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
                         {{ $about->app_description ?? 'Platform terintegrasi untuk memantau kehadiran, laporan kegiatan, dan penilaian kinerja peserta magang di lingkungan Pemerintahan Kabupaten Karanganyar.' }}
@@ -232,116 +243,6 @@
                 <div class="absolute top-0 left-1/2 w-full -translate-x-1/2 h-full z-0 pointer-events-none">
                     <div class="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
                     <div class="absolute top-20 right-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-                </div>
-            </div>
-
-            {{-- DATA TABLE SECTION --}}
-            <div class="bg-gray-50 py-16 border-t border-gray-200">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-                        <div>
-                            <h2 class="text-2xl font-bold text-gray-900">Direktori Peserta</h2>
-                            <p class="text-sm text-gray-500 mt-1">Daftar mahasiswa/siswa yang terdaftar dalam sistem.</p>
-                        </div>
-
-                        {{-- Filter Dropdown (Opsional, tampilan saja) --}}
-                        <div class="flex gap-2">
-                            <span class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-500 shadow-sm flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-green-500"></span> Live Data
-                            </span>
-                        </div>
-                    </div>
-
-                    {{-- TABEL --}}
-                    <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-200 overflow-hidden">
-                        <div class="overflow-x-auto custom-scrollbar">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="bg-gray-50/50 border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500">
-                                        <th class="px-6 py-4 font-bold">Peserta</th>
-                                        <th class="px-6 py-4 font-bold">Asal Sekolah / Kampus</th>
-                                        <th class="px-6 py-4 font-bold">Lokasi Magang</th>
-                                        <th class="px-6 py-4 font-bold text-center">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-100">
-                                    @forelse($mahasiswa as $m)
-                                    <tr class="hover:bg-blue-50/30 transition duration-150 group">
-                                        {{-- NAMA & EMAIL --}}
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 flex items-center justify-center font-bold text-sm">
-                                                    {{ substr($m->name, 0, 1) }}
-                                                </div>
-                                                <div>
-                                                    <div class="font-bold text-gray-900 group-hover:text-blue-600 transition">
-                                                        {{ $m->name }}
-                                                    </div>
-                                                    <div class="text-xs text-gray-400">
-                                                        {{ $m->prodi ?? 'Umum' }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-
-                                        {{-- ASAL SEKOLAH --}}
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-gray-700">
-                                                {{ $m->instansi }}
-                                            </div>
-                                            <div class="text-[10px] text-gray-400 uppercase mt-0.5">
-                                                {{ $m->nim ?? 'No ID' }}
-                                            </div>
-                                        </td>
-
-                                        {{-- LOKASI MAGANG (INSTANSI PEMERINTAH) --}}
-                                        <td class="px-6 py-4">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
-                                                {{ $m->kategori_instansi ?? 'BAPPERIDA' }}
-                                            </span>
-                                            <div class="text-[10px] text-gray-400 mt-1 pl-1">
-                                                {{ Str::limit($m->bidang, 25) }}
-                                            </div>
-                                        </td>
-
-                                        {{-- STATUS --}}
-                                        <td class="px-6 py-4 text-center">
-                                            @if($m->status === 'aktif')
-                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-green-100 text-green-700">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                                                    Aktif
-                                                </span>
-                                            @else
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500">
-                                                    Selesai
-                                                </span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr>
-                                        <td colspan="4" class="px-6 py-12 text-center text-gray-400">
-                                            <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                                            Belum ada data peserta magang.
-                                        </td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {{-- PAGINATION --}}
-                        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
-                            <div class="text-xs text-gray-500">
-                                Menampilkan {{ $mahasiswa->firstItem() ?? 0 }} - {{ $mahasiswa->lastItem() ?? 0 }} dari {{ $mahasiswa->total() }} data
-                            </div>
-                            <div>
-                                {{ $mahasiswa->onEachSide(1)->links('pagination::tailwind') }}
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
             </div>
 

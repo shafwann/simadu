@@ -46,7 +46,7 @@
 
                     <div class="flex items-center justify-end mt-4">
                         <a href="{{ route('master.agencies.index') }}" class="text-gray-600 hover:text-gray-900 mr-4">Batal</a>
-                        <x-primary-button class="ml-4 bg-yellow-600 hover:bg-yellow-700">
+                        <x-primary-button class="ml-4 bg-blue-600 hover:bg-blue-700">
                             {{ __('Simpan Perubahan') }}
                         </x-primary-button>
                     </div>
