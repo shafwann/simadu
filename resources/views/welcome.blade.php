@@ -208,52 +208,88 @@
                     </div>
                 </div>
 
-                {{-- PESERTA MAGANG AKTIF PER INSTANSI --}}
-<div class="mt-8 max-w-5xl mx-auto">
-    <div class="flex items-center justify-between mb-4">
-        <h3 class="text-sm font-black uppercase tracking-wider text-gray-800">
-            Peserta Magang Aktif per Instansi
-        </h3>
-        <span class="text-[10px] font-bold text-green-600 uppercase">
-            Live Data
-        </span>
-    </div>
+        {{-- PESERTA MAGANG AKTIF PER INSTANSI --}}
+        <div class="mt-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-    <div class="bg-white border border-gray-200 rounded-2xl p-4">
-    <!-- WRAPPER SCROLL -->
-    <div class="w-full overflow-x-auto md:overflow-visible">
-        <!-- CONTAINER CHIP -->
-        <div class="flex gap-3 md:flex-wrap flex-nowrap min-w-max md:min-w-0">
-            @foreach($pesertaAktifPerInstansi as $item)
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white shadow-sm whitespace-nowrap">
-                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-
-                    <span class="text-xs font-bold uppercase text-gray-700">
-                        {{ $item->kategori_instansi }}
-                    </span>
-
-                    <span class="text-xs font-black text-blue-600">
-                        {{ $item->total }}
-                    </span>
+            {{-- HEADER SECTION --}}
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+                <div>
+                    <h3 class="text-base font-black uppercase tracking-wider text-gray-900 leading-tight">
+                        Peserta Magang Aktif
+                    </h3>
+                    <p class="text-sm text-gray-500 mt-1 hidden sm:block">
+                        Distribusi peserta berdasarkan instansi penempatan saat ini.
+                    </p>
                 </div>
-            @endforeach
-        </div>
-    </div>
-</div>
 
-
-
-                {{-- Background Decoration --}}
-                <div class="absolute top-0 left-1/2 w-full -translate-x-1/2 h-full z-0 pointer-events-none">
-                    <div class="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-                    <div class="absolute top-20 right-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-                </div>
+                <span class="inline-flex items-center gap-2 bg-green-50 text-green-700 text-[10px] font-bold uppercase px-3 py-1.5 rounded-full border border-green-200 shadow-sm whitespace-nowrap">
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-600"></span>
+                    </span>
+                    Live Data
+                </span>
             </div>
+
+            {{-- CONTENT SECTION --}}
+            <div class="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+
+                @if($pesertaAktifPerInstansi->count() > 0)
+
+                    {{--
+                    LOGIKA TAMPILAN BARU:
+                    1. Mobile: 'flex' & 'overflow-x-auto' (Scrolling Samping Kiri-Kanan)
+                    2. Desktop (md+): 'flex-wrap' & 'justify-center' (Tumpuk Rata Tengah)
+                    --}}
+                    <div class="
+                        flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 snap-x             {{-- Style HP: Scrolling --}}
+                        md:flex-wrap md:justify-center md:pb-0 md:mx-0 md:px-0 md:overflow-visible {{-- Style PC: Center Wrap --}}
+                        custom-scrollbar
+                    ">
+                        @foreach($pesertaAktifPerInstansi as $item)
+                            <div class="
+                                flex-shrink-0 snap-center min-w-[150px] w-[40vw] md:w-auto md:min-w-[180px]
+                                group flex items-center justify-between p-3
+                                bg-gray-50 rounded-xl border border-gray-100
+                                hover:bg-white hover:border-blue-200 hover:shadow-md
+                                transition-all duration-200 cursor-default
+                            ">
+
+                                <div class="flex items-center gap-3 overflow-hidden">
+                                    {{-- Indikator Bulat --}}
+                                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <span class="text-blue-600 font-black text-xs">
+                                            {{ substr($item->kategori_instansi, 0, 1) }}
+                                        </span>
+                                    </div>
+
+                                    {{-- Nama Instansi --}}
+                                    <span class="text-xs font-bold uppercase text-gray-700 group-hover:text-blue-800 transition-colors whitespace-nowrap">
+                                        {{ $item->kategori_instansi }}
+                                    </span>
+                                </div>
+
+                                {{-- Total Count Badge --}}
+                                <span class="flex-shrink-0 ml-3 inline-flex items-center justify-center bg-blue-600 text-white text-[10px] font-black h-5 min-w-[20px] px-1 rounded-md shadow-sm group-hover:bg-blue-700 group-hover:scale-105 transition-all">
+                                    {{ $item->total }}
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    {{-- State Kosong --}}
+                    <div class="text-center py-8 text-gray-400">
+                        <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Belum ada data peserta aktif.
+                    </div>
+                @endif
+            </div>
+        </div>
 
         </main>
 
         {{-- FOOTER --}}
-        <footer class="bg-white border-t border-gray-200 pt-10 pb-6">
+        <footer style="background: linear-gradient(231deg, rgb(6, 147, 227) 0%, rgb(155, 81, 224) 94%);" class="text-white py-8 px-4 lg:px-8">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                     <div>
@@ -261,29 +297,29 @@
                             @if(isset($about) && $about->logo_path)
                                 <img src="{{ asset('storage/' . $about->logo_path) }}" class="h-8 w-auto grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition">
                             @endif
-                            <span class="font-bold text-gray-700">{{ $about->app_name ?? 'SISTEM MAGANG' }}</span>
+                            <span class="font-bold text-white">{{ $about->app_name ?? 'SISTEM MAGANG' }}</span>
                         </div>
-                        <p class="text-xs text-gray-500 leading-relaxed">
+                        <p class="text-xs text-white leading-relaxed">
                             {{ $about->office_address ?? 'Alamat kantor belum disetting.' }}
                         </p>
                     </div>
                     <div>
-                        <h4 class="font-bold text-gray-900 text-sm mb-4">Tautan</h4>
-                        <ul class="space-y-2 text-xs text-gray-500">
+                        <h4 class="font-bold text-white text-sm mb-4">Tautan</h4>
+                        <ul class="space-y-2 text-xs text-white">
                             <li><a href="{{ route('login') }}" class="hover:text-blue-600">Login Peserta</a></li>
                             <li><a href="#" class="hover:text-blue-600">Panduan Magang</a></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="font-bold text-gray-900 text-sm mb-4">Kontak</h4>
-                        <ul class="space-y-2 text-xs text-gray-500">
+                        <h4 class="font-bold text-white text-sm mb-4">Kontak</h4>
+                        <ul class="space-y-2 text-xs text-white">
                             <li>{{ $about->office_phone ?? '-' }}</li>
                             <li>{{ $about->office_email ?? '-' }}</li>
                         </ul>
                     </div>
                 </div>
                 <div class="border-t border-gray-100 pt-6 text-center">
-                    <p class="text-xs text-gray-400">
+                    <p class="text-xs text-white-400">
                         &copy; {{ date('Y') }} {{ $about->agency_name ?? 'Pemerintah Kabupaten Karanganyar' }}. All rights reserved.
                     </p>
                 </div>
