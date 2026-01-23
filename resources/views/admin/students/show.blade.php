@@ -252,59 +252,59 @@
                                 <tbody class="divide-y divide-gray-50">
                                     @forelse($student->attendances()->orderBy('tanggal', 'desc')->get() as $a)
                                     @php
-                                        // ============================
-                                        // STATUS ADMIN: samakan dengan logika ringkas (H/T/I/S/DL/CT/TK + PC/TAP)
-                                        // ============================
+                                    // ============================
+                                    // STATUS ADMIN: samakan dengan logika ringkas (H/T/I/S/DL/CT/TK + PC/TAP)
+                                    // ============================
 
-                                        $stRaw  = $a->status ?? '-';
-                                        $ketRaw = $a->keterangan ?? null;
+                                    $stRaw = $a->status ?? '-';
+                                    $ketRaw = $a->keterangan ?? null;
 
-                                        $st  = strtoupper(trim((string) $stRaw));
-                                        $ket = strtoupper(trim((string) $ketRaw));
+                                    $st = strtoupper(trim((string) $stRaw));
+                                    $ket = strtoupper(trim((string) $ketRaw));
 
-                                        // base code
-                                        $code = '-';
-                                        if ($st === '' || $st === '-') $code = '-';
-                                        elseif (in_array($st, ['ALPHA','TANPA KETERANGAN','TK'])) $code = 'TK';
-                                        elseif ($st === 'HADIR') $code = 'H';
-                                        elseif ($st === 'TELAT') $code = 'T';
-                                        elseif (in_array($st, ['I','IZIN','IJIN'])) $code = 'I';
-                                        elseif (in_array($st, ['S','SAKIT'])) $code = 'S';
-                                        elseif (in_array($st, ['DL','DINAS LUAR'])) $code = 'DL';
-                                        elseif (in_array($st, ['CT','CUTI'])) $code = 'CT';
+                                    // base code
+                                    $code = '-';
+                                    if ($st === '' || $st === '-') $code = '-';
+                                    elseif (in_array($st, ['ALPHA','TANPA KETERANGAN','TK'])) $code = 'TK';
+                                    elseif ($st === 'HADIR') $code = 'H';
+                                    elseif ($st === 'TELAT') $code = 'T';
+                                    elseif (in_array($st, ['I','IZIN','IJIN'])) $code = 'I';
+                                    elseif (in_array($st, ['S','SAKIT'])) $code = 'S';
+                                    elseif (in_array($st, ['DL','DINAS LUAR'])) $code = 'DL';
+                                    elseif (in_array($st, ['CT','CUTI'])) $code = 'CT';
 
-                                        // PC
-                                        $isPC = ($ket === 'PULANG CEPAT');
+                                    // PC
+                                    $isPC = ($ket === 'PULANG CEPAT');
 
-                                        // TAP: check_in ada, check_out kosong, dan sekarang sudah lewat checkout_selesai hari itu
+                                    // TAP: check_in ada, check_out kosong, dan sekarang sudah lewat checkout_selesai hari itu
+                                    $isTAP = false;
+                                    if (!empty($a->check_in) && empty($a->check_out)) {
+                                    try {
+                                    // perlu about setting / jadwal checkout per hari.
+                                    // pakai kategori_instansi dari student agar sesuai instansi
+                                    $about = \App\Models\AboutSetting::where('kategori_instansi', $student->kategori_instansi ?? 'UMUM')->first();
+
+                                    $checkoutEndMap = [
+                                    1 => $about?->senin_checkout_selesai,
+                                    2 => $about?->selasa_checkout_selesai,
+                                    3 => $about?->rabu_checkout_selesai,
+                                    4 => $about?->kamis_checkout_selesai,
+                                    5 => $about?->jumat_checkout_selesai,
+                                    ];
+
+                                    $date = \Carbon\Carbon::parse($a->tanggal, 'Asia/Jakarta');
+                                    $dow = $date->dayOfWeekIso; // 1..7
+
+                                    if ($dow <= 5) {
+                                        $endStr=$checkoutEndMap[$dow] ?? null;
+                                        if (!empty($endStr)) {
+                                        $endTime=\Carbon\Carbon::parse($date->format('Y-m-d') . ' ' . $endStr, 'Asia/Jakarta');
+                                        $isTAP = \Carbon\Carbon::now('Asia/Jakarta')->gt($endTime);
+                                        }
+                                        }
+                                        } catch (\Throwable $e) {
                                         $isTAP = false;
-                                        if (!empty($a->check_in) && empty($a->check_out)) {
-                                            try {
-                                                // perlu about setting / jadwal checkout per hari.
-                                                // pakai kategori_instansi dari student agar sesuai instansi
-                                                $about = \App\Models\AboutSetting::where('kategori_instansi', $student->kategori_instansi ?? 'UMUM')->first();
-
-                                                $checkoutEndMap = [
-                                                    1 => $about?->senin_checkout_selesai,
-                                                    2 => $about?->selasa_checkout_selesai,
-                                                    3 => $about?->rabu_checkout_selesai,
-                                                    4 => $about?->kamis_checkout_selesai,
-                                                    5 => $about?->jumat_checkout_selesai,
-                                                ];
-
-                                                $date = \Carbon\Carbon::parse($a->tanggal, 'Asia/Jakarta');
-                                                $dow  = $date->dayOfWeekIso; // 1..7
-
-                                                if ($dow <= 5) {
-                                                    $endStr = $checkoutEndMap[$dow] ?? null;
-                                                    if (!empty($endStr)) {
-                                                        $endTime = \Carbon\Carbon::parse($date->format('Y-m-d') . ' ' . $endStr, 'Asia/Jakarta');
-                                                        $isTAP = \Carbon\Carbon::now('Asia/Jakarta')->gt($endTime);
-                                                    }
-                                                }
-                                            } catch (\Throwable $e) {
-                                                $isTAP = false;
-                                            }
+                                        }
                                         }
 
                                         $extras = [];
@@ -313,99 +313,99 @@
 
                                         $statusFinal = $code;
                                         if (!empty($extras)) {
-                                            $statusFinal = $code . ',' . implode(',', $extras);
+                                        $statusFinal = $code . ',' . implode(',', $extras);
                                         }
 
                                         // split badge
                                         $parts = array_filter(array_map('trim', explode(',', $statusFinal)));
-                                    @endphp
+                                        @endphp
 
-                                    <tr class="hover:bg-blue-50/50 transition">
-                                        <td class="p-4 font-medium">{{ \Carbon\Carbon::parse($a->tanggal)->format('d M Y') }}</td>
+                                        <tr class="hover:bg-blue-50/50 transition">
+                                            <td class="p-4 font-medium">{{ \Carbon\Carbon::parse($a->tanggal)->format('d M Y') }}</td>
 
-                                        {{-- Jam: tampil check_in - check_out biar lengkap --}}
-                                        <td class="p-4 font-mono text-gray-600">
-                                            {{ \Carbon\Carbon::parse($a->check_in)->format('H:i') ?? '-' }}
-                                            <span class="text-gray-300">—</span>
-                                            {{ $a->check_out ? \Carbon\Carbon::parse($a->check_out)->format('H:i') : '-' }}
-                                        </td>
+                                            {{-- Jam: tampil check_in - check_out biar lengkap --}}
+                                            <td class="p-4 font-mono text-gray-600">
+                                                {{ \Carbon\Carbon::parse($a->check_in)->format('H:i') ?? '-' }}
+                                                <span class="text-gray-300">—</span>
+                                                {{ $a->check_out ? \Carbon\Carbon::parse($a->check_out)->format('H:i') : '-' }}
+                                            </td>
 
-                                        <td class="p-4">
-                                            <div class="flex flex-wrap gap-2">
-                                                @foreach($parts as $p)
+                                            <td class="p-4">
+                                                <div class="flex flex-wrap gap-2">
+                                                    @foreach($parts as $p)
                                                     @if($p === 'H')
-                                                        <span class="px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-bold">H</span>
+                                                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-bold">H</span>
                                                     @elseif($p === 'T')
-                                                        <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md text-xs font-bold">T</span>
+                                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md text-xs font-bold">T</span>
                                                     @elseif($p === 'I')
-                                                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-bold">I</span>
+                                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-bold">I</span>
                                                     @elseif($p === 'S')
-                                                        <span class="px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-xs font-bold">S</span>
+                                                    <span class="px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-xs font-bold">S</span>
                                                     @elseif($p === 'DL')
-                                                        <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs font-bold">DL</span>
+                                                    <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs font-bold">DL</span>
                                                     @elseif($p === 'CT')
-                                                        <span class="px-2 py-1 bg-pink-100 text-pink-700 rounded-md text-xs font-bold">CT</span>
+                                                    <span class="px-2 py-1 bg-pink-100 text-pink-700 rounded-md text-xs font-bold">CT</span>
                                                     @elseif($p === 'TK')
-                                                        <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">TK</span>
+                                                    <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">TK</span>
                                                     @elseif($p === 'PC')
-                                                        <span class="px-2 py-1 bg-orange-100 text-orange-700 rounded-md text-xs font-bold">PC</span>
+                                                    <span class="px-2 py-1 bg-orange-100 text-orange-700 rounded-md text-xs font-bold">PC</span>
                                                     @elseif($p === 'TAP')
-                                                        <span class="px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs font-bold">TAP</span>
+                                                    <span class="px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs font-bold">TAP</span>
                                                     @else
-                                                        <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">{{ $p }}</span>
+                                                    <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">{{ $p }}</span>
                                                     @endif
-                                                @endforeach
-                                            </div>
-                                        </td>
+                                                    @endforeach
+                                                </div>
+                                            </td>
 
-                                        <td class="p-4 text-xs">
-                                            @if($a->location)
-                                            <div class="flex flex-col gap-1">
-                                                <a href="{{ $a->location }}" target="_blank"
-                                                    class="flex items-center gap-1 text-blue-600 font-bold hover:underline">
-                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                    </svg>
-                                                    Buka Link Peta
-                                                </a>
-                                                <span class="text-[10px] text-gray-400 truncate max-w-[160px]" title="{{ $a->location }}">
-                                                    {{ $a->location }}
-                                                </span>
-                                            </div>
-                                            @else
-                                            <span class="text-gray-400 italic text-[10px]">Lokasi Kosong</span>
-                                            @endif
-                                        </td>
+                                            <td class="p-4 text-xs">
+                                                @if($a->location)
+                                                <div class="flex flex-col gap-1">
+                                                    <a href="{{ $a->location }}" target="_blank"
+                                                        class="flex items-center gap-1 text-blue-600 font-bold hover:underline">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        </svg>
+                                                        Buka Link Peta
+                                                    </a>
+                                                    <span class="text-[10px] text-gray-400 truncate max-w-[160px]" title="{{ $a->location }}">
+                                                        {{ $a->location }}
+                                                    </span>
+                                                </div>
+                                                @else
+                                                <span class="text-gray-400 italic text-[10px]">Lokasi Kosong</span>
+                                                @endif
+                                            </td>
 
-                                        <td class="p-4 text-center flex items-center justify-center gap-2">
-                                            <a href="{{ route('admin.attendance.edit', $a->id) }}"
-                                                class="text-blue-400 hover:text-blue-600 transition" title="Edit Absensi">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                                </svg>
-                                            </a>
-                                            <form action="{{ route('admin.attendance.destroy', $a->id) }}" method="POST"
-                                                onsubmit="return confirm('Hapus data presensi ini?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-400 hover:text-red-600 transition" title="Hapus">
+                                            <td class="p-4 text-center flex items-center justify-center gap-2">
+                                                <a href="{{ route('admin.attendance.edit', $a->id) }}"
+                                                    class="text-blue-400 hover:text-blue-600 transition" title="Edit Absensi">
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                                     </svg>
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr>
-                                        <td colspan="5" class="p-6 text-center italic text-gray-400">Belum ada data presensi.</td>
-                                    </tr>
-                                    @endforelse
+                                                </a>
+                                                <form action="{{ route('admin.attendance.destroy', $a->id) }}" method="POST"
+                                                    onsubmit="return confirm('Hapus data presensi ini?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-red-400 hover:text-red-600 transition" title="Hapus">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                        </svg>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="5" class="p-6 text-center italic text-gray-400">Belum ada data presensi.</td>
+                                        </tr>
+                                        @endforelse
                                 </tbody>
                             </table>
                         </div>
@@ -690,17 +690,20 @@
                             </div>
                         </div>
 
-                        <div class="mb-4">
-    <label class="block text-sm font-medium text-gray-700">
-        Apresiasi Khusus
-    </label>
-    <textarea
-        name="apresiasi_khusus"
-        rows="3"
-        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-        placeholder="Contoh: Menunjukkan dedikasi tinggi dan kontribusi yang menonjol selama magang"
-    >{{ old('apresiasi_khusus', $penilaian->apresiasi_khusus ?? '') }}</textarea>
-</div>
+                        {{-- ✅ Apresiasi Khusus (rapi + keep value saat edit) --}}
+                        <div class="rounded-2xl border border-gray-100 bg-white p-4 mt-0">
+                            <label class="block text-[11px] font-black text-gray-500 uppercase tracking-wide">
+                                Apresiasi Khusus
+                            </label>
+
+                            <textarea
+                                id="inputApresiasiKhusus"
+                                name="apresiasi_khusus"
+                                rows="3"
+                                class="mt-2 w-full rounded-2xl border-gray-200 bg-gray-50
+               focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800 text-sm">{{ old('apresiasi_khusus', optional($student->assessment)->apresiasi_khusus) }}</textarea>
+                        </div>
+
 
 
                         {{-- ✅ TAMBAHAN BARU: TANGGAL SERTIFIKAT (DITAMBAHKAN SAJA, TIDAK MENGUBAH KODE LAIN) --}}
@@ -764,6 +767,15 @@
             const methodSpoof = document.getElementById('methodSpoof');
             const submitBtn = document.getElementById('assessmentSubmitBtn');
 
+            const apresiasiInput = document.getElementById('inputApresiasiKhusus');
+
+            function focusApresiasiSelect() {
+                if (!apresiasiInput) return;
+                setTimeout(() => {
+                    apresiasiInput.focus();
+                }, 50);
+            }
+
             function openAssessment(mode) {
                 assessmentModal.classList.remove('hidden');
                 document.body.classList.add('overflow-hidden');
@@ -772,6 +784,7 @@
                     assessmentForm.action = updateUrl;
                     methodSpoof.value = "PATCH";
                     submitBtn.textContent = "Simpan Perubahan";
+                    focusApresiasiSelect();
                 } else {
                     assessmentForm.action = storeUrl;
                     methodSpoof.value = "POST";
@@ -812,6 +825,7 @@
             });
         });
     </script>
+
 
     {{-- MODAL DOWNLOAD PRESENSI --}}
     <div id="downloadPresensiModal" class="fixed inset-0 z-50 hidden">
