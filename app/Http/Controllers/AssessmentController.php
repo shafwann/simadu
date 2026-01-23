@@ -66,7 +66,7 @@ class AssessmentController extends Controller
 
         [$total, $avg, $grade] = $this->computeTotalAvgGrade($validated);
 
-        $assessment = Assessment::updateOrCreate(
+        Assessment::updateOrCreate(
             ['user_id' => $user->id],
             [
                 'certificate_no' => $validated['certificate_no'],
@@ -81,8 +81,11 @@ class AssessmentController extends Controller
 
                 'total' => $total,
                 'average' => $avg,
+                'grade_letter' => $grade,
+
+                // ✅ SIMPAN apresiasi khusus (INI YANG KURANG DI KODE KAMU)
                 'apresiasi_khusus' => $validated['apresiasi_khusus'] ?? null,
-                'grade_letter' => $grade, 
+
                 'assessed_at' => now(),
             ]
         );
@@ -153,7 +156,7 @@ class AssessmentController extends Controller
         return back()->with('success', 'Penilaian berhasil dihapus.');
     }
 
-    // DOWNLOAD PDF 2 halaman (SUDAH DINAMIS DARI ABOUT)
+    // DOWNLOAD PDF (SUDAH DINAMIS DARI ABOUT)
     public function certificate(User $user)
     {
         $assessment = $user->assessment;
@@ -162,20 +165,20 @@ class AssessmentController extends Controller
             abort(404, 'Penilaian belum ada.');
         }
 
-        // tetap ada (logic lama)
+        // logic lama: tetap ada
         $today = Carbon::now();
 
-        // ✅ label hasil dari grade_letter (logic lama)
+        // label hasil dari grade_letter
         $hasilLabel = $this->labelFromGrade($assessment->grade_letter);
 
-        // ✅ ambil data about setting per kategori_instansi (logic lama)
+        // ambil data about setting per kategori_instansi
         $about = AboutSetting::where('kategori_instansi', $user->kategori_instansi)->first();
 
         // F4: 210 x 330 mm (landscape => 330 x 210)
         $w = 330 / 25.4 * 72;
         $h = 210 / 25.4 * 72;
 
-        // locale (logic lama kamu)
+        // locale (logic lama)
         app()->setLocale('id');
         \Carbon\Carbon::setLocale('id');
         \Illuminate\Support\Carbon::setLocale('id');
@@ -185,11 +188,10 @@ class AssessmentController extends Controller
             'student' => $user,
             'assessment' => $assessment,
 
-            // tetap dikirim (logic lama)
+            // tetap dikirim
             'today' => $today,
 
-            // ✅ lebih relevan untuk sertifikat: pakai tanggal yang diinput dari form
-            // (kalau view kamu belum pakai ini, aman—tinggal pakai saat dibutuhkan)
+            // tambahan (kalau view pakai) — tetap aman
             'certificateDate' => $assessment->certificate_date
                 ? Carbon::parse($assessment->certificate_date)
                 : $today,
