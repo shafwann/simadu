@@ -477,7 +477,8 @@
                                         <td class="p-4 text-gray-500">{{ \Carbon\Carbon::parse($lap->created_at)->format('d M Y') }}</td>
                                         <td class="p-4 text-center flex justify-center gap-2">
                                             <button type="button"
-                                                onclick="document.getElementById('preview-iframe').src='{{ route("admin.laporan.preview", $lap->id) }}'"
+                                                data-url="{{ route('admin.laporan.preview', $lap->id) }}"
+                                                onclick="document.getElementById('preview-iframe').src=this.dataset.url"
                                                 class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-200 transition">
                                                 Preview
                                             </button>
