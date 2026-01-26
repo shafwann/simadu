@@ -36,6 +36,20 @@
                         </select>
                     </div>
 
+                    {{-- Pulang Cepat --}}
+                    <div id="pulangCepatWrapper" class="hidden mt-2">
+                        <label class="inline-flex items-center gap-2 font-semibold text-gray-700">
+                            <input type="checkbox"
+                                id="pulangCepatCheckbox"
+                                name="keterangan"
+                                value="Pulang Cepat"
+                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                {{ old('keterangan', $attendance->keterangan) === 'Pulang Cepat' ? 'checked' : '' }}>
+                            ⏱️ Pulang Cepat
+                        </label>
+                    </div>
+
+
                     {{-- Grid Jam Masuk & Pulang --}}
                     <div class="grid grid-cols-2 gap-4">
                         <div>
@@ -116,6 +130,30 @@
             // Jalankan saat load & saat ganti status
             toggleJam();
             statusSelect.addEventListener('change', toggleJam);
-        });
+
+            //PULANG CEPAT
+            const pulangCepatCheckbox = document.getElementById('pulangCepatCheckbox');
+            const pulangCepatWrapper = document.getElementById('pulangCepatWrapper');
+
+            function togglePulangCepat() {
+                const status = statusSelect.value;
+
+                // Hanya muncul saat Hadir / Telat
+                const allowPulangCepat =
+                    status.includes('Hadir') || status.includes('Telat');
+
+                if (allowPulangCepat) {
+                    pulangCepatWrapper.style.display = 'block';
+                    pulangCepatCheckbox.disabled = false;
+                } else {
+                    pulangCepatWrapper.style.display = 'none';
+                    pulangCepatCheckbox.checked = false;
+                    pulangCepatCheckbox.disabled = true;
+                }
+            }
+
+            togglePulangCepat();
+            statusSelect.addEventListener('change', togglePulangCepat);
+                });
     </script>
 </x-app-layout>
