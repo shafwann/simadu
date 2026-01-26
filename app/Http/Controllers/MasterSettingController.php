@@ -80,7 +80,23 @@ class MasterSettingController extends Controller
             }
 
             // Source PNG
-            $source = imagecreatefrompng($file->getPathname());
+            // Matikan warning libpng (FIX iCCP error)
+            $oldLevel = error_reporting(0);
+            ini_set('display_errors', '0');
+
+            $source = imagecreatefromstring(
+                file_get_contents($file->getPathname())
+            );
+
+            // Kembalikan error reporting
+            error_reporting($oldLevel);
+
+            if (!$source) {
+                return back()->withErrors([
+                    'hero_image' => 'File PNG tidak valid atau rusak.'
+                ]);
+            }
+
 
             $srcWidth  = imagesx($source);
             $srcHeight = imagesy($source);
