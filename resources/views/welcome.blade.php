@@ -320,7 +320,7 @@
                 </div>
                 <div class="border-t border-gray-100 pt-6 text-center">
                     <p class="text-xs text-white-400">
-                        &copy; {{ date('Y') }} Aspa Virda Aura Adnan. All Rights Reserved.
+                        &copy; {{ date('Y') }} SI MaDu - Aspa, Virda, Aura, Adnan. All Rights Reserved.
                     </p>
                 </div>
             </div>

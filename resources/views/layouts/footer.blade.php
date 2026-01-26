@@ -163,7 +163,7 @@
     {{-- COPYRIGHT --}}
     <div class="bg-gray-900 text-gray-400 py-3 text-center text-[10px]">
         <p>
-            <span class="font-bold text-gray-300">© {{ date('Y') }} Aspa Virda Aura Adnan.</span>
+            <span class="font-bold text-gray-300">© {{ date('Y') }} {{ $globalAbout->app_name ?? 'Kab. Karanganyar' }} - Aspa, Virda, Aura, Adnan.</span>
              All Rights Reserved.
         </p>
     </div>
