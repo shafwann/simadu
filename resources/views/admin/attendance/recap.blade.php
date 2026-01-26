@@ -158,7 +158,7 @@
                                 <th class="px-6 py-4 text-center">Sakit</th>
                                 <th class="px-6 py-4 text-center">Alpha</th>
                                 <th class="px-6 py-4 text-center">Total</th>
-                                <th class="px-6 py-4 text-center">%</th>
+                                {{-- <th class="px-6 py-4 text-center">%</th> --}}
                             </tr>
                         </thead>
 
