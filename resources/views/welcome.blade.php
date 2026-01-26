@@ -167,7 +167,7 @@
                             <img
                                 src="{{ asset('storage/' . $about->hero_image_path) }}"
                                 alt="Welcome Image"
-                                class="w-full max-w-5xl rounded-2xl shadow-lg object-cover">
+                                class="w-full max-w-5xl object-cover">
                         </div>
                     @else
                         {{-- FALLBACK TEXT --}}
