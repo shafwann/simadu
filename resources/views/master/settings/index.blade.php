@@ -72,10 +72,10 @@
 
                 @if($about->hero_image_path)
                     <img src="{{ asset('storage/' . $about->hero_image_path) }}"
-                        class="w-full max-w-xl rounded-xl border mb-3">
+                        class="w-full max-w-xl rounded-xl border mb-3 bg-transparent">
                 @endif
 
-                <input type="file" name="hero_image"
+                <input type="file" name="hero_image" accept="image/png"
                     class="block w-full text-sm text-gray-500
                         file:mr-4 file:py-2 file:px-4
                         file:rounded-full file:border-0
@@ -83,6 +83,7 @@
 
                 <p class="text-xs text-gray-400 mt-2">
                     Ukuran ideal: <b>1200 x 500 px</b>. Gambar akan otomatis disesuaikan.
+                    <b>Hanya file PNG</b> (transparan). JPG/JPEG tidak diperbolehkan.
                 </p>
 
                 <div class="mt-4 pt-4 border-t flex justify-end">

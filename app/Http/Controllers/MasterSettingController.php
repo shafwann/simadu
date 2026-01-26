@@ -63,20 +63,40 @@ class MasterSettingController extends Controller
     elseif ($section === 'welcome') {
 
         $request->validate([
-            'hero_image' => 'required|image|max:4096',
+            'hero_image' => 'required|image|mimes:png|max:4096',
+        ], [
+            'hero_image.mimes' => 'Hanya file PNG yang diperbolehkan.',
         ]);
 
         if ($request->hasFile('hero_image')) {
 
             $file = $request->file('hero_image');
-            $filename = 'hero_' . time() . '.jpg';
+
+            $filename = 'hero_' . time() . '.png';
             $dir = storage_path('app/public/hero');
 
             if (!file_exists($dir)) {
                 mkdir($dir, 0755, true);
             }
 
-            $source = imagecreatefromstring(file_get_contents($file));
+            // Source PNG
+            // Matikan warning libpng (FIX iCCP error)
+            $oldLevel = error_reporting(0);
+            ini_set('display_errors', '0');
+
+            $source = imagecreatefromstring(
+                file_get_contents($file->getPathname())
+            );
+
+            // Kembalikan error reporting
+            error_reporting($oldLevel);
+
+            if (!$source) {
+                return back()->withErrors([
+                    'hero_image' => 'File PNG tidak valid atau rusak.'
+                ]);
+            }
+
 
             $srcWidth  = imagesx($source);
             $srcHeight = imagesy($source);
@@ -101,6 +121,12 @@ class MasterSettingController extends Controller
 
             $canvas = imagecreatetruecolor($targetWidth, $targetHeight);
 
+            // 🔑 WAJIB untuk transparansi PNG
+            imagealphablending($canvas, false);
+            imagesavealpha($canvas, true);
+            $transparent = imagecolorallocatealpha($canvas, 0, 0, 0, 127);
+            imagefill($canvas, 0, 0, $transparent);
+
             imagecopyresampled(
                 $canvas,
                 $source,
@@ -110,7 +136,7 @@ class MasterSettingController extends Controller
                 $newWidth, $newHeight
             );
 
-            imagejpeg($canvas, $dir . '/' . $filename, 85);
+            imagepng($canvas, $dir . '/' . $filename);
 
             imagedestroy($source);
             imagedestroy($canvas);
@@ -127,27 +153,28 @@ class MasterSettingController extends Controller
         return back()->with('success', 'Welcome Page berhasil diperbarui.');
     }
 
-    /* ===============================
-     | 3. FOOTER
-     ===============================*/
-    elseif ($section === 'footer') {
 
-        $data = $request->validate([
-            'office_address' => 'nullable|string',
-            'office_phone'   => 'nullable|string',
-            'office_email'   => 'nullable|email',
-            'social_instagram' => 'nullable|url',
-        ]);
+        /* ===============================
+        | 3. FOOTER
+        ===============================*/
+        elseif ($section === 'footer') {
+
+            $data = $request->validate([
+                'office_address' => 'nullable|string',
+                'office_phone'   => 'nullable|string',
+                'office_email'   => 'nullable|email',
+                'social_instagram' => 'nullable|url',
+            ]);
+        }
+
+        /* ===============================
+        | SIMPAN UMUM
+        ===============================*/
+        if (!empty($data)) {
+            $about->update($data);
+        }
+
+        return back()->with('success', 'Pengaturan berhasil diperbarui.');
     }
-
-    /* ===============================
-     | SIMPAN UMUM
-     ===============================*/
-    if (!empty($data)) {
-        $about->update($data);
-    }
-
-    return back()->with('success', 'Pengaturan berhasil diperbarui.');
-}
 
 }
