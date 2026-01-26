@@ -195,11 +195,11 @@
                         </div>
                         <div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
                             <div class="text-3xl font-black text-purple-600">{{ \App\Models\User::where('role', 'admin')->count() }}</div>
-                            <div class="text-xs text-gray-500 font-bold uppercase mt-1">Instansi Aktif</div>
+                            <div class="text-xs text-gray-500 font-bold uppercase mt-1">Unit Kerja Aktif</div>
                         </div>
                         <div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
                             <div class="text-3xl font-black text-green-600">{{ \App\Models\User::where('role', 'mahasiswa')->where('status','aktif')->count() }}</div>
-                            <div class="text-xs text-gray-500 font-bold uppercase mt-1">Sedang Magang</div>
+                            <div class="text-xs text-gray-500 font-bold uppercase mt-1">Magang Aktif</div>
                         </div>
                         <div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
                             <div class="text-3xl font-black text-orange-600">{{ date('Y') }}</div>
