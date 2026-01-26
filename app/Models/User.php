@@ -76,37 +76,49 @@ class User extends Authenticatable
         return $this->hasOne(Assessment::class)->orderByDesc('created_at');
     }
 
+    /**
+     * ============================
+     * RELASI DOSEN ↔ MAHASISWA
+     * Pivot: dosen_mahasiswa
+     * ============================
+     */
+
+    // ✅ ALIAS (biar kompatibel kalau ada kode lama yang memanggil $user->mahasiswa())
+    // dosen -> banyak mahasiswa
     public function mahasiswa()
     {
-        return $this->belongsToMany(User::class, 'dosen_mahasiswa', 'dosen_id', 'mahasiswa_id');
+        return $this->belongsToMany(
+            User::class,
+            'dosen_mahasiswa',
+            'dosen_id',
+            'mahasiswa_id'
+        );
     }
 
-        // dosen → banyak mahasiswa
-        public function mahasiswaBimbingan()
-        {
-            return $this->belongsToMany(
-                User::class,
-                'dosen_mahasiswa',
-                'dosen_id',
-                'mahasiswa_id'
-            );
-        }
+    // dosen → banyak mahasiswa (utama)
+    public function mahasiswaBimbingan()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'dosen_mahasiswa',
+            'dosen_id',
+            'mahasiswa_id'
+        );
+    }
 
-        // mahasiswa → banyak dosen
-        public function dosenPembimbing()
-        {
-            return $this->belongsToMany(
-                User::class,
-                'dosen_mahasiswa',
-                'mahasiswa_id',
-                'dosen_id'
-            );
-        }
+    // mahasiswa → banyak dosen (utama)
+    public function dosenPembimbing()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'dosen_mahasiswa',
+            'mahasiswa_id',
+            'dosen_id'
+        );
+    }
 
-        // app/Models/User.php
-
-        protected static function booted()
-        {
-            static::addGlobalScope(new \App\Models\Scopes\AgencyScope);
-        }
+    protected static function booted()
+    {
+        static::addGlobalScope(new \App\Models\Scopes\AgencyScope);
+    }
 }

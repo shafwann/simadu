@@ -167,7 +167,7 @@
                             <img
                                 src="{{ asset('storage/' . $about->hero_image_path) }}"
                                 alt="Welcome Image"
-                                class="w-full max-w-5xl rounded-2xl shadow-lg object-cover">
+                                class="w-full max-w-5xl object-cover">
                         </div>
                     @else
                         {{-- FALLBACK TEXT --}}
@@ -195,11 +195,11 @@
                         </div>
                         <div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
                             <div class="text-3xl font-black text-purple-600">{{ \App\Models\User::where('role', 'admin')->count() }}</div>
-                            <div class="text-xs text-gray-500 font-bold uppercase mt-1">Instansi Aktif</div>
+                            <div class="text-xs text-gray-500 font-bold uppercase mt-1">Unit Kerja Aktif</div>
                         </div>
                         <div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
                             <div class="text-3xl font-black text-green-600">{{ \App\Models\User::where('role', 'mahasiswa')->where('status','aktif')->count() }}</div>
-                            <div class="text-xs text-gray-500 font-bold uppercase mt-1">Sedang Magang</div>
+                            <div class="text-xs text-gray-500 font-bold uppercase mt-1">Magang Aktif</div>
                         </div>
                         <div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
                             <div class="text-3xl font-black text-orange-600">{{ date('Y') }}</div>
@@ -320,7 +320,7 @@
                 </div>
                 <div class="border-t border-gray-100 pt-6 text-center">
                     <p class="text-xs text-white-400">
-                        &copy; {{ date('Y') }} {{ $about->agency_name ?? 'Pemerintah Kabupaten Karanganyar' }}. All rights reserved.
+                        &copy; {{ date('Y') }} Aspa, Virda, Aura, Adnan. Hak Cipta Dilindungi.
                     </p>
                 </div>
             </div>

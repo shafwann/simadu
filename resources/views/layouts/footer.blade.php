@@ -163,8 +163,7 @@
     {{-- COPYRIGHT --}}
     <div class="bg-gray-900 text-gray-400 py-3 text-center text-[10px]">
         <p>
-            © {{ date('Y') }} {{ $globalAbout->app_name ?? 'Sistem Magang' }}
-            <span class="font-bold text-gray-300">{{ $globalAbout->agency_name ?? 'Kab. Karanganyar' }}</span>.
+            <span class="font-bold text-gray-300">Dibuat untuk {{ $globalAbout->app_name ?? 'Kab. Karanganyar' }} © {{ date('Y') }} Aspa, Virda, Aura, Adnan. Hak Cipta Dilindungi.</span>
         </p>
     </div>
 </footer>

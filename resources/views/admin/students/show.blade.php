@@ -90,9 +90,12 @@
                             </div>
 
                             {{-- Status Kehadiran --}}
+                            {{-- Status Kehadiran --}}
                             <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status Kehadiran</label>
-                                <select name="status"
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                    Status Kehadiran
+                                </label>
+                                <select name="status" id="statusSelect"
                                     class="w-full rounded-xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800">
                                     <option value="Hadir">✅ Hadir</option>
                                     <option value="Telat">⏰ Telat</option>
@@ -103,6 +106,19 @@
                                     <option value="Tanpa Keterangan">❌ Tanpa Keterangan (TK)</option>
                                 </select>
                             </div>
+
+                            {{-- Pulang Cepat --}}
+                            <div id="pulangCepatWrapper" class="mt-3 hidden">
+                                <label class="inline-flex items-center gap-2 font-semibold text-gray-700">
+                                    <input type="checkbox"
+                                        id="pulangCepatCheckbox"
+                                        name="keterangan"
+                                        value="Pulang Cepat"
+                                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    ⏱️ Pulang Cepat
+                                </label>
+                            </div>
+
 
 
                             {{-- Link Maps --}}
@@ -477,7 +493,8 @@
                                         <td class="p-4 text-gray-500">{{ \Carbon\Carbon::parse($lap->created_at)->format('d M Y') }}</td>
                                         <td class="p-4 text-center flex justify-center gap-2">
                                             <button type="button"
-                                                onclick="document.getElementById('preview-iframe').src='{{ route("admin.laporan.preview", $lap->id) }}'"
+                                                data-url="{{ route('admin.laporan.preview', $lap->id) }}"
+                                                onclick="document.getElementById('preview-iframe').src=this.dataset.url"
                                                 class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-200 transition">
                                                 Preview
                                             </button>
@@ -824,6 +841,34 @@
                 }
             });
         });
+
+            //pulang cepat
+            document.addEventListener('DOMContentLoaded', function () {
+    const statusSelect = document.getElementById('statusSelect');
+    const pcWrapper = document.getElementById('pulangCepatWrapper');
+    const pcCheckbox = document.getElementById('pulangCepatCheckbox');
+
+    function updatePulangCepatUI() {
+        const status = statusSelect.value;
+
+        if (status === 'Hadir' || status === 'Telat') {
+            // tampilkan checkbox
+            pcWrapper.classList.remove('hidden');
+            pcCheckbox.disabled = false;
+        } else {
+            // sembunyikan + reset
+            pcWrapper.classList.add('hidden');
+            pcCheckbox.checked = false;
+            pcCheckbox.disabled = true;
+        }
+    }
+
+    // pertama kali load
+    updatePulangCepatUI();
+
+    // setiap status berubah
+    statusSelect.addEventListener('change', updatePulangCepatUI);
+});
     </script>
 
 
