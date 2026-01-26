@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule; // Penting untuk validasi Enum/Pilihan
+use App\Models\Attendance;
+use Carbon\Carbon;
 
 class AdminStudentController extends Controller
 {
@@ -299,6 +301,48 @@ class AdminStudentController extends Controller
                 ? 'Mahasiswa diaktifkan kembali.'
                 : 'Mahasiswa dinonaktifkan.'
         );
+    }
+    public function monthlyRecap(Request $request)
+    {
+        $admin = Auth::user();
+        // Ambil tanggal awal & akhir bulan ini
+        $startOfMonth = Carbon::now()->startOfMonth();
+        $endOfMonth   = Carbon::now()->endOfMonth();
+        $monthName    = Carbon::now()->translatedFormat('F Y'); // Contoh: Januari 2026
+
+        // Query Mahasiswa (Sama seperti sebelumnya)
+        $studentsQuery = User::where('role', 'mahasiswa')->where('status', 'aktif');
+
+        if ($admin->kategori_instansi) {
+            $studentsQuery->where('kategori_instansi', $admin->kategori_instansi);
+        }
+        if ($admin->bidang !== 'Administrator Sistem') {
+            $studentsQuery->where('bidang', $admin->bidang);
+        }
+
+        $students = $studentsQuery->orderBy('name')->get();
+
+        $rekap = [];
+
+        foreach ($students as $student) {
+            // Ambil semua data presensi bulan ini punya mahasiswa tsb
+            $attendances = Attendance::where('user_id', $student->id)
+                ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+                ->get();
+
+            // Hitung Statistik
+            $rekap[] = [
+                'user' => $student,
+                'total_hadir'     => $attendances->where('status', 'Hadir')->count(),
+                'total_terlambat' => $attendances->where('is_late', true)->count(),
+                'total_izin'      => $attendances->whereIn('status', ['Izin', 'Sakit'])->count(),
+                'total_alpha'     => $attendances->where('status', 'Alpha')->count(),
+                // Hitung persentase kehadiran (opsional, biar keren)
+                'attendance_count'=> $attendances->count()
+            ];
+        }
+
+        return view('admin.students.monthly_recap', compact('rekap', 'monthName'));
     }
 
 }
