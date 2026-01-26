@@ -17,7 +17,7 @@
         .title .h3 { margin-top: 3px; }
         .title .h4 { font-size: 18px; margin: 3px 0 10px; }
 
-        .info { width: 100%; margin-top: 8px; font-size: 18px; }
+        .info { width: 100%; margin-top: 8px; font-size: 16px; }
         .info td { padding: 2px 2px; vertical-align: top; }
         .label { width: 155px; }
         .colon { width: 12px; }
@@ -30,11 +30,11 @@
 
         table.foot { width: 100%; margin-top: 14px; }
         table.foot td { vertical-align: top; }
-        .note { width: 52%; font-size: 16px; }
-        .note .head { margin-bottom: 4px; font-size: 16px; }
-        .sign { width: 48%; font-size: 16px; }
+        .note { width: 52%; font-size: 14px; }
+        .note .head { margin-bottom: 4px; font-size: 14px; }
+        .sign { width: 48%; font-size: 14px; }
         .sign .gap { height: 46px; }
-        .sign .name { font-size: 16px; }
+        .sign .name { font-size: 14px; }
     </style>
 </head>
 
