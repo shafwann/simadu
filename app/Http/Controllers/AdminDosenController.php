@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Attendance;
 use App\Models\Logbook;
 use App\Models\Laporan;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -13,70 +12,73 @@ use App\Models\PembimbingRequest;
 
 class AdminDosenController extends Controller
 {
-    // 1. Daftar Dosen
-public function index()
-{
-    $admin = auth()->user();
+    // ==================================================
+    // 1. DAFTAR DOSEN (🔥 FIX AGENCY SCOPE 🔥)
+    // ==================================================
+    public function index()
+    {
+        $admin = auth()->user();
 
-    // ===============================
-    // 1. PENDING DOSEN
-    // ===============================
-    $pendingDosens = PembimbingRequest::with('mahasiswa')
-        ->where('status', 'pending')
-        ->when(
-            $admin->bidang !== 'Administrator Sistem',
-            function ($q) use ($admin) {
-                $q->whereHas('mahasiswa', function ($m) use ($admin) {
-                    $m->where('bidang', $admin->bidang)
-                      ->where('kategori_instansi', $admin->kategori_instansi);
-                });
-            }
-        )
-        ->latest()
-        ->get();
-
-    // ===============================
-    // 2. DAFTAR DOSEN (FINAL & AMAN)
-    // ===============================
-    $dosen = User::where('role', 'pembimbing')
-        ->when(
-            $admin->bidang !== 'Administrator Sistem',
-            function ($q) use ($admin) {
-
-                // HARUS PUNYA mahasiswa sesuai bidang + instansi admin
-                $q->whereHas('mahasiswaBimbingan', function ($m) use ($admin) {
-                    $m->where('bidang', $admin->bidang)
-                      ->where('kategori_instansi', $admin->kategori_instansi);
-                })
-
-                // TIDAK BOLEH punya mahasiswa dari bidang / instansi lain
-                ->whereDoesntHave('mahasiswaBimbingan', function ($m) use ($admin) {
-                    $m->where(function ($x) use ($admin) {
-                        $x->where('bidang', '!=', $admin->bidang)
-                          ->orWhere('kategori_instansi', '!=', $admin->kategori_instansi);
+        // ===============================
+        // 1. PENDING DOSEN
+        // ===============================
+        $pendingDosens = PembimbingRequest::with('mahasiswa')
+            ->where('status', 'pending')
+            ->when(
+                $admin->bidang !== 'Administrator Sistem',
+                function ($q) use ($admin) {
+                    $q->whereHas('mahasiswa', function ($m) use ($admin) {
+                        $m->where('bidang', $admin->bidang)
+                          ->where('kategori_instansi', $admin->kategori_instansi);
                     });
-                });
-            }
-        )
-        ->latest()
-        ->paginate(10);
+                }
+            )
+            ->latest()
+            ->get();
 
-    return view('admin.dosen.index', compact('pendingDosens', 'dosen'));
-}
+        // ===============================
+        // 2. DAFTAR DOSEN (FINAL & BENAR)
+        // ===============================
+        $dosen = User::withoutGlobalScope(\App\Models\Scopes\AgencyScope::class)
+            ->where('role', 'pembimbing')
+            ->when(
+                $admin->bidang !== 'Administrator Sistem',
+                function ($q) use ($admin) {
 
+                    // HARUS punya mahasiswa sesuai admin
+                    $q->whereHas('mahasiswaBimbingan', function ($m) use ($admin) {
+                        $m->withoutGlobalScope(\App\Models\Scopes\AgencyScope::class)
+                          ->where('bidang', $admin->bidang)
+                          ->where('kategori_instansi', $admin->kategori_instansi);
+                    })
 
+                    // TIDAK BOLEH punya mahasiswa dari instansi lain
+                    ->whereDoesntHave('mahasiswaBimbingan', function ($m) use ($admin) {
+                        $m->withoutGlobalScope(\App\Models\Scopes\AgencyScope::class)
+                          ->where(function ($x) use ($admin) {
+                              $x->where('bidang', '!=', $admin->bidang)
+                                ->orWhere('kategori_instansi', '!=', $admin->kategori_instansi);
+                          });
+                    });
+                }
+            )
+            ->latest()
+            ->paginate(10);
 
+        return view('admin.dosen.index', compact('pendingDosens', 'dosen'));
+    }
 
-
-    // 3. Simpan akun Dosen
+    // ==================================================
+    // 2. SIMPAN DOSEN MANUAL
+    // ==================================================
     public function store(Request $request)
     {
         $request->validate([
-        'name' => 'required',
-        'email' => 'required|email|unique:users',
-        'password' => 'required|confirmed|min:8',
-        'instansi' => 'required|string',
-        'mahasiswa_ids' => 'array'
+            'name' => 'required',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|confirmed|min:8',
+            'instansi' => 'required|string',
+            'mahasiswa_ids' => 'array'
         ]);
 
         $dosen = User::create([
@@ -89,52 +91,32 @@ public function index()
             'kategori_instansi' => auth()->user()->kategori_instansi,
         ]);
 
-        // Assign mahasiswa yang dipilih
         if ($request->filled('mahasiswa_ids')) {
             $dosen->mahasiswaBimbingan()->sync($request->mahasiswa_ids);
         }
 
         return redirect()->route('admin.dosen.index')
-                         ->with('success', 'Dosen berhasil dibuat dan mahasiswa berhasil diassign.');
+            ->with('success', 'Dosen berhasil dibuat.');
     }
 
-    // 4. Hapus Dosen
+    // ==================================================
+    // 3. HAPUS DOSEN
+    // ==================================================
     public function destroy(User $dosen)
     {
         $this->authorizeInstansi($dosen);
         $dosen->delete();
+
         return redirect()->back()->with('success','Akun dosen berhasil dihapus.');
     }
 
-    // 5. Form assign mahasiswa (opsional jika mau assign lagi)
-    public function showAssignForm(User $dosen)
-    {
-        $mahasiswa = User::where('role', 'mahasiswa')
-                         ->where('status', 'aktif')
-                         ->get();
-
-        $mahasiswaAssigned = $dosen->mahasiswaBimbingan->pluck('id')->toArray();
-
-        return view('admin.dosen.assign', compact('dosen','mahasiswa','mahasiswaAssigned'));
-    }
-
-    // 6. Assign mahasiswa ke dosen (opsional)
-    public function assignMahasiswa(Request $request, User $dosen)
-    {
-        $dosen->mahasiswaBimbingan()->sync(
-            $request->input('mahasiswa_ids', [])
-        );
-
-        return redirect()
-            ->route('admin.dosen.index')
-            ->with('success','Mahasiswa berhasil diassign ke dosen.');
-    }
-
-
-    //7. edit dosen dari admin
+    // ==================================================
+    // 4. EDIT DOSEN
+    // ==================================================
     public function edit(Request $request, $id)
     {
         $dosen = User::where('role', 'pembimbing')->findOrFail($id);
+
         if (
             auth()->user()->kategori_instansi &&
             $dosen->kategori_instansi !== auth()->user()->kategori_instansi
@@ -142,9 +124,6 @@ public function index()
             abort(403, 'Akses Ditolak. Beda instansi.');
         }
 
-        // ===============================
-        // 1. DROPDOWN INSTANSI (GLOBAL)
-        // ===============================
         $instansiList = User::where('role', 'mahasiswa')
             ->where('status', 'aktif')
             ->whereNotNull('instansi')
@@ -152,32 +131,22 @@ public function index()
             ->orderBy('instansi')
             ->pluck('instansi');
 
-        // ===============================
-        // 2. DROPDOWN PRODI (TERGANTUNG INSTANSI)
-        // ===============================
         $instansi = $request->instansi ?? $dosen->instansi;
 
         $prodiList = User::where('role', 'mahasiswa')
             ->where('status', 'aktif')
-            ->when($instansi, function ($q) use ($instansi) {
-                $q->where('instansi', $instansi);
-            })
+            ->when($instansi, fn ($q) => $q->where('instansi', $instansi))
             ->whereNotNull('prodi')
             ->distinct()
             ->orderBy('prodi')
             ->pluck('prodi');
 
-        // ===============================
-        // 3. MAHASISWA TERFILTER
-        // ===============================
         $prodi = $request->prodi ?? $dosen->prodi;
 
         $mahasiswa = User::where('role', 'mahasiswa')
             ->where('status', 'aktif')
-            ->when($instansi, fn ($q) =>
-                $q->where('instansi', $instansi))
-            ->when($prodi, fn ($q) =>
-                $q->where('prodi', $prodi))
+            ->when($instansi, fn ($q) => $q->where('instansi', $instansi))
+            ->when($prodi, fn ($q) => $q->where('prodi', $prodi))
             ->get();
 
         $mahasiswaAssigned = $dosen->mahasiswaBimbingan
@@ -191,23 +160,22 @@ public function index()
             'mahasiswa',
             'mahasiswaAssigned'
         ));
-
     }
 
-    //8. update data dosen
+    // ==================================================
+    // 5. UPDATE DOSEN
+    // ==================================================
     public function update(Request $request, $id)
     {
         $dosen = User::where('role', 'pembimbing')->findOrFail($id);
+
         if (
             auth()->user()->kategori_instansi &&
             $dosen->kategori_instansi !== auth()->user()->kategori_instansi
         ) {
-            abort(403, 'Akses Ditolak. Beda instansi.');
+            abort(403, 'Akses Ditolak.');
         }
-        
-        // ===============================
-        // VALIDASI
-        // ===============================
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $dosen->id,
@@ -215,9 +183,6 @@ public function index()
             'mahasiswa_ids' => 'array',
         ]);
 
-        // ===============================
-        // UPDATE DATA DOSEN
-        // ===============================
         $dosen->name = $request->name;
         $dosen->email = $request->email;
 
@@ -225,125 +190,82 @@ public function index()
             $dosen->password = Hash::make($request->password);
         }
 
-        // ===============================
-        // FILTER MAHASISWA SESUAI INSTANSI
-        // ===============================
         $mahasiswaIds = User::whereIn('id', $request->input('mahasiswa_ids', []))
             ->pluck('id')
             ->toArray();
 
-        // SYNC PIVOT
         $dosen->mahasiswaBimbingan()->sync($mahasiswaIds);
 
-        // ===============================
-        // UPDATE INSTANSI DOSEN SESUAI MAHASISWA TERPILIH
-        // ===============================
         if (!empty($mahasiswaIds)) {
-            // Ambil data mahasiswa yang dipilih
-            $mahasiswa = User::whereIn('id', $mahasiswaIds)->get();
-
-            // Update instansi, prodi, fakultas, kegiatan sesuai mahasiswa pertama
-            $dosen->instansi  = $mahasiswa->first()->instansi ?? $dosen->instansi;
-            $dosen->prodi     = $mahasiswa->first()->prodi ?? $dosen->prodi;
-            $dosen->fakultas  = $mahasiswa->first()->fakultas ?? $dosen->fakultas;
-            $dosen->kegiatan  = $mahasiswa->first()->kegiatan ?? $dosen->kegiatan;
-            $dosen->bidang    = $mahasiswa->first()->bidang ?? $dosen->bidang;
-
-            // Jika mau, bisa diganti logikanya: misal gabungkan semua unik mahasiswa
-            // $dosen->instansi = $mahasiswa->pluck('instansi')->unique()->implode(', ');
-        } else {
-            // Kalau tidak ada mahasiswa dipilih, tetap gunakan input dari form atau biarkan
-            $dosen->instansi  = $request->instansi ?? $dosen->instansi;
-            $dosen->prodi     = $request->prodi ?? $dosen->prodi;
-            $dosen->fakultas  = $dosen->fakultas; // biarkan tetap
-            $dosen->kegiatan  = $dosen->kegiatan; // biarkan tetap
-            $dosen->bidang    = $dosen->bidang;
+            $mhs = User::whereIn('id', $mahasiswaIds)->first();
+            $dosen->instansi = $mhs->instansi;
+            $dosen->prodi = $mhs->prodi;
+            $dosen->fakultas = $mhs->fakultas;
+            $dosen->bidang = $mhs->bidang;
         }
 
         $dosen->save();
 
-        return redirect()
-            ->route('admin.dosen.index')
+        return redirect()->route('admin.dosen.index')
             ->with('success', 'Data dosen berhasil diperbarui.');
     }
 
-
-    //9. dashboard dosen
+    // ==================================================
+    // 6. DASHBOARD DOSEN
+    // ==================================================
     public function dashboard()
     {
         $dosen = auth()->user();
+
         $mahasiswa = $dosen->mahasiswaBimbingan()
-            ->with([
-                'attendances' => function ($q) {
-                    $q->latest()->limit(10);
-                },
-                'logbooks' => function ($q) {
-                    $q->latest()->limit(10);
-                },
-                'laporans' => function ($q) {
-                    $q->latest();
-                }
-            ])
-            ->paginate(5); // 👈 jumlah mahasiswa per halaman
+            ->with(['attendances','logbooks','laporans'])
+            ->paginate(5);
 
         return view('pembimbing.dashboard', compact('mahasiswa'));
     }
 
-    // 10. detail mahasiswa
+    // ==================================================
+    // 7. DETAIL MAHASISWA DOSEN
+    // ==================================================
     public function detailMahasiswa($id)
     {
         $dosen = auth()->user();
 
-        // pastikan mahasiswa ini memang bimbingannya
         $mahasiswa = $dosen->mahasiswaBimbingan()
             ->where('users.id', $id)
             ->firstOrFail();
 
-        $presensi = Attendance::where('user_id', $id)
-            ->orderByDesc('tanggal')
-            ->paginate(10);
-
-        $logbooks = Logbook::where('user_id', $id)
-            ->orderByDesc('tanggal')
-            ->paginate(5);
-
-        $laporans = Laporan::where('user_id', $id)
-            ->orderByDesc('created_at')
-            ->get();
+        $presensi = Attendance::where('user_id', $id)->paginate(10);
+        $logbooks = Logbook::where('user_id', $id)->paginate(5);
+        $laporans = Laporan::where('user_id', $id)->get();
 
         return view('pembimbing.mahasiswa-detail', compact(
-            'mahasiswa',
-            'presensi',
-            'logbooks',
-            'laporans'
+            'mahasiswa','presensi','logbooks','laporans'
         ));
     }
 
-    // 11. lihat mahasiswa bimbingan dosen (ADMIN)
+    // ==================================================
+    // 8. ADMIN LIHAT MAHASISWA DOSEN
+    // ==================================================
     public function showMahasiswa(User $dosen)
     {
-                if (auth()->user()->kategori_instansi && $dosen->kategori_instansi !== auth()->user()->kategori_instansi
-    ) {   abort(403, 'Akses Ditolak. Beda instansi.'); }
-        // pastikan ini dosen
         abort_if($dosen->role !== 'pembimbing', 404);
 
-        $mahasiswa = $dosen->mahasiswaBimbingan()
-            ->with(['attendances', 'logbooks'])
-            ->paginate(10);
+        if (
+            auth()->user()->kategori_instansi &&
+            $dosen->kategori_instansi !== auth()->user()->kategori_instansi
+        ) {
+            abort(403);
+        }
 
-        return view('admin.dosen.mahasiswa', compact('dosen', 'mahasiswa'));
+        $mahasiswa = $dosen->mahasiswaBimbingan()->paginate(10);
+
+        return view('admin.dosen.mahasiswa', compact('dosen','mahasiswa'));
     }
 
-    //APPROVE DOSEN
-    public function requests()
-{
-    $requests = \App\Models\PembimbingRequest::with('mahasiswa')
-        ->orderBy('created_at', 'desc')
-        ->get();
-
-    return view('admin.dosen.requests', compact('requests'));
-}
-
+    // ==================================================
+    // HELPER
+    // ==================================================
     private function authorizeInstansi(User $user)
     {
         if (
@@ -353,8 +275,4 @@ public function index()
             abort(403, 'Beda instansi');
         }
     }
-
-
-
-
 }
