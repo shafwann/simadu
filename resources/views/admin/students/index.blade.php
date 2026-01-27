@@ -19,18 +19,7 @@
     {{-- Kanan: Aksi (Rekap + Filter + Search + Tambah) --}}
 <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto items-center">
 
-    {{-- Tombol Rekap Absensi --}}
-    <a href="{{ route('admin.attendance.recap') }}"
-       class="group flex items-center justify-center gap-2 bg-blue-600 text-white px-5 py-3 rounded-2xl font-bold
-              hover:bg-blue-700 transition shadow-lg shadow-blue-100 hover:shadow-blue-200 whitespace-nowrap text-sm w-full md:w-auto">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9 17v-2a4 4 0 014-4h6M9 17H7a2 2 0 01-2-2V7a2 2 0 012-2h10a2 2 0 012 2v3" />
-        </svg>
-        Rekap Absensi
-    </a>
 
-    
                     {{-- FORM SEARCH & FILTER (Digabung dalam 1 Form) --}}
                     <form action="{{ route('admin.students.index') }}" method="GET" class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
 
@@ -58,9 +47,15 @@
                         </div>
                     </form>
 
-                    <a href="{{ route('admin.students.monthly_recap') }}" class="group flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 px-5 py-3 rounded-2xl font-bold hover:bg-gray-50 transition shadow-sm hover:shadow-md whitespace-nowrap text-sm w-full md:w-auto">
-                        <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                        Rekap Bulanan
+                        {{-- Tombol Rekap Absensi --}}
+                    <a href="{{ route('admin.attendance.recap') }}"
+                    class="group flex items-center justify-center gap-2 bg-blue-600 text-white px-5 py-3 rounded-2xl font-bold
+                            hover:bg-blue-700 transition shadow-lg shadow-blue-100 hover:shadow-blue-200 whitespace-nowrap text-sm w-full md:w-auto">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 17v-2a4 4 0 014-4h6M9 17H7a2 2 0 01-2-2V7a2 2 0 012-2h10a2 2 0 012 2v3" />
+                        </svg>
+                        Rekap Absensi
                     </a>
 
                     {{-- TOMBOL TAMBAH --}}

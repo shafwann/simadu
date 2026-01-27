@@ -253,8 +253,8 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/laporan/{laporan}/preview', [LaporanController::class, 'preview'])->name('laporan.preview');
         Route::get('/laporan/{laporan}/download', [LaporanController::class, 'download'])->name('laporan.download');
 
-        Route::get('/students/monthly-recap', [AdminStudentController::class, 'monthlyRecap'])
-        ->name('students.monthly_recap');
+        // Route::get('/students/monthly-recap', [AdminStudentController::class, 'monthlyRecap'])
+        // ->name('students.monthly_recap');
 
         // CRUD Mahasiswa
         Route::resource('students', AdminStudentController::class);

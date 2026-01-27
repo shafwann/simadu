@@ -121,7 +121,7 @@
                 <div class="p-8 bg-white border border-gray-200 rounded-[2rem] shadow-sm">
                     <h3 class="text-lg font-bold text-gray-800 mb-6 border-b pb-2 flex items-center gap-2">
                         <span class="bg-orange-100 text-orange-600 w-6 h-6 flex items-center justify-center rounded-full text-xs">3</span>
-                        Periode & Penempatan
+                        Periode & Pembimbing
                     </h3>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -136,35 +136,9 @@
                             <input type="date" name="tanggal_selesai" value="{{ old('tanggal_selesai', $student->tanggal_selesai) }}" class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
                         </div>
 
-                        {{-- Bidang --}}
-                        <div class="md:col-span-2 border-t pt-4 mt-2">
-                            <x-input-label for="bidang" :value="__('Divisi / Bidang Penempatan')" />
-
-                            <input
-                                type="text"
-                                name="bidang"
-                                id="bidang"
-                                list="bidangList"
-                                value="{{ old('bidang', $student->bidang) }}"
-                                class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm
-               focus:border-blue-500 focus:ring-blue-500 bg-gray-50"
-                                placeholder="Ketik manual atau pilih dari daftar..."
-                                required>
-
-                            <datalist id="bidangList">
-                                @foreach($bidangOptions as $bidang)
-                                <option value="{{ $bidang }}">
-                                    @endforeach
-                            </datalist>
-
-                            <p class="text-xs text-gray-500 mt-1">
-                                Mengubah bidang akan memindahkan mahasiswa ke admin bidang tersebut.
-                            </p>
-                        </div>
-
 
                         {{-- TAMBAHAN: Pembimbing Lapangan --}}
-                        <div class="md:col-span-2 mt-4">
+                        <div class="md:col-span-2">
                             <x-input-label for="jabatan_pembimbing" :value="__('Jabatan Pembimbing Lapangan')" />
                             <x-text-input
                                 id="jabatan_pembimbing"
