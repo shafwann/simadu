@@ -70,7 +70,7 @@ class AdminAttendanceRecapController extends Controller
     });
 
     // 3️⃣ FILTER status valid SAJA (INI JAWABAN PERTANYAAN KAMU)
-    $validStatus = ['hadir','telat','izin','sakit','alpha'];
+    $validStatus = ['hadir','telat','ijin','sakit','alpha'];
     $rows = $rows->whereIn('status', $validStatus);
 
     // 4️⃣ Hitung per status
@@ -78,7 +78,7 @@ class AdminAttendanceRecapController extends Controller
 
     $hadir = $count('hadir');
     $telat = $count('telat');
-    $izin  = $count('izin');
+    $ijin  = $count('ijin');
     $sakit = $count('sakit');
     $alpha = $count('alpha');
 
@@ -95,7 +95,7 @@ class AdminAttendanceRecapController extends Controller
         'instansi' => $s->instansi,
         'hadir' => $hadir,
         'telat' => $telat,
-        'izin' => $izin,
+        'ijin' => $ijin,
         'sakit' => $sakit,
         'alpha' => $alpha,
         'total' => $total,
@@ -108,7 +108,7 @@ class AdminAttendanceRecapController extends Controller
             'mahasiswa' => $rekap->count(),
             'hadir' => $rekap->sum('hadir'),
             'telat' => $rekap->sum('telat'),
-            'izin'  => $rekap->sum('izin'),
+            'ijin'  => $rekap->sum('ijin'),
             'sakit' => $rekap->sum('sakit'),
             'alpha' => $rekap->sum('alpha'),
             'total' => $rekap->sum('total'),
@@ -124,8 +124,8 @@ class AdminAttendanceRecapController extends Controller
     {
         $today = Carbon::today();
 
-    
-
+        
+            
         if ($mode === 'bulanan') {
             // input: month (YYYY-MM) optional
             $m = $request->filled('month') ? Carbon::createFromFormat('Y-m', $request->month) : $today->copy();

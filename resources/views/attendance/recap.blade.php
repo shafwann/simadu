@@ -65,7 +65,7 @@
                         <option value="all"   {{ $statusVal==='all' ? 'selected' : '' }}>Semua Status</option>
                         <option value="hadir" {{ $statusVal==='hadir' ? 'selected' : '' }}>Hadir</option>
                         <option value="telat" {{ $statusVal==='telat' ? 'selected' : '' }}>Telat</option>
-                        <option value="izin"  {{ $statusVal==='izin' ? 'selected' : '' }}>Izin</option>
+                        <option value="ijin"  {{ $statusVal==='ijin' ? 'selected' : '' }}>Ijin</option>
                         <option value="sakit" {{ $statusVal==='sakit' ? 'selected' : '' }}>Sakit</option>
                         <option value="alpha" {{ $statusVal==='alpha' ? 'selected' : '' }}>Alpha</option>
                     </select>
@@ -97,7 +97,7 @@
 
             {{-- SUMMARY --}}
             @php
-                $sum = $summary ?? ['mahasiswa'=>0,'hadir'=>0,'telat'=>0,'izin'=>0,'sakit'=>0,'alpha'=>0,'total'=>0];
+                $sum = $summary ?? ['mahasiswa'=>0,'hadir'=>0,'telat'=>0,'ijin'=>0,'sakit'=>0,'alpha'=>0,'total'=>0];
             @endphp
 
             <div class="grid grid-cols-2 md:grid-cols-7 gap-3">
@@ -114,8 +114,8 @@
                     <div class="text-2xl font-black text-gray-900 mt-1">{{ $sum['telat'] }}</div>
                 </div>
                 <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-4">
-                    <div class="text-xs text-gray-400 font-bold uppercase">Izin</div>
-                    <div class="text-2xl font-black text-gray-900 mt-1">{{ $sum['izin'] }}</div>
+                    <div class="text-xs text-gray-400 font-bold uppercase">Ijin</div>
+                    <div class="text-2xl font-black text-gray-900 mt-1">{{ $sum['ijin'] }}</div>
                 </div>
                 <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-4">
                     <div class="text-xs text-gray-400 font-bold uppercase">Sakit</div>
@@ -154,7 +154,7 @@
                                 <th class="px-6 py-4">Bidang</th>
                                 <th class="px-6 py-4 text-center">Hadir</th>
                                 <th class="px-6 py-4 text-center">Telat</th>
-                                <th class="px-6 py-4 text-center">Izin</th>
+                                <th class="px-6 py-4 text-center">Ijin</th>
                                 <th class="px-6 py-4 text-center">Sakit</th>
                                 <th class="px-6 py-4 text-center">Alpha</th>
                                 <th class="px-6 py-4 text-center">Total</th>
@@ -198,11 +198,11 @@
     @endif
 </td>
 
-{{-- IZIN --}}
+{{-- IJIN --}}
 <td class="px-6 py-4 text-center">
-    @if($r['izin'] > 0)
+    @if($r['ijin'] > 0)
         <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
-            {{ $r['izin'] }}
+            {{ $r['ijin'] }}
         </span>
     @else
         <span class="text-gray-400">0</span>
