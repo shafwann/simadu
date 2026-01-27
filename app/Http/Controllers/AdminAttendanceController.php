@@ -28,7 +28,7 @@ class AdminAttendanceController extends Controller
             'tipe_absensi'  => 'nullable|in:check_in,check_out',
             'location'      => 'nullable|string|max:255',
             'location_name' => 'nullable|string|max:255',
-            'keterangan'    => 'nullable|string|max:50', // ✅ untuk PC
+            'keterangan'    => 'nullable|string|max:50', // untuk PC di input manual
         ]);
 
         $status = $validated['status'];
@@ -133,48 +133,55 @@ class AdminAttendanceController extends Controller
         return view('admin.attendance.edit', compact('attendance'));
     }
 
+    // ✅ UPDATE: PC akan hilang jika check_out kosong (biar TAP yang muncul)
     public function update(Request $request, $id)
     {
         $attendance = Attendance::findOrFail($id);
 
-        $validated = $request->validate([
+        $request->validate([
             'tanggal'       => 'required|date',
-            'status'        => 'required|in:Hadir,Telat,Ijin,Sakit,Dinas Luar,Cuti,Tanpa Keterangan,Alpha',
             'check_in'      => 'nullable',
             'check_out'     => 'nullable',
+            'status'        => 'nullable|string|max:50',
             'location'      => 'nullable|string|max:255',
             'location_name' => 'nullable|string|max:255',
-            'keterangan'    => 'nullable|string|max:50', // ✅ untuk PC
+            // checkbox pulang cepat (dari form edit)
+            'pulang_cepat'  => 'nullable',
         ]);
 
-        $status = $validated['status'];
-        if ($status === 'Alpha') $status = 'Tanpa Keterangan';
+        $status   = $request->status;
+        $checkIn  = $request->check_in ?: null;
+        $checkOut = $request->check_out ?: null;
 
-        $lokasiNama = $validated['location_name'] ?? $this->getDefaultLocationName($status);
+        // checkbox PC
+        $pcChecked = $request->has('pulang_cepat');
 
-        if (in_array($status, ['Tanpa Keterangan', 'Sakit', 'Ijin', 'Dinas Luar', 'Cuti'], true)) {
-            $attendance->update([
-                'tanggal'       => $validated['tanggal'],
-                'check_in'      => null,
-                'check_out'     => null,
-                'status'        => $status,
-                'keterangan'    => $validated['keterangan'] ?? null,
-                'location'      => null,
-                'location_name' => $lokasiNama,
-            ]);
-        } else {
-            $request->validate(['check_in' => 'required']);
-
-            $attendance->update([
-                'tanggal'       => $validated['tanggal'],
-                'check_in'      => $validated['check_in'],
-                'check_out'     => $validated['check_out'] ?? null,
-                'status'        => $status,
-                'keterangan'    => $validated['keterangan'] ?? $attendance->keterangan,
-                'location'      => $validated['location'] ?? null,
-                'location_name' => $lokasiNama,
-            ]);
+        // ✅ keterangan PC hanya valid jika:
+        // - status Hadir/Telat
+        // - check_out TERISI
+        // - checkbox dicentang
+        $keterangan = null;
+        if (in_array($status, ['Hadir', 'Telat'], true)) {
+            if (!empty($checkOut) && $pcChecked) {
+                $keterangan = 'Pulang Cepat';
+            }
         }
+
+        // ✅ jika check_out kosong => pastikan PC hilang (TAP akan dihitung dari VIEW)
+        if (empty($checkOut)) {
+            $keterangan = null;
+        }
+
+        $attendance->tanggal = $request->tanggal;
+        $attendance->check_in = $checkIn;
+        $attendance->check_out = $checkOut;
+        $attendance->status = $status;
+        $attendance->keterangan = $keterangan;
+
+        $attendance->location = $request->location;
+        $attendance->location_name = $request->location_name;
+
+        $attendance->save();
 
         return redirect()
             ->route('admin.students.show', $attendance->user_id)

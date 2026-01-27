@@ -1,3 +1,4 @@
+{{-- resources/views/admin/attendance/edit.blade.php --}}
 <x-app-layout>
     <div class="py-12 bg-gray-50 min-h-screen">
         <div class="max-w-xl mx-auto px-6 lg:px-8">
@@ -24,16 +25,30 @@
                             class="block mt-1 w-full border-gray-200 rounded-xl bg-gray-50 focus:border-blue-500 focus:ring-blue-500 font-bold text-gray-800" required>
                     </div>
 
-                    {{-- Status Kehadiran (Pindah ke atas agar logika JS lebih masuk akal bagi user) --}}
+                    {{-- Status Kehadiran --}}
                     <div>
                         <x-input-label for="status" :value="__('Status Kehadiran')" />
-                        <select name="status" id="statusSelect" class="block mt-1 w-full border-gray-200 rounded-xl bg-white focus:border-blue-500 focus:ring-blue-500 font-bold text-gray-800">
+                        <select name="status" id="statusSelect"
+                            class="block mt-1 w-full border-gray-200 rounded-xl bg-white focus:border-blue-500 focus:ring-blue-500 font-bold text-gray-800">
                             @foreach(['Hadir','Telat','Ijin','Sakit','Dinas Luar','Cuti','Tanpa Keterangan'] as $s)
                                 <option value="{{ $s }}" {{ $attendance->status == $s ? 'selected' : '' }}>
                                     {{ $s }}
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+
+                    {{-- Pulang Cepat --}}
+                    <div id="pulangCepatWrapper" class="hidden mt-2">
+                        <label class="inline-flex items-center gap-2 font-semibold text-gray-700">
+                            <input type="checkbox"
+                                id="pulangCepatCheckbox"
+                                name="pulang_cepat"
+                                value="1"
+                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                {{ old('pulang_cepat') ? 'checked' : (old('keterangan', $attendance->keterangan) === 'Pulang Cepat' ? 'checked' : '') }}>
+                            ⏱️ Pulang Cepat
+                        </label>
                     </div>
 
                     {{-- Grid Jam Masuk & Pulang --}}
@@ -58,7 +73,7 @@
                             placeholder="https://goo.gl/maps/...">
                     </div>
 
-                    {{-- ✅ TAMBAHAN: NAMA LOKASI --}}
+                    {{-- Nama Lokasi --}}
                     <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
                         <x-input-label for="location_name" :value="__('Nama Lokasi (Teks PDF)')" />
                         <input type="text" name="location_name" value="{{ old('location_name', $attendance->location_name) }}"
@@ -72,10 +87,12 @@
 
                     {{-- Tombol Aksi --}}
                     <div class="pt-6 flex gap-3 border-t border-gray-100">
-                        <button type="submit" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-lg shadow-blue-200">
+                        <button type="submit"
+                            class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-lg shadow-blue-200">
                             Simpan Perubahan
                         </button>
-                        <a href="{{ route('admin.students.show', $attendance->user_id) }}" class="px-6 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition">
+                        <a href="{{ route('admin.students.show', $attendance->user_id) }}"
+                            class="px-6 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition">
                             Batal
                         </a>
                     </div>
@@ -85,7 +102,7 @@
         </div>
     </div>
 
-    {{-- SCRIPT TOGGLE JAM --}}
+    {{-- SCRIPT TOGGLE JAM + PC --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const statusSelect = document.getElementById('statusSelect');
@@ -93,12 +110,8 @@
             const checkOutInput = document.getElementById('checkOutInput');
 
             function toggleJam() {
-                // Daftar status yang TIDAK butuh jam
                 const noTimeStatus = ['Sakit', 'Ijin', 'Cuti', 'Tanpa Keterangan', 'Alpha'];
                 const selected = statusSelect.value;
-
-                // Cek apakah status yang dipilih termasuk yang tidak butuh jam
-                // Kita pakai logika string matching sederhana
                 const isDisabled = noTimeStatus.some(s => selected.includes(s));
 
                 checkInInput.disabled = isDisabled;
@@ -113,9 +126,28 @@
                 }
             }
 
-            // Jalankan saat load & saat ganti status
             toggleJam();
             statusSelect.addEventListener('change', toggleJam);
+
+            const pulangCepatCheckbox = document.getElementById('pulangCepatCheckbox');
+            const pulangCepatWrapper = document.getElementById('pulangCepatWrapper');
+
+            function togglePulangCepat() {
+                const status = statusSelect.value;
+                const allowPulangCepat = status.includes('Hadir') || status.includes('Telat');
+
+                if (allowPulangCepat) {
+                    pulangCepatWrapper.style.display = 'block';
+                    pulangCepatCheckbox.disabled = false;
+                } else {
+                    pulangCepatWrapper.style.display = 'none';
+                    pulangCepatCheckbox.checked = false;
+                    pulangCepatCheckbox.disabled = true;
+                }
+            }
+
+            togglePulangCepat();
+            statusSelect.addEventListener('change', togglePulangCepat);
         });
     </script>
 </x-app-layout>

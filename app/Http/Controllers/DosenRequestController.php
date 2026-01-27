@@ -26,9 +26,32 @@ class DosenRequestController extends Controller
 
         $request->validate([
             'nama_dosen' => ['required', 'string', 'max:255'],
-            'nidn'       => ['nullable', 'digits:10', Rule::unique('pembimbing_requests', 'nidn')->ignore($existingId)],
-            'email'      => ['required', 'email', 'max:255', Rule::unique('pembimbing_requests', 'email')->ignore($existingId)],
-            'password'   => ['required', 'string', 'min:8'],
+
+            // ✅ PERUBAHAN SESUAI REQUEST:
+            // nidn/email uniknya dibatasi PER mahasiswa saja (bukan global)
+            // jadi dosen yang sama bisa diajukan oleh banyak mahasiswa (tetap aman untuk 1 mahasiswa)
+            'nidn' => [
+                'nullable',
+                'digits:10',
+                Rule::unique('pembimbing_requests', 'nidn')
+                    ->where(function ($q) {
+                        return $q->where('mahasiswa_id', auth()->id());
+                    })
+                    ->ignore($existingId),
+            ],
+
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('pembimbing_requests', 'email')
+                    ->where(function ($q) {
+                        return $q->where('mahasiswa_id', auth()->id());
+                    })
+                    ->ignore($existingId),
+            ],
+
+            'password' => ['required', 'string', 'min:8'],
         ]);
 
         $payload = [
@@ -44,7 +67,7 @@ class DosenRequestController extends Controller
             'status'            => 'pending',
         ];
 
-        // ✅ jika sudah ada -> update saja (agar tidak duplicate NIDN/Email unik)
+        // ✅ jika sudah ada -> update saja (agar tidak duplicate dalam 1 mahasiswa)
         if ($existing) {
             $existing->update($payload);
             return back()->with('success', 'Perubahan dikirim. Menunggu persetujuan admin.');
@@ -76,7 +99,10 @@ class DosenRequestController extends Controller
             }
 
             // 3️⃣ BUAT / AMBIL DOSEN
-            $dosen = User::where('email', $req->email)->first();
+            // ✅ FIX: cari berdasarkan email TANPA global scope AgencyScope
+            $dosen = User::withoutGlobalScope(\App\Models\Scopes\AgencyScope::class)
+                ->where('email', $req->email)
+                ->first();
 
             if (!$dosen) {
                 $dosen = User::create([
@@ -95,6 +121,7 @@ class DosenRequestController extends Controller
                     'status'   => 'aktif',
                 ]);
             }
+
             // 🔥 SINKRON DATA DOSEN DARI MAHASISWA
             $mahasiswa = $req->mahasiswa;
 
@@ -102,7 +129,7 @@ class DosenRequestController extends Controller
             $dosen->prodi     = $mahasiswa->prodi;
             $dosen->fakultas  = $mahasiswa->fakultas;
             $dosen->bidang    = $mahasiswa->bidang;
-            $dosen->nidn      = $req->nidn; // dari form request mahasiswa
+            $dosen->nidn      = $req->nidn;
 
             $dosen->save();
 
