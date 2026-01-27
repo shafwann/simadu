@@ -133,13 +133,13 @@ Route::get('/', function (Request $request) {
 // 2. LOBBY UTAMA (PENGALIH ARUS)
 // ==========================================
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'no-cache'])
     ->name('dashboard');
 
 // ==========================================
 // 3. GROUP: AUTHENTICATED USERS (SHARED)
 // ==========================================
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'no-cache'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -148,7 +148,7 @@ Route::middleware('auth')->group(function () {
 // ==========================================
 // 4. GROUP: MAHASISWA ONLY
 // ==========================================
-Route::middleware(['auth', 'role:mahasiswa'])->group(function () {
+Route::middleware(['auth', 'no-cache', 'role:mahasiswa'])->group(function () {
 
     // Certificate
     Route::get('/certificate/download', function () {
@@ -231,7 +231,7 @@ Route::middleware(['auth', 'role:mahasiswa'])->group(function () {
 // ==========================================
 // 5. GROUP: ADMIN ONLY
 // ==========================================
-Route::middleware(['auth', 'role:admin'])
+Route::middleware(['auth', 'no-cache', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
@@ -252,9 +252,6 @@ Route::middleware(['auth', 'role:admin'])
         // Laporan (Admin View)
         Route::get('/laporan/{laporan}/preview', [LaporanController::class, 'preview'])->name('laporan.preview');
         Route::get('/laporan/{laporan}/download', [LaporanController::class, 'download'])->name('laporan.download');
-
-        // Route::get('/students/monthly-recap', [AdminStudentController::class, 'monthlyRecap'])
-        // ->name('students.monthly_recap');
 
         // CRUD Mahasiswa
         Route::resource('students', AdminStudentController::class);
@@ -284,7 +281,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/attendance/{id}/edit', [AdminAttendanceController::class, 'edit'])->name('attendance.edit');
         Route::put('/attendance/{id}', [AdminAttendanceController::class, 'update'])->name('attendance.update');
 
-        // Assessment (Tidak ada GET /admin/assessment/{id})
+        // Assessment
         Route::prefix('assessment')->name('assessment.')->group(function () {
             Route::post('/{user}', [AssessmentController::class, 'store'])->name('store');
             Route::patch('/{assessment}', [AssessmentController::class, 'update'])->name('update');
@@ -343,7 +340,7 @@ Route::middleware(['auth', 'role:admin'])
 // ==========================================
 // 6. GROUP: PEMBIMBING ONLY
 // ==========================================
-Route::middleware(['auth', 'role:pembimbing'])
+Route::middleware(['auth', 'no-cache', 'role:pembimbing'])
     ->prefix('pembimbing')
     ->name('pembimbing.')
     ->group(function () {
@@ -356,7 +353,7 @@ Route::middleware(['auth', 'role:pembimbing'])
 // ==========================================
 // 7. GROUP: MASTER ONLY
 // ==========================================
-Route::middleware(['auth', 'role:master'])
+Route::middleware(['auth', 'no-cache', 'role:master'])
     ->prefix('master')
     ->name('master.')
     ->group(function () {
