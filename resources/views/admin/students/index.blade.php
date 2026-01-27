@@ -5,20 +5,32 @@
         <div class="max-w-7xl mx-auto px-6 lg:px-8">
 
             {{-- HEADER SECTION --}}
-            <div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-6 gap-4">
+<div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-6 gap-4">
 
-                {{-- Kiri: Judul --}}
-                <div>
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 mb-2">
-                        <span class="w-2 h-2 rounded-full bg-blue-600"></span>
-                        <span class="text-xs font-bold text-blue-700 uppercase tracking-wider">Database Anggota</span>
-                    </div>
-                    <h1 class="text-3xl font-black text-gray-900 tracking-tight">Daftar Mahasiswa</h1>
-                </div>
+    {{-- Kiri: Judul --}}
+    <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 mb-2">
+            <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+            <span class="text-xs font-bold text-blue-700 uppercase tracking-wider">Database Anggota</span>
+        </div>
+        <h1 class="text-3xl font-black text-gray-900 tracking-tight">Daftar Mahasiswa</h1>
+    </div>
 
-                {{-- Kanan: Aksi (Search & Filter & Tambah) --}}
-                <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto items-center">
+    {{-- Kanan: Aksi (Rekap + Filter + Search + Tambah) --}}
+<div class="flex flex-col md:flex-row gap-3 w-full md:w-auto items-center">
 
+    {{-- Tombol Rekap Absensi --}}
+    <a href="{{ route('admin.attendance.recap') }}"
+       class="group flex items-center justify-center gap-2 bg-blue-600 text-white px-5 py-3 rounded-2xl font-bold
+              hover:bg-blue-700 transition shadow-lg shadow-blue-100 hover:shadow-blue-200 whitespace-nowrap text-sm w-full md:w-auto">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 17v-2a4 4 0 014-4h6M9 17H7a2 2 0 01-2-2V7a2 2 0 012-2h10a2 2 0 012 2v3" />
+        </svg>
+        Rekap Absensi
+    </a>
+
+    
                     {{-- FORM SEARCH & FILTER (Digabung dalam 1 Form) --}}
                     <form action="{{ route('admin.students.index') }}" method="GET" class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
 

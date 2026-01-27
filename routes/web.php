@@ -24,6 +24,7 @@ use App\Http\Controllers\AdminPresensiPdfController;
 use App\Http\Controllers\DosenRequestController;
 use App\Http\Controllers\MasterAgencyController;
 use App\Http\Controllers\MasterSettingController;
+use App\Http\Controllers\AdminAttendanceRecapController;
 
 use App\Models\AboutSetting;
 use App\Models\User;
@@ -236,6 +237,12 @@ Route::middleware(['auth', 'role:admin'])
     ->group(function () {
 
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+
+        // ✅ REKAP ABSENSI (TAMBAHKAN DI SINI)
+        Route::get('/rekap-absensi', [AdminAttendanceRecapController::class, 'index'])
+            ->name('attendance.recap');
+
+        // route admin lain..
 
         // Validasi
         Route::post('/logbook/{id}/validate', [AdminController::class, 'validateLogbook'])->name('logbook.validate');
