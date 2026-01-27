@@ -229,11 +229,6 @@
             <div class="mt-4">
                 {{ $students->links() }}
             </div>
-
-            <div class="mt-6 text-center">
-                <p class="text-xs text-gray-400">&copy; Sistem Monitoring Baperlitbang</p>
-            </div>
-
         </div>
     </div>
 </x-app-layout>

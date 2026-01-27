@@ -119,8 +119,6 @@
                                 </label>
                             </div>
 
-
-
                             {{-- Link Maps --}}
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Link Google Maps</label>
@@ -292,49 +290,21 @@
                                     // PC
                                     $isPC = ($ket === 'PULANG CEPAT');
 
-                                    // TAP: check_in ada, check_out kosong, dan sekarang sudah lewat checkout_selesai hari itu
-                                    $isTAP = false;
-                                    if (!empty($a->check_in) && empty($a->check_out)) {
-                                    try {
-                                    // perlu about setting / jadwal checkout per hari.
-                                    // pakai kategori_instansi dari student agar sesuai instansi
-                                    $about = \App\Models\AboutSetting::where('kategori_instansi', $student->kategori_instansi ?? 'UMUM')->first();
+                                    // ✅ TAP: jika check_in ada dan check_out kosong => langsung TAP (sesuai permintaan)
+                                    $isTAP = (!empty($a->check_in) && empty($a->check_out));
 
-                                    $checkoutEndMap = [
-                                    1 => $about?->senin_checkout_selesai,
-                                    2 => $about?->selasa_checkout_selesai,
-                                    3 => $about?->rabu_checkout_selesai,
-                                    4 => $about?->kamis_checkout_selesai,
-                                    5 => $about?->jumat_checkout_selesai,
-                                    ];
+                                    $extras = [];
+                                    if ($isPC) $extras[] = 'PC';
+                                    if ($isTAP) $extras[] = 'TAP';
 
-                                    $date = \Carbon\Carbon::parse($a->tanggal, 'Asia/Jakarta');
-                                    $dow = $date->dayOfWeekIso; // 1..7
+                                    $statusFinal = $code;
+                                    if (!empty($extras)) {
+                                    $statusFinal = $code . ',' . implode(',', $extras);
+                                    }
 
-                                    if ($dow <= 5) {
-                                        $endStr=$checkoutEndMap[$dow] ?? null;
-                                        if (!empty($endStr)) {
-                                        $endTime=\Carbon\Carbon::parse($date->format('Y-m-d') . ' ' . $endStr, 'Asia/Jakarta');
-                                        $isTAP = \Carbon\Carbon::now('Asia/Jakarta')->gt($endTime);
-                                        }
-                                        }
-                                        } catch (\Throwable $e) {
-                                        $isTAP = false;
-                                        }
-                                        }
-
-                                        $extras = [];
-                                        if ($isPC) $extras[] = 'PC';
-                                        if ($isTAP) $extras[] = 'TAP';
-
-                                        $statusFinal = $code;
-                                        if (!empty($extras)) {
-                                        $statusFinal = $code . ',' . implode(',', $extras);
-                                        }
-
-                                        // split badge
-                                        $parts = array_filter(array_map('trim', explode(',', $statusFinal)));
-                                        @endphp
+                                    // split badge
+                                    $parts = array_filter(array_map('trim', explode(',', $statusFinal)));
+                                    @endphp
 
                                         <tr class="hover:bg-blue-50/50 transition">
                                             <td class="p-4 font-medium">{{ \Carbon\Carbon::parse($a->tanggal)->format('d M Y') }}</td>
@@ -721,9 +691,7 @@
                focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800 text-sm">{{ old('apresiasi_khusus', optional($student->assessment)->apresiasi_khusus) }}</textarea>
                         </div>
 
-
-
-                        {{-- ✅ TAMBAHAN BARU: TANGGAL SERTIFIKAT (DITAMBAHKAN SAJA, TIDAK MENGUBAH KODE LAIN) --}}
+                        {{-- ✅ TAMBAHAN BARU: TANGGAL SERTIFIKAT --}}
                         <div class="rounded-2xl border border-gray-100 bg-white p-4 mt-0">
                             <label class="block text-[11px] font-black text-gray-500 uppercase tracking-wide">
                                 Tanggal Sertifikat
@@ -759,7 +727,6 @@
             </div>
         </div>
     </div>
-
 
     {{-- ✅ SCRIPT MODAL (FIX: klik status -> modal muncul) --}}
     <script>
@@ -870,7 +837,6 @@
     statusSelect.addEventListener('change', updatePulangCepatUI);
 });
     </script>
-
 
     {{-- MODAL DOWNLOAD PRESENSI --}}
     <div id="downloadPresensiModal" class="fixed inset-0 z-50 hidden">
@@ -1021,6 +987,5 @@
             });
         });
     </script>
-
 
 </x-app-layout>
