@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
 use App\Models\AboutSetting;
 use Illuminate\Support\Facades\URL; // ✅ PENTING
+use Illuminate\Support\Facades\DB;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Event;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -70,6 +73,16 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $view->with('globalAbout', $setting);
+
+            Event::listen(Login::class, function ($event) {
+            DB::table('authentication_logs')->insert([
+                'user_id'    => $event->user->id,
+                'name'       => $event->user->name,
+                'ip_address' => Request::ip(),
+                'user_agent' => Request::userAgent(),
+                'login_at'   => now(),
+            ]);
+        });
         });
     }
 }
