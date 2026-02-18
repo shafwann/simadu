@@ -17,7 +17,6 @@
                 </div>
 
                 <div class="flex gap-3">
-                    {{-- ✅ IMPORTANT: kasih id="statusForm" biar JS gak error --}}
                     <form id="statusForm" action="{{ route('admin.students.updateStatus', $student->id) }}" method="POST">
                         @csrf
                         @method('PATCH')
@@ -65,21 +64,18 @@
                             @csrf
                             <input type="hidden" name="user_id" value="{{ $student->id }}">
 
-                            {{-- Tanggal --}}
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tanggal</label>
                                 <input type="date" name="tanggal" value="{{ date('Y-m-d') }}"
                                     class="w-full rounded-xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800">
                             </div>
 
-                            {{-- Jam --}}
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Jam</label>
                                 <input type="time" name="jam" value="08:00"
                                     class="w-full rounded-xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800">
                             </div>
 
-                            {{-- Tipe Absensi --}}
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipe Absensi</label>
                                 <select name="tipe_absensi"
@@ -89,12 +85,8 @@
                                 </select>
                             </div>
 
-                            {{-- Status Kehadiran --}}
-                            {{-- Status Kehadiran --}}
                             <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">
-                                    Status Kehadiran
-                                </label>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status Kehadiran</label>
                                 <select name="status" id="statusSelect"
                                     class="w-full rounded-xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800">
                                     <option value="Hadir">✅ Hadir</option>
@@ -107,7 +99,6 @@
                                 </select>
                             </div>
 
-                            {{-- Pulang Cepat --}}
                             <div id="pulangCepatWrapper" class="mt-3 hidden">
                                 <label class="inline-flex items-center gap-2 font-semibold text-gray-700">
                                     <input type="checkbox"
@@ -119,7 +110,6 @@
                                 </label>
                             </div>
 
-                            {{-- Link Maps --}}
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Link Google Maps</label>
                                 <input type="text" name="location" placeholder="https://goo.gl/maps/..."
@@ -137,6 +127,13 @@
 
                 {{-- KANAN: Riwayat --}}
                 <div class="lg:col-span-2 space-y-6">
+
+                    @php
+                    $isSuperAdmin = Auth::user()->bidang === 'Administrator Sistem';
+                    $scanUrl = $student->assessment && $student->assessment->certificate_scan
+                    ? asset('storage/' . $student->assessment->certificate_scan)
+                    : null;
+                    @endphp
 
                     {{-- Riwayat Penilaian --}}
                     <div class="bg-white border border-gray-100 rounded-[2rem] shadow-sm overflow-hidden">
@@ -160,10 +157,13 @@
                                     </button>
                                 </form>
 
+                                {{-- Download Sertifikat hanya Super Admin --}}
+                                @if($isSuperAdmin)
                                 <a href="{{ route('admin.assessment.certificate', $student->id) }}"
                                     class="px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 transition">
                                     Download
                                 </a>
+                                @endif
                             </div>
                             @endif
                         </div>
@@ -234,6 +234,106 @@
                                     </tbody>
                                 </table>
                             </div>
+
+                            @if($student->assessment && $isSuperAdmin)
+                            @php
+                            $scanPath = $student->assessment->certificate_scan ?? null;
+                            $scanUrl = $scanPath ? asset('storage/' . $scanPath) : null;
+
+                            $scanOriginalName = $student->assessment->certificate_scan_original_name ?? null;
+
+                            $scanDisplayName = $scanOriginalName ?: ($scanPath ? basename($scanPath) : 'Belum ada file dipilih');
+                            @endphp
+
+                            <div class="mt-6 bg-white border border-gray-100 rounded-2xl p-5">
+                                <div class="flex items-center justify-between gap-3 flex-wrap">
+                                    <div>
+                                        <p class="text-sm font-black text-gray-900">Upload Scan Sertifikat</p>
+                                        <p class="text-[11px] font-bold text-gray-400 mt-1">PDF/JPG/PNG/WEBP • Max 20MB</p>
+                                    </div>
+                                    @if($scanUrl)
+                                    <form action="{{ route('admin.assessment.scan.destroy', $student->assessment->id) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Yakin ingin menghapus scan sertifikat ini?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="px-4 py-2 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 transition">
+                                            Hapus
+                                        </button>
+                                    </form>
+                                    @endif
+                                </div>
+
+                                <form class="mt-4 flex flex-col md:flex-row gap-3 items-start md:items-center"
+                                    action="{{ route('admin.assessment.scan.upload', $student->assessment->id) }}"
+                                    method="POST"
+                                    enctype="multipart/form-data">
+                                    @csrf
+                                    @method('PATCH')
+
+                                    <div class="w-full flex-1">
+                                        <input
+                                            id="certificate_scan_input"
+                                            type="file"
+                                            name="certificate_scan"
+                                            accept="application/pdf,image/jpeg,image/png,image/webp"
+                                            class="hidden">
+
+                                        <div class="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 hover:bg-gray-100 transition">
+                                            <div class="flex items-center justify-between gap-3">
+                                                <label for="certificate_scan_input" class="cursor-pointer inline-flex items-center gap-2">
+                                                    <span class="px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-700 font-bold text-sm">
+                                                        Pilih File
+                                                    </span>
+                                                    @if($scanUrl)
+                                                    <a href="{{ $scanUrl }}" target="_blank"
+                                                        class="font-bold text-blue-600 hover:underline break-all">
+                                                        <span id="certificate_scan_filename">{{ $scanDisplayName }}</span>
+                                                    </a>
+                                                    @else
+                                                    <span id="certificate_scan_filename" class="font-semibold text-gray-500">
+                                                        {{ $scanDisplayName }}
+                                                    </span>
+                                                    @endif
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        @error('certificate_scan')
+                                        <p class="mt-2 text-xs text-red-600 font-semibold">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
+                                    <button type="submit"
+                                        class="w-full md:w-auto px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition">
+                                        {{ $scanUrl ? 'Upload Scan' : 'Upload Scan' }}
+                                    </button>
+                                </form>
+                            </div>
+
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    const input = document.getElementById('certificate_scan_input');
+                                    const nameEl = document.getElementById('certificate_scan_filename');
+                                    if (!input || !nameEl) return;
+
+                                    const initial = nameEl.textContent;
+
+                                    input.addEventListener('change', function() {
+                                        const f = this.files && this.files[0] ? this.files[0] : null;
+                                        if (!f) {
+                                            nameEl.textContent = initial;
+                                            return;
+                                        }
+                                        // ✅ tampilkan nama asli file yang dipilih user
+                                        nameEl.textContent = f.name;
+                                    });
+                                });
+                            </script>
+                            @endif
+
+
                             @else
                             <p class="text-gray-500 italic">
                                 Belum ada penilaian. Klik <b>Tandai Selesai Magang</b> untuk mengisi penilaian.
@@ -266,17 +366,11 @@
                                 <tbody class="divide-y divide-gray-50">
                                     @forelse($student->attendances()->orderBy('tanggal', 'desc')->get() as $a)
                                     @php
-                                    // ============================
-                                    // STATUS ADMIN: samakan dengan logika ringkas (H/T/I/S/DL/CT/TK + PC/TAP)
-                                    // ============================
-
                                     $stRaw = $a->status ?? '-';
                                     $ketRaw = $a->keterangan ?? null;
-
                                     $st = strtoupper(trim((string) $stRaw));
                                     $ket = strtoupper(trim((string) $ketRaw));
 
-                                    // base code
                                     $code = '-';
                                     if ($st === '' || $st === '-') $code = '-';
                                     elseif (in_array($st, ['ALPHA','TANPA KETERANGAN','TK'])) $code = 'TK';
@@ -287,10 +381,7 @@
                                     elseif (in_array($st, ['DL','DINAS LUAR'])) $code = 'DL';
                                     elseif (in_array($st, ['CT','CUTI'])) $code = 'CT';
 
-                                    // PC
                                     $isPC = ($ket === 'PULANG CEPAT');
-
-                                    // ✅ TAP: jika check_in ada dan check_out kosong => langsung TAP (sesuai permintaan)
                                     $isTAP = (!empty($a->check_in) && empty($a->check_out));
 
                                     $extras = [];
@@ -298,100 +389,96 @@
                                     if ($isTAP) $extras[] = 'TAP';
 
                                     $statusFinal = $code;
-                                    if (!empty($extras)) {
-                                    $statusFinal = $code . ',' . implode(',', $extras);
-                                    }
+                                    if (!empty($extras)) $statusFinal = $code . ',' . implode(',', $extras);
 
-                                    // split badge
                                     $parts = array_filter(array_map('trim', explode(',', $statusFinal)));
                                     @endphp
 
-                                        <tr class="hover:bg-blue-50/50 transition">
-                                            <td class="p-4 font-medium">{{ \Carbon\Carbon::parse($a->tanggal)->format('d M Y') }}</td>
+                                    <tr class="hover:bg-blue-50/50 transition">
+                                        <td class="p-4 font-medium">{{ \Carbon\Carbon::parse($a->tanggal)->format('d M Y') }}</td>
 
-                                            {{-- Jam: tampil check_in - check_out biar lengkap --}}
-                                            <td class="p-4 font-mono text-gray-600">
-                                                {{ \Carbon\Carbon::parse($a->check_in)->format('H:i') ?? '-' }}
-                                                <span class="text-gray-300">—</span>
-                                                {{ $a->check_out ? \Carbon\Carbon::parse($a->check_out)->format('H:i') : '-' }}
-                                            </td>
+                                        <td class="p-4 font-mono text-gray-600">
+                                            {{ $a->check_in ? \Carbon\Carbon::parse($a->check_in)->format('H:i') : '-' }}
+                                            <span class="text-gray-300">—</span>
+                                            {{ $a->check_out ? \Carbon\Carbon::parse($a->check_out)->format('H:i') : '-' }}
+                                        </td>
 
-                                            <td class="p-4">
-                                                <div class="flex flex-wrap gap-2">
-                                                    @foreach($parts as $p)
-                                                    @if($p === 'H')
-                                                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-bold">H</span>
-                                                    @elseif($p === 'T')
-                                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md text-xs font-bold">T</span>
-                                                    @elseif($p === 'I')
-                                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-bold">I</span>
-                                                    @elseif($p === 'S')
-                                                    <span class="px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-xs font-bold">S</span>
-                                                    @elseif($p === 'DL')
-                                                    <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs font-bold">DL</span>
-                                                    @elseif($p === 'CT')
-                                                    <span class="px-2 py-1 bg-pink-100 text-pink-700 rounded-md text-xs font-bold">CT</span>
-                                                    @elseif($p === 'TK')
-                                                    <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">TK</span>
-                                                    @elseif($p === 'PC')
-                                                    <span class="px-2 py-1 bg-orange-100 text-orange-700 rounded-md text-xs font-bold">PC</span>
-                                                    @elseif($p === 'TAP')
-                                                    <span class="px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs font-bold">TAP</span>
-                                                    @else
-                                                    <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">{{ $p }}</span>
-                                                    @endif
-                                                    @endforeach
-                                                </div>
-                                            </td>
-
-                                            <td class="p-4 text-xs">
-                                                @if($a->location)
-                                                <div class="flex flex-col gap-1">
-                                                    <a href="{{ $a->location }}" target="_blank"
-                                                        class="flex items-center gap-1 text-blue-600 font-bold hover:underline">
-                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                        </svg>
-                                                        Buka Link Peta
-                                                    </a>
-                                                    <span class="text-[10px] text-gray-400 truncate max-w-[160px]" title="{{ $a->location }}">
-                                                        {{ $a->location }}
-                                                    </span>
-                                                </div>
+                                        <td class="p-4">
+                                            <div class="flex flex-wrap gap-2">
+                                                @foreach($parts as $p)
+                                                @if($p === 'H')
+                                                <span class="px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-bold">H</span>
+                                                @elseif($p === 'T')
+                                                <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md text-xs font-bold">T</span>
+                                                @elseif($p === 'I')
+                                                <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-bold">I</span>
+                                                @elseif($p === 'S')
+                                                <span class="px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-xs font-bold">S</span>
+                                                @elseif($p === 'DL')
+                                                <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs font-bold">DL</span>
+                                                @elseif($p === 'CT')
+                                                <span class="px-2 py-1 bg-pink-100 text-pink-700 rounded-md text-xs font-bold">CT</span>
+                                                @elseif($p === 'TK')
+                                                <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">TK</span>
+                                                @elseif($p === 'PC')
+                                                <span class="px-2 py-1 bg-orange-100 text-orange-700 rounded-md text-xs font-bold">PC</span>
+                                                @elseif($p === 'TAP')
+                                                <span class="px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs font-bold">TAP</span>
                                                 @else
-                                                <span class="text-gray-400 italic text-[10px]">Lokasi Kosong</span>
+                                                <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">{{ $p }}</span>
                                                 @endif
-                                            </td>
+                                                @endforeach
+                                            </div>
+                                        </td>
 
-                                            <td class="p-4 text-center flex items-center justify-center gap-2">
-                                                <a href="{{ route('admin.attendance.edit', $a->id) }}"
-                                                    class="text-blue-400 hover:text-blue-600 transition" title="Edit Absensi">
+                                        <td class="p-4 text-xs">
+                                            @if($a->location)
+                                            <div class="flex flex-col gap-1">
+                                                <a href="{{ $a->location }}" target="_blank"
+                                                    class="flex items-center gap-1 text-blue-600 font-bold hover:underline">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    </svg>
+                                                    Buka Link Peta
+                                                </a>
+                                                <span class="text-[10px] text-gray-400 truncate max-w-[160px]" title="{{ $a->location }}">
+                                                    {{ $a->location }}
+                                                </span>
+                                            </div>
+                                            @else
+                                            <span class="text-gray-400 italic text-[10px]">Lokasi Kosong</span>
+                                            @endif
+                                        </td>
+
+                                        <td class="p-4 text-center flex items-center justify-center gap-2">
+                                            <a href="{{ route('admin.attendance.edit', $a->id) }}"
+                                                class="text-blue-400 hover:text-blue-600 transition" title="Edit Absensi">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                </svg>
+                                            </a>
+                                            <form action="{{ route('admin.attendance.destroy', $a->id) }}" method="POST"
+                                                onsubmit="return confirm('Hapus data presensi ini?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-400 hover:text-red-600 transition" title="Hapus">
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                                     </svg>
-                                                </a>
-                                                <form action="{{ route('admin.attendance.destroy', $a->id) }}" method="POST"
-                                                    onsubmit="return confirm('Hapus data presensi ini?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="text-red-400 hover:text-red-600 transition" title="Hapus">
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                                        </svg>
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                        @empty
-                                        <tr>
-                                            <td colspan="5" class="p-6 text-center italic text-gray-400">Belum ada data presensi.</td>
-                                        </tr>
-                                        @endforelse
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="5" class="p-6 text-center italic text-gray-400">Belum ada data presensi.</td>
+                                    </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
@@ -439,8 +526,6 @@
                             </table>
                         </div>
                     </div>
-
-                    {{-- Riwayat Laporan --}}
                     <div class="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm overflow-hidden">
                         <h3 class="text-lg font-black text-gray-800 mb-4 flex items-center gap-2">
                             <span class="w-2 h-6 bg-blue-600 rounded-full"></span>
@@ -464,8 +549,7 @@
                                         <td class="p-4 text-center flex justify-center gap-2">
                                             <button type="button"
                                                 data-url="{{ route('admin.laporan.preview', $lap->id) }}"
-                                                onclick="document.getElementById('preview-iframe').src=this.dataset.url"
-                                                class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-200 transition">
+                                                class="btnSetPreviewIframe px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-200 transition">
                                                 Preview
                                             </button>
 
@@ -473,7 +557,17 @@
                                                 class="px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded-lg hover:bg-purple-700 transition">
                                                 Download
                                             </a>
+                                            <form action="{{ route('admin.laporan.destroy', $lap->id) }}" method="POST"
+                                                onsubmit="return confirm('Yakin hapus laporan ini? File juga akan ikut terhapus dan tidak muncul lagi di akun mahasiswa.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                    class="px-3 py-1 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 transition">
+                                                    Hapus
+                                                </button>
+                                            </form>
                                         </td>
+
                                     </tr>
                                     @empty
                                     <tr>
@@ -484,7 +578,7 @@
                             </table>
                         </div>
 
-                        <div class="w-full h-[500px] border border-gray-200 rounded-xl overflow-hidden">
+                        <div class="w-full h-[520px] border border-gray-200 rounded-xl overflow-hidden">
                             <iframe id="preview-iframe" class="w-full h-full" src="" frameborder="0"></iframe>
                         </div>
                     </div>
@@ -494,7 +588,7 @@
         </div>
     </div>
 
-    {{-- ✅ MODAL PENILAIAN (POPUP KECIL + 2 KOLOM + BACKDROP HITAM) --}}
+    {{-- ✅ MODAL PENILAIAN --}}
     <div id="assessmentModal"
         data-has-assessment="{{ $student->assessment ? '1' : '0' }}"
         data-update-url="{{ $student->assessment ? route('admin.assessment.update', $student->assessment->id) : '' }}"
@@ -502,16 +596,12 @@
         data-student-status="{{ $student->status }}"
         class="fixed inset-0 z-50 hidden">
 
-        {{-- Backdrop --}}
         <div class="absolute inset-0 bg-black/50" data-backdrop></div>
 
-        {{-- Wrapper --}}
         <div class="relative min-h-full w-full flex items-center justify-center p-4">
-            {{-- Panel (kecil seperti gambar) --}}
             <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden
                     max-h-[90vh] flex flex-col">
 
-                {{-- Header (dibuat lebih rapet) --}}
                 <div class="p-5 border-b border-gray-100 relative">
                     <button id="closeModal" type="button"
                         class="absolute top-4 right-4 w-10 h-10 rounded-xl flex items-center justify-center
@@ -542,16 +632,30 @@
                     </div>
                 </div>
 
-                {{-- Body (scrollable) -> FIX JARAK BESAR DI ATAS --}}
                 <div class="p-5 pt-1 overflow-y-auto">
                     <form id="assessmentForm"
                         method="POST"
+                        enctype="multipart/form-data"
                         action="{{ route('admin.assessment.store', $student->id) }}"
                         class="space-y-5">
                         @csrf
                         <input type="hidden" id="methodSpoof" name="_method" value="POST">
 
-                        {{-- ✅ Nomor Sertifikat (FULL 1 baris) --}}
+                        {{-- Admin bidang: hidden agar tetap terkirim --}}
+                        @php
+                        $oldNo = old('certificate_no', optional($student->assessment)->certificate_no);
+                        $oldDate = old('certificate_date', optional(optional($student->assessment)->certificate_date)->format('Y-m-d'));
+                        $defaultNo = $oldNo ?: '-';
+                        $defaultDate = $oldDate ?: now()->format('Y-m-d');
+                        @endphp
+
+                        @if(!$isSuperAdmin)
+                        <input type="hidden" name="certificate_no" value="{{ $defaultNo }}">
+                        <input type="hidden" name="certificate_date" value="{{ $defaultDate }}">
+                        @endif
+
+                        {{-- Nomor Sertifikat (Super Admin) --}}
+                        @if($isSuperAdmin)
                         <div class="rounded-2xl border border-gray-100 bg-white p-4 mt-0">
                             <label class="block text-[11px] font-black text-gray-500 uppercase tracking-wide">
                                 Nomor Sertifikat
@@ -562,161 +666,92 @@
                                 required
                                 value="{{ old('certificate_no', optional($student->assessment)->certificate_no) }}"
                                 class="mt-2 w-full rounded-2xl border-gray-200 bg-gray-50
-                                      focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800">
+                                        focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800">
                             <p class="mt-2 text-[11px] text-gray-400">
                                 *Pastikan format sertifikat sesuai instansi.
                             </p>
                         </div>
+                        @endif
 
-                        {{-- ✅ Aspek Penilaian (jarak konsisten dari Nomor Sertifikat) --}}
+                        {{-- Aspek Penilaian --}}
                         <div class="rounded-2xl border border-gray-100 bg-white p-4 mt-0">
                             <div class="mb-3">
                                 <h3 class="text-base font-black text-gray-900">Aspek Penilaian</h3>
                                 <p class="text-xs text-gray-500">Isi nilai 0–100 untuk tiap aspek.</p>
                             </div>
 
-                            {{-- INI YANG BIKIN 2 KOLOM --}}
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                                {{-- 1 --}}
                                 <div class="rounded-1xl border border-gray-100 bg-white p-4">
-                                    <p class="text-[11px] font-black text-gray-500 uppercase tracking-wide">
-                                        1. Etika & Kedisiplinan
-                                    </p>
-                                    <input id="input1"
-                                        type="number"
-                                        name="aspek_1"
-                                        min="0"
-                                        max="100"
-                                        required
+                                    <p class="text-[11px] font-black text-gray-500 uppercase tracking-wide">1. Etika & Kedisiplinan</p>
+                                    <input id="input1" type="number" name="aspek_1" min="0" max="100" required
                                         value="{{ old('aspek_1', optional($student->assessment)->aspek_1) }}"
-                                        class="mt-2 w-full rounded-1xl border-gray-200 bg-gray-50
-                                              focus:ring-blue-500 focus:border-blue-500 font-black text-gray-900">
+                                        class="mt-2 w-full rounded-1xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-black text-gray-900">
                                 </div>
 
-                                {{-- 2 --}}
                                 <div class="rounded-1xl border border-gray-100 bg-white p-4">
-                                    <p class="text-[11px] font-black text-gray-500 uppercase tracking-wide">
-                                        2. Komunikasi & Kerjasama
-                                    </p>
-                                    <input id="input2"
-                                        type="number"
-                                        name="aspek_2"
-                                        min="0"
-                                        max="100"
-                                        required
+                                    <p class="text-[11px] font-black text-gray-500 uppercase tracking-wide">2. Komunikasi & Kerjasama</p>
+                                    <input id="input2" type="number" name="aspek_2" min="0" max="100" required
                                         value="{{ old('aspek_2', optional($student->assessment)->aspek_2) }}"
-                                        class="mt-2 w-full rounded-1xl border-gray-200 bg-gray-50
-                                              focus:ring-blue-500 focus:border-blue-500 font-black text-gray-900">
+                                        class="mt-2 w-full rounded-1xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-black text-gray-900">
                                 </div>
 
-                                {{-- 3 --}}
                                 <div class="rounded-1xl border border-gray-100 bg-white p-4">
-                                    <p class="text-[11px] font-black text-gray-500 uppercase tracking-wide">
-                                        3. Kemandirian
-                                    </p>
-                                    <input id="input3"
-                                        type="number"
-                                        name="aspek_3"
-                                        min="0"
-                                        max="100"
-                                        required
+                                    <p class="text-[11px] font-black text-gray-500 uppercase tracking-wide">3. Kemandirian</p>
+                                    <input id="input3" type="number" name="aspek_3" min="0" max="100" required
                                         value="{{ old('aspek_3', optional($student->assessment)->aspek_3) }}"
-                                        class="mt-2 w-full rounded-1xl border-gray-200 bg-gray-50
-                                              focus:ring-blue-500 focus:border-blue-500 font-black text-gray-900">
+                                        class="mt-2 w-full rounded-1xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-black text-gray-900">
                                 </div>
 
-                                {{-- 4 --}}
                                 <div class="rounded-1xl border border-gray-100 bg-white p-4">
-                                    <p class="text-[11px] font-black text-gray-500 uppercase tracking-wide">
-                                        4. Kreativitas
-                                    </p>
-                                    <input id="input4"
-                                        type="number"
-                                        name="aspek_4"
-                                        min="0"
-                                        max="100"
-                                        required
+                                    <p class="text-[11px] font-black text-gray-500 uppercase tracking-wide">4. Kreativitas</p>
+                                    <input id="input4" type="number" name="aspek_4" min="0" max="100" required
                                         value="{{ old('aspek_4', optional($student->assessment)->aspek_4) }}"
-                                        class="mt-2 w-full rounded-1xl border-gray-200 bg-gray-50
-                                              focus:ring-blue-500 focus:border-blue-500 font-black text-gray-900">
+                                        class="mt-2 w-full rounded-1xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-black text-gray-900">
                                 </div>
 
-                                {{-- 5 --}}
                                 <div class="rounded-1xl border border-gray-100 bg-white p-4">
-                                    <p class="text-[11px] font-black text-gray-500 uppercase tracking-wide">
-                                        5. Penyelesaian Pekerjaan
-                                    </p>
-                                    <input id="input5"
-                                        type="number"
-                                        name="aspek_5"
-                                        min="0"
-                                        max="100"
-                                        required
+                                    <p class="text-[11px] font-black text-gray-500 uppercase tracking-wide">5. Penyelesaian Pekerjaan</p>
+                                    <input id="input5" type="number" name="aspek_5" min="0" max="100" required
                                         value="{{ old('aspek_5', optional($student->assessment)->aspek_5) }}"
-                                        class="mt-2 w-full rounded-1xl border-gray-200 bg-gray-50
-                                              focus:ring-blue-500 focus:border-blue-500 font-black text-gray-900">
+                                        class="mt-2 w-full rounded-1xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-black text-gray-900">
                                 </div>
 
-                                {{-- 6 --}}
                                 <div class="rounded-1xl border border-gray-100 bg-white p-4">
-                                    <p class="text-[11px] font-black text-gray-500 uppercase tracking-wide">
-                                        6. Problem Solving
-                                    </p>
-                                    <input id="input6"
-                                        type="number"
-                                        name="aspek_6"
-                                        min="0"
-                                        max="100"
-                                        required
+                                    <p class="text-[11px] font-black text-gray-500 uppercase tracking-wide">6. Problem Solving</p>
+                                    <input id="input6" type="number" name="aspek_6" min="0" max="100" required
                                         value="{{ old('aspek_6', optional($student->assessment)->aspek_6) }}"
-                                        class="mt-2 w-full rounded-1xl border-gray-200 bg-gray-50
-                                              focus:ring-blue-500 focus:border-blue-500 font-black text-gray-900">
+                                        class="mt-2 w-full rounded-1xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-black text-gray-900">
                                 </div>
-
                             </div>
                         </div>
 
-                        {{-- ✅ Apresiasi Khusus (rapi + keep value saat edit) --}}
+                        {{-- Apresiasi Khusus --}}
                         <div class="rounded-2xl border border-gray-100 bg-white p-4 mt-0">
                             <label class="block text-[11px] font-black text-gray-500 uppercase tracking-wide">
                                 Apresiasi Khusus
                             </label>
-
-                            <textarea
-                                id="inputApresiasiKhusus"
-                                name="apresiasi_khusus"
-                                rows="3"
-                                class="mt-2 w-full rounded-2xl border-gray-200 bg-gray-50
-               focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800 text-sm">{{ old('apresiasi_khusus', optional($student->assessment)->apresiasi_khusus) }}</textarea>
+                            <textarea id="inputApresiasiKhusus" name="apresiasi_khusus" rows="3"
+                                class="mt-2 w-full rounded-2xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800 text-sm">{{ old('apresiasi_khusus', optional($student->assessment)->apresiasi_khusus) }}</textarea>
                         </div>
 
-                        {{-- ✅ TAMBAHAN BARU: TANGGAL SERTIFIKAT --}}
+                        {{-- Tanggal Sertifikat (Super Admin) --}}
+                        @if($isSuperAdmin)
                         <div class="rounded-2xl border border-gray-100 bg-white p-4 mt-0">
                             <label class="block text-[11px] font-black text-gray-500 uppercase tracking-wide">
                                 Tanggal Sertifikat
                             </label>
-
-                            <input
-                                id="inputTanggalSertifikat"
-                                type="date"
-                                name="certificate_date"
-                                required
+                            <input id="inputTanggalSertifikat" type="date" name="certificate_date" required
                                 value="{{ old('certificate_date', optional(optional($student->assessment)->certificate_date)->format('Y-m-d')) }}"
-                                class="mt-2 w-full rounded-2xl border-gray-200 bg-gray-50
-                                       focus:ring-blue-500 focus:border-blue-500 font-black text-gray-900">
-
+                                class="mt-2 w-full rounded-2xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-black text-gray-900">
                             <p class="mt-2 text-[11px] text-gray-400">
                                 *Tanggal ini akan dipakai di sertifikat.
                             </p>
                         </div>
+                        @endif
 
-                        {{-- Button --}}
                         <div class="sticky bottom-0 bg-white pt-3">
-                            <button id="assessmentSubmitBtn"
-                                type="submit"
-                                class="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-700
-                                       text-white font-black transition shadow-lg shadow-blue-200">
+                            <button id="assessmentSubmitBtn" type="submit"
+                                class="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black transition shadow-lg shadow-blue-200">
                                 Simpan Penilaian
                             </button>
                         </div>
@@ -728,7 +763,7 @@
         </div>
     </div>
 
-    {{-- ✅ SCRIPT MODAL (FIX: klik status -> modal muncul) --}}
+    {{-- ✅ SCRIPT MODAL + preview iframe --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const assessmentModal = document.getElementById('assessmentModal');
@@ -755,9 +790,7 @@
 
             function focusApresiasiSelect() {
                 if (!apresiasiInput) return;
-                setTimeout(() => {
-                    apresiasiInput.focus();
-                }, 50);
+                setTimeout(() => apresiasiInput.focus(), 50);
             }
 
             function openAssessment(mode) {
@@ -781,7 +814,6 @@
                 document.body.classList.remove('overflow-hidden');
             }
 
-            // Klik "Tandai Selesai Magang" (hanya jika status aktif)
             if (statusButton && studentStatus === "aktif") {
                 statusButton.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -789,7 +821,6 @@
                 });
             }
 
-            // Klik tombol Edit pada Riwayat Penilaian
             if (btnEditAssessmentTop) {
                 btnEditAssessmentTop.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -797,45 +828,66 @@
                 });
             }
 
-            // Close
             if (closeBtn) closeBtn.addEventListener('click', closeAssessment);
             if (backdrop) backdrop.addEventListener('click', closeAssessment);
 
-            // ESC
             window.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && !assessmentModal.classList.contains('hidden')) {
-                    closeAssessment();
-                }
+                if (e.key === 'Escape' && !assessmentModal.classList.contains('hidden')) closeAssessment();
             });
+
+            // ✅ Preview Iframe (Laporan & Scan Sertifikat pakai handler yang sama)
+            const iframe = document.getElementById('preview-iframe');
+
+            document.querySelectorAll('.btnSetPreviewIframe').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const url = this.dataset.url;
+                    if (!iframe || !url) return;
+                    iframe.src = url;
+
+                    // Scroll halus ke iframe biar user langsung lihat preview
+                    iframe.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                });
+            });
+
+            // tombol khusus dari Riwayat Penilaian (jika ada)
+            const btnScan = document.getElementById('btnPreviewScanSertifikat');
+            if (btnScan && iframe) {
+                btnScan.addEventListener('click', function() {
+                    const url = this.dataset.url;
+                    if (!url) return;
+                    iframe.src = url;
+                    iframe.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                });
+            }
         });
 
-            //pulang cepat
-            document.addEventListener('DOMContentLoaded', function () {
-    const statusSelect = document.getElementById('statusSelect');
-    const pcWrapper = document.getElementById('pulangCepatWrapper');
-    const pcCheckbox = document.getElementById('pulangCepatCheckbox');
+        // pulang cepat
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusSelect = document.getElementById('statusSelect');
+            const pcWrapper = document.getElementById('pulangCepatWrapper');
+            const pcCheckbox = document.getElementById('pulangCepatCheckbox');
 
-    function updatePulangCepatUI() {
-        const status = statusSelect.value;
+            function updatePulangCepatUI() {
+                const status = statusSelect.value;
+                if (status === 'Hadir' || status === 'Telat') {
+                    pcWrapper.classList.remove('hidden');
+                    pcCheckbox.disabled = false;
+                } else {
+                    pcWrapper.classList.add('hidden');
+                    pcCheckbox.checked = false;
+                    pcCheckbox.disabled = true;
+                }
+            }
 
-        if (status === 'Hadir' || status === 'Telat') {
-            // tampilkan checkbox
-            pcWrapper.classList.remove('hidden');
-            pcCheckbox.disabled = false;
-        } else {
-            // sembunyikan + reset
-            pcWrapper.classList.add('hidden');
-            pcCheckbox.checked = false;
-            pcCheckbox.disabled = true;
-        }
-    }
-
-    // pertama kali load
-    updatePulangCepatUI();
-
-    // setiap status berubah
-    statusSelect.addEventListener('change', updatePulangCepatUI);
-});
+            updatePulangCepatUI();
+            statusSelect.addEventListener('change', updatePulangCepatUI);
+        });
     </script>
 
     {{-- MODAL DOWNLOAD PRESENSI --}}
@@ -987,5 +1039,4 @@
             });
         });
     </script>
-
 </x-app-layout>

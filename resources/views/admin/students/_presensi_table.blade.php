@@ -24,6 +24,8 @@
         vertical-align: middle;
         text-align: center;
         line-height: 1.1;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
 
     .col-tanggal { width: 28%; font-weight: 700; }
@@ -32,6 +34,7 @@
     .col-status { width: 16%; }
     .col-lokasi { width: 28%; }
 
+    /* merah libur */
     .holiday-row td { background: #d6a8a8; }
 
     .badge {
@@ -41,6 +44,7 @@
         font-weight: 700;
         font-size: 11px;
         margin: 2px 2px;
+        line-height: 1;
     }
 
     .badge-hadir { background: #dcfce7; color: #166534; }
@@ -52,6 +56,25 @@
     .badge-tk    { background: #e5e7eb; color: #374151; }
     .badge-pc    { background: #ffedd5; color: #9a3412; }
     .badge-tap   { background: #fee2e2; color: #991b1b; }
+
+    .holiday-name {
+        display: block;
+        margin-top: 3px;
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .lokasi-text {
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 10px;
+        color: #000;
+        display: block;
+    }
+
+    /* DomPDF kadang kurang suka link style kompleks; ini aman */
+    a.lokasi-link { color:#000; text-decoration:none; }
 </style>
 
 <table class="presensi-simple">
@@ -67,15 +90,23 @@
 
     <tbody>
         @foreach($rows as $r)
-            <tr class="{{ $r['isHoliday'] ? 'holiday-row' : '' }}">
-                <td class="col-tanggal">{{ $r['tanggal_label'] }}</td>
+            <tr class="{{ !empty($r['isHoliday']) ? 'holiday-row' : '' }}">
+                <td class="col-tanggal">
+                    {{ $r['tanggal_label'] }}
+
+                    {{-- OPTIONAL: tampilkan nama hari libur dari API/manual --}}
+                    @if(!empty($r['holiday_name']))
+                        <span class="holiday-name">{{ $r['holiday_name'] }}</span>
+                    @endif
+                </td>
+
                 <td class="col-in">{{ $r['checkin_label'] }}</td>
                 <td class="col-out">{{ $r['checkout_label'] }}</td>
 
                 <td class="col-status">
                     @php
                         $raw = strtoupper(trim($r['status'] ?? ''));
-                        $parts = array_filter(array_map('trim', explode(',', $raw)));
+                        $parts = array_values(array_filter(array_map('trim', explode(',', $raw)), fn($v) => $v !== ''));
 
                         $main = $parts[0] ?? '-';
                         $extras = $parts;
@@ -84,26 +115,20 @@
                         $badge = 'badge-tk';
                         $label = $main;
 
-                        if ($main === '' || $main === '-') {
-                            $badge = 'badge-tk'; $label = '-';
-                        } elseif ($main === 'TK') {
-                            $badge = 'badge-tk'; $label = 'TK';
-                        } elseif ($main === 'H') {
-                            $badge = 'badge-hadir'; $label = 'H';
-                        } elseif ($main === 'T') {
-                            $badge = 'badge-telat'; $label = 'T';
-                        } elseif ($main === 'I') {
-                            $badge = 'badge-ijin'; $label = 'I';
-                        } elseif ($main === 'S') {
-                            $badge = 'badge-sakit'; $label = 'S';
-                        } elseif ($main === 'DL') {
-                            $badge = 'badge-dl'; $label = 'DL';
-                        } elseif ($main === 'CT') {
-                            $badge = 'badge-cuti'; $label = 'CT';
+                        switch ($main) {
+                            case 'H':  $badge = 'badge-hadir'; $label = 'H'; break;
+                            case 'T':  $badge = 'badge-telat'; $label = 'T'; break;
+                            case 'I':  $badge = 'badge-ijin';  $label = 'I'; break;
+                            case 'S':  $badge = 'badge-sakit'; $label = 'S'; break;
+                            case 'DL': $badge = 'badge-dl';    $label = 'DL'; break;
+                            case 'CT': $badge = 'badge-cuti';  $label = 'CT'; break;
+                            case 'TK': $badge = 'badge-tk';    $label = 'TK'; break;
+                            case '-':
+                            default:   $badge = 'badge-tk';    $label = ($main === '' ? '-' : $main); break;
                         }
 
-                        $showPC  = in_array('PC', $extras);
-                        $showTAP = in_array('TAP', $extras);
+                        $showPC  = in_array('PC', $extras, true);
+                        $showTAP = in_array('TAP', $extras, true);
                     @endphp
 
                     <span class="badge {{ $badge }}">{{ $label }}</span>
@@ -113,15 +138,11 @@
 
                 <td class="col-lokasi">
                     @if(!empty($r['location_url']))
-                        <a href="{{ $r['location_url'] }}" target="_blank" style="color:#000;display:block;width:100%;text-decoration:none;">
-                            <span style="font-weight:700;text-transform:uppercase;font-size:10px;">
-                                {{ $r['location_text'] }}
-                            </span>
+                        <a class="lokasi-link" href="{{ $r['location_url'] }}" target="_blank">
+                            <span class="lokasi-text">{{ $r['location_text'] }}</span>
                         </a>
                     @else
-                        <span style="font-weight:700;text-transform:uppercase;font-size:10px;color:#000;">
-                            {{ $r['location_text'] }}
-                        </span>
+                        <span class="lokasi-text">{{ $r['location_text'] }}</span>
                     @endif
                 </td>
             </tr>

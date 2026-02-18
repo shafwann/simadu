@@ -9,11 +9,27 @@ use App\Support\AttendanceStatus;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class AdminPresensiPdfController extends Controller
 {
     public function download(Request $request, $id)
+    {
+        $student = User::findOrFail($id);
+        return $this->renderPresensiPdf($request, $student);
+    }
+
+    public function myPresensiPdf(Request $request)
+    {
+        $student = Auth::user();
+        if (!$student) abort(403, 'Anda harus login.');
+        return $this->renderPresensiPdf($request, $student);
+    }
+
+    private function renderPresensiPdf(Request $request, User $student)
     {
         $month = (int) $request->get('month', now()->month);
         $year  = (int) $request->get('year', now()->year);
@@ -21,45 +37,49 @@ class AdminPresensiPdfController extends Controller
         if ($month < 1 || $month > 12) $month = now()->month;
         if ($year < 2000 || $year > 2100) $year = now()->year;
 
-        $student = User::findOrFail($id);
-        $about = AboutSetting::where('kategori_instansi', $student->kategori_instansi)->first() ?? abort(500, 'Setting instansi belum dikonfigurasi.');
+        $tz = 'Asia/Jakarta';
 
-        $start = Carbon::create($year, $month, 1, 0, 0, 0, 'Asia/Jakarta');
+        $about = AboutSetting::where('kategori_instansi', $student->kategori_instansi)->first();
+        if (!$about) abort(500, 'Setting instansi belum dikonfigurasi.');
+
+        $start = Carbon::create($year, $month, 1, 0, 0, 0, $tz);
         $daysInMonth = $start->daysInMonth;
 
         $attendances = Attendance::where('user_id', $student->id)
             ->whereMonth('tanggal', $month)
             ->whereYear('tanggal', $year)
             ->get()
-            ->keyBy(fn ($a) => Carbon::parse($a->tanggal)->format('Y-m-d'));
+            ->keyBy(function ($a) use ($tz) {
+                return Carbon::parse($a->tanggal, $tz)->format('Y-m-d');
+            });
 
-        $holidays = $this->getIndonesiaHolidaysRealtime($year);
+        $holidays = $this->getIndonesiaHolidaysMerged($year);
 
-        // jam checkout selesai per hari (untuk TAP)
         $checkoutEndMap = [
-            1 => $about?->senin_checkout_selesai,
-            2 => $about?->selasa_checkout_selesai,
-            3 => $about?->rabu_checkout_selesai,
-            4 => $about?->kamis_checkout_selesai,
-            5 => $about?->jumat_checkout_selesai,
+            1 => $about->senin_checkout_selesai,
+            2 => $about->selasa_checkout_selesai,
+            3 => $about->rabu_checkout_selesai,
+            4 => $about->kamis_checkout_selesai,
+            5 => $about->jumat_checkout_selesai,
         ];
 
         $rows = [];
+
         for ($d = 1; $d <= $daysInMonth; $d++) {
-            $date = Carbon::create($year, $month, $d, 0, 0, 0, 'Asia/Jakarta');
+            $date = Carbon::create($year, $month, $d, 0, 0, 0, $tz);
             $key  = $date->format('Y-m-d');
 
             $isHoliday = $date->isWeekend() || isset($holidays[$key]);
+
             $a = $attendances[$key] ?? null;
 
-            $checkin  = (!empty($a?->check_in))  ? Carbon::parse($a->check_in)->format('H:i')  : '-';
-            $checkout = (!empty($a?->check_out)) ? Carbon::parse($a->check_out)->format('H:i') : '-';
+            $checkin  = (!empty($a?->check_in))  ? Carbon::parse($a->check_in, $tz)->format('H:i')  : '-';
+            $checkout = (!empty($a?->check_out)) ? Carbon::parse($a->check_out, $tz)->format('H:i') : '-';
 
-            // ===== STATUS FINAL (H/T + PC + TAP) =====
             $main = AttendanceStatus::mainCode($a?->status);
             $pc   = AttendanceStatus::isPC($a?->keterangan);
 
-            $dow = $date->dayOfWeekIso; // 1..7
+            $dow = $date->dayOfWeekIso;
             $checkoutEnd = ($dow <= 5) ? ($checkoutEndMap[$dow] ?? null) : null;
 
             $tap = AttendanceStatus::isTAP(
@@ -67,14 +87,13 @@ class AdminPresensiPdfController extends Controller
                 $a?->check_out,
                 $checkoutEnd,
                 $key,
-                'Asia/Jakarta'
+                $tz
             );
 
             $statusFinal = AttendanceStatus::buildFinal($main, $pc, $tap);
 
             $tanggalLabel = $date->translatedFormat('d M Y');
 
-            // ===== LOKASI (sama konsep sebelumnya) =====
             $lokasiText = '-';
             $lokasiUrl  = null;
 
@@ -98,11 +117,9 @@ class AdminPresensiPdfController extends Controller
                 'checkout_label' => $checkout,
                 'status'         => $statusFinal,
                 'status_label'   => $statusFinal,
-
                 'location_text'  => $lokasiText,
                 'location_url'   => $lokasiUrl,
                 'location'       => $lokasiText,
-
                 'isHoliday'      => $isHoliday,
             ];
         }
@@ -112,7 +129,6 @@ class AdminPresensiPdfController extends Controller
 
         $bulanLabel = $this->bulanIndo($month);
 
-        // ✅ F4 points: 595.28 x 935.43
         $f4 = [0, 0, 595.28, 935.43];
 
         return Pdf::loadView('admin.students.presensi_pdf', compact(
@@ -122,29 +138,48 @@ class AdminPresensiPdfController extends Controller
             ->download("DAFTAR-HADIR-MAGANG-{$student->nim}-{$bulanLabel}-{$year}.pdf");
     }
 
-    private function getIndonesiaHolidaysRealtime(int $year): array
+    private function getIndonesiaHolidaysMerged(int $year): array
     {
-        // 1) manual file (kalau ada)
-        try {
-            $manual = require app_path('Support/IndonesianHolidays.php');
-            if (isset($manual[$year])) return $manual[$year];
-        } catch (\Throwable $e) {
-            // ignore
-        }
+        $cacheKey = "holidays:merged:id:$year";
 
-        // 2) fallback API
-        try {
-            $res = Http::timeout(10)->get("https://date.nager.at/api/v3/PublicHolidays/$year/ID");
-            if (!$res->ok()) return [];
+        return Cache::remember($cacheKey, now()->addHours(12), function () use ($year) {
 
-            $out = [];
-            foreach ($res->json() as $h) {
-                $out[$h['date']] = $h['localName'] ?? 'Hari Libur';
+            $manualOut = [];
+            try {
+                $manual = require app_path('Support/IndonesianHolidays.php');
+                if (is_array($manual) && isset($manual[$year]) && is_array($manual[$year])) {
+                    $manualOut = $manual[$year];
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Holiday manual file failed", ['year' => $year]);
             }
-            return $out;
-        } catch (\Throwable $e) {
-            return [];
-        }
+
+            $apiOut = [];
+            try {
+                $url = "https://date.nager.at/api/v3/PublicHolidays/{$year}/ID";
+
+                $res = Http::timeout(15)
+                    ->withHeaders([
+                        'Accept' => 'application/json',
+                        'User-Agent' => 'Laravel-Presensi/1.0',
+                    ])
+                    ->get($url);
+
+                if ($res->successful()) {
+                    $json = $res->json();
+                    if (is_array($json)) {
+                        foreach ($json as $h) {
+                            if (isset($h['date'])) {
+                                $apiOut[$h['date']] = $h['localName'] ?? 'Hari Libur';
+                            }
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+            }
+
+            return array_merge($manualOut, $apiOut);
+        });
     }
 
     private function bulanIndo(int $m): string

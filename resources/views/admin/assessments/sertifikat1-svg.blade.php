@@ -32,8 +32,11 @@ if ($len <= 20) {
     $instansiFont = 18.5;
 }
 
-/* Style string aman (1 line) */
 $instansiStyle = 'display:block;margin-top:2px;font-weight:700;line-height:1.15;white-space:nowrap;font-size:'.$instansiFont.'px;';
+
+/* ✅ FAKULTAS: MENYAMPING SAJA (TIDAK TURUN, TIDAK IKUT INSTANSI) */
+$fakultasText  = trim((string) ($student->fakultas ?? ''));
+$fakultasStyle = 'display:inline-block;white-space:nowrap;overflow:visible;line-height:1.35;';
 
 /* NIP */
 $nipRaw = preg_replace('/\s+/', '', (string)($about->nip_kepala_instansi ?? ''));
@@ -54,7 +57,6 @@ if (strlen($nipRaw) === 18) {
     <meta charset="utf-8">
 
     <style>
-        /* === F4 LANDSCAPE === */
         @page {
             size: 330mm 210mm;
             margin: 0;
@@ -67,18 +69,13 @@ if (strlen($nipRaw) === 18) {
             height: 210mm;
         }
 
-        /* Wrapper 1 halaman */
         .sertifikat {
             position: relative;
             width: 330mm;
             height: 210mm;
-            overflow: hidden; /* cegah keluar halaman */
+            overflow: hidden;
             font-family: Arial, Helvetica, sans-serif;
             color: #111;
-
-            page-break-after: avoid;
-            page-break-before: avoid;
-            page-break-inside: avoid;
         }
 
         * {
@@ -86,27 +83,24 @@ if (strlen($nipRaw) === 18) {
             page-break-inside: avoid;
         }
 
-        /* ✅ FIX #1: Paragraf harus absolute agar tidak muncul di atas halaman */
         .c-para {
             position: absolute;
-            top: 121mm;      /* posisi sesuai layout sertifikat (tengah-bawah) */
+            top: 121mm;
             left: 40mm;
             right: 40mm;
             text-align: center;
             font-size: 18px;
             line-height: 1.35;
             overflow: hidden;
-            max-height: 22mm; /* aman biar gak nabrak tanggal */
+            max-height: 22mm;
         }
 
-        /* ✅ FIX #2: Nama tidak boleh turun ke bawah (tetap 1 baris, boleh melebar ke kanan) */
         .nama-nowrap {
             font-weight: 700;
             font-size: 24px;
             padding-top: 1px;
-
-            white-space: nowrap;  /* jangan wrap */
-            overflow: visible;    /* boleh melebar keluar */
+            white-space: nowrap;
+            overflow: visible;
             display: inline-block;
         }
     </style>
@@ -136,36 +130,36 @@ if (strlen($nipRaw) === 18) {
     <div style="position:absolute; top:80mm; left:100mm; width:140mm; font-size:20px; line-height:1.35;">
         <table cellpadding="0" cellspacing="0" style="width:100%;">
             <tr>
-                <td style="width:45mm; vertical-align:top; padding-top:6px; line-height:1.35;">
-                    <span style="position:relative; top:-6px;">Nama</span><br>
+                <td style="width:45mm; vertical-align:top; padding-top:6px;">
+                    Nama<br>
                     NIM<br>
                     Program Studi<br>
                     Fakultas
                 </td>
 
-                <td style="width:6mm; vertical-align:top; text-align:center; padding-top:6px; line-height:1.35;">
-                    <span style="position:relative; top:-6px;">:</span><br>
+                <td style="width:6mm; vertical-align:top; text-align:center; padding-top:6px;">
+                    :<br>
                     :<br>
                     :<br>
                     :
                 </td>
 
                 <td style="vertical-align:top;">
-                    {{-- ✅ FIX #2 dipakai di sini: nama tidak turun ke bawah --}}
                     <span class="nama-nowrap">{{ $student->name }}</span><br>
 
                     {{ $student->nim }}<br>
                     {{ $student->prodi }}<br>
-                    {{ $student->fakultas }}<br>
 
-                    {{-- instansi mahasiswa (1 baris + auto font) --}}
+                    {{-- ✅ Fakultas menyamping saja --}}
+                    <span style="{!! $fakultasStyle !!}">{{ $fakultasText }}</span><br>
+
+                    {{-- Instansi tetap baris sendiri --}}
                     <span style="{!! $instansiStyle !!}">{{ $instansiText }}</span>
                 </td>
             </tr>
         </table>
     </div>
 
-    {{-- ✅ PARAGRAF (tidak akan muncul di atas lagi) --}}
     <div class="c-para">
         Telah melaksanakan {{ strtolower($judulKegiatan) }} di {{ $about->nama_instansi ?? '-' }} Kabupaten Karanganyar
         dari {{ $mulai }} sampai {{ $selesai }}

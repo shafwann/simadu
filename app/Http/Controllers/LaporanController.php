@@ -228,4 +228,25 @@ class LaporanController extends Controller
 
         return back()->with('success', 'Laporan berhasil dihapus.');
     }
+
+    // ✅ TAMBAHAN BARU: Hapus laporan oleh ADMIN (hapus juga file & record DB)
+    public function adminDestroy(Laporan $laporan)
+    {
+        if (auth()->user()->role !== 'admin') {
+            abort(403);
+        }
+
+        // hapus file fisik (aman local/public + kandidat public/)
+        try {
+            $resolved = $this->resolveFile($laporan);
+            Storage::disk($resolved['disk'])->delete($resolved['path']);
+        } catch (\Throwable $e) {
+            // kalau file sudah tidak ada, tetap lanjut hapus record
+        }
+
+        // hapus record DB
+        $laporan->delete();
+
+        return back()->with('success', 'Laporan berhasil dihapus oleh admin (file ikut terhapus).');
+    }
 }

@@ -6,13 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Assessment extends Model
 {
-    // Opsional (tidak wajib). Laravel defaultnya sudah pakai "assessments".
-    // protected $table = 'assessments';
-
     protected $fillable = [
         'user_id',
         'certificate_no',
         'certificate_date',
+
+        // scan sertifikat
+        'certificate_scan',
+        'certificate_scan_original_name',
 
         'aspek_1',
         'aspek_2',

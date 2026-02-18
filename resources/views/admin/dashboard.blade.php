@@ -25,7 +25,9 @@
     </x-slot>
 
     <div class="py-12 bg-white min-h-screen">
-        <div class="max-w-7xl mx-auto px-6 lg:px-8 space-y-10">
+        {{-- ✅ Padding diperlebar agar tidak mepet --}}
+        {{-- ✅ FIX TYPO: space-y-10> -> space-y-10" --}}
+        <div class="max-w-7xl mx-auto px-6 lg:px-12 space-y-10">
 
             {{-- 1. SECTION RINGKASAN AKTIVITAS --}}
             <div>
@@ -33,13 +35,11 @@
                 <p class="text-gray-500 mt-2">
                     Pantau perkembangan mahasiswa magang di
                     <span class="font-bold text-gray-800 uppercase">
-                        {{-- ✅ LOGIKA DINAMIS: --}}
-                        {{-- Jika Super Admin -> Tampilkan "Seluruh Lingkungan [NAMA APP]" --}}
-                        {{-- Jika Admin Bidang -> Tampilkan "Bidang [NAMA BIDANG]" --}}
+                        {{-- ✅ LOGIKA DINAMIS --}}
                         @if($isSuperAdmin)
-                            Seluruh Lingkungan {{ $globalAbout->app_name ?? 'BAPPERIDA' }}
+                        Seluruh Lingkungan {{ $globalAbout->app_name ?? 'BAPPERIDA' }}
                         @else
-                            Bidang {{ $userBidang }}
+                        Bidang {{ $userBidang }}
                         @endif
                     </span>.
                 </p>
@@ -133,7 +133,7 @@
 
 
             {{-- 2. TABEL PERSETUJUAN LOGBOOK --}}
-            <div class="bg-white border border-gray-100 rounded-[2rem] shadow-2xl shadow-gray-100/50 overflow-hidden">
+            <div id="logbook" class="bg-white border border-gray-100 rounded-[2rem] shadow-2xl shadow-gray-100/50 overflow-hidden">
                 <div class="p-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
                         <h3 class="text-lg font-black text-gray-800">Persetujuan Logbook</h3>
@@ -141,16 +141,17 @@
                     </div>
 
                     <div class="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-                       {{-- SEARCH (tetap) --}}
-                        <form action="{{ route('admin.dashboard') }}" method="GET" class="flex w-full md:w-auto gap-2">
-                            <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Cari mahasiswa..."
+                        {{-- SEARCH (auto + tetap di logbook saat reload) --}}
+                        <form action="{{ route('admin.dashboard') }}#logbook" method="GET" class="flex w-full md:w-auto gap-2">
+                            <input id="logbookSearchInput" type="text" name="search" value="{{ $search ?? '' }}" placeholder="Cari mahasiswa..."
+                                autocomplete="off"
                                 class="w-full md:w-64 px-4 py-2 rounded-xl border border-gray-200 text-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50">
                             <button type="submit" class="px-5 py-2 bg-gray-900 text-white rounded-xl hover:bg-black transition text-sm font-bold shadow-lg">
                                 Cari
                             </button>
                         </form>
 
-                    {{-- ✅ BUTTON VALIDASI SEMUA --}}
+                        {{-- ✅ BUTTON VALIDASI SEMUA --}}
                         @if($pendingLogbooks->count() > 0)
                         <form action="{{ route('admin.logbook.validateAll') }}" method="POST"
                             onsubmit="return confirm('Validasi semua logbook yang pending?');">
@@ -163,7 +164,6 @@
                         @endif
                     </div>
                 </div>
-
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
@@ -193,7 +193,7 @@
                             @empty
                             <tr>
                                 <td colspan="4" class="px-8 py-12 text-center text-gray-400 italic">
-                                    Semua logbook {{ $isSuperAdmin ? '' : $labelBidang }} aman terkendali.
+                                    Data tidak ditemukan
                                 </td>
                             </tr>
                             @endforelse
@@ -263,12 +263,6 @@
 
                                 {{-- Aksi --}}
                                 <td class="px-6 py-4 text-center flex justify-center gap-2">
-                                    {{-- Preview --}}
-                                    <a href="{{ route('laporan.preview', $laporan->id) }}"
-                                        target="_blank"
-                                        class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold rounded-lg transition">
-                                        Preview
-                                    </a>
 
                                     {{-- Validasi --}}
                                     <form action="{{ route('admin.laporan.validate', $laporan->id) }}" method="POST">
@@ -294,4 +288,43 @@
 
         </div>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const logbookSearchInput = document.getElementById("logbookSearchInput");
+            if (!logbookSearchInput) return;
+
+            const logbookForm = logbookSearchInput.closest("form");
+            let typingTimer;
+
+            const params = new URLSearchParams(window.location.search);
+
+            // ✅ Scroll hanya jika user benar-benar melakukan search
+            if (params.has("search") && params.get("search").trim() !== "") {
+
+                const logbookSection = document.getElementById("logbook");
+                if (logbookSection) {
+                    logbookSection.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start"
+                    });
+                }
+
+                // Fokus input hanya saat search aktif
+                logbookSearchInput.focus();
+                const val = logbookSearchInput.value || "";
+                logbookSearchInput.setSelectionRange(val.length, val.length);
+            }
+
+            // Auto submit saat mengetik
+            logbookSearchInput.addEventListener("input", function() {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => {
+                    logbookForm.submit();
+                }, 400);
+            });
+        });
+    </script>
+
+
 </x-app-layout>

@@ -162,7 +162,10 @@ Route::middleware(['auth', 'no-cache', 'role:mahasiswa'])->group(function () {
     Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.checkin');
     Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkout');
     Route::get('/attendance/history', [AttendanceController::class, 'history'])->name('attendance.history');
-    Route::get('/attendance/presensi-pdf', [AttendanceController::class, 'presensiPdf'])->name('attendance.presensi_pdf');
+
+    Route::get('/attendance/presensi-pdf', [AdminPresensiPdfController::class, 'myPresensiPdf'])
+        ->name('attendance.presensi_pdf');
+
 
     // Logbook
     Route::get('/logbook', [LogbookController::class, 'index'])->name('logbook.index');
@@ -252,6 +255,9 @@ Route::middleware(['auth', 'no-cache', 'role:admin'])
         // Laporan (Admin View)
         Route::get('/laporan/{laporan}/preview', [LaporanController::class, 'preview'])->name('laporan.preview');
         Route::get('/laporan/{laporan}/download', [LaporanController::class, 'download'])->name('laporan.download');
+        Route::delete('laporan/{laporan}/destroy', [LaporanController::class, 'adminDestroy'])
+            ->name('laporan.destroy');
+
 
         // CRUD Mahasiswa
         Route::resource('students', AdminStudentController::class);
@@ -287,7 +293,14 @@ Route::middleware(['auth', 'no-cache', 'role:admin'])
             Route::patch('/{assessment}', [AssessmentController::class, 'update'])->name('update');
             Route::delete('/{assessment}', [AssessmentController::class, 'destroy'])->name('destroy');
             Route::get('/certificate/{user}', [AssessmentController::class, 'certificate'])->name('certificate');
+
+            // ✅ upload & delete scan sertifikat
+            Route::patch('/{assessment}/scan', [AssessmentController::class, 'uploadScan'])->name('scan.upload');
+            Route::delete('/{assessment}/scan', [AssessmentController::class, 'destroyScan'])->name('scan.destroy');
         });
+
+
+
 
         // Manage Admins
         Route::prefix('manage-admins')->name('manage.')->group(function () {

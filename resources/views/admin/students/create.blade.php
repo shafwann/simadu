@@ -37,9 +37,6 @@
                             <x-text-input id="password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" required />
                         </div>
 
-                       
-
-                        {{-- TAMBAHAN: Pembimbing Lapangan (di bawah Bidang / Divisi) --}}
                         <div class="md:col-span-2">
                             <x-input-label for="jabatan_pembimbing" :value="__('Jabatan Pembimbing Lapangan')" />
                             <x-text-input
