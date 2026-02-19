@@ -171,6 +171,8 @@ Route::middleware(['auth', 'no-cache', 'role:mahasiswa'])->group(function () {
     Route::get('/logbook', [LogbookController::class, 'index'])->name('logbook.index');
     Route::post('/logbook', [LogbookController::class, 'store'])->name('logbook.store');
     Route::get('/logbook/pdf', [LogbookController::class, 'exportPdf'])->name('logbook.export.pdf');
+    Route::get('/logbook/{logbook}/edit', [LogbookController::class, 'edit'])->name('logbook.edit');
+    Route::put('/logbook/{logbook}', [LogbookController::class, 'update'])->name('logbook.update');
 
     // Laporan
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
@@ -240,6 +242,8 @@ Route::middleware(['auth', 'no-cache', 'role:admin'])
     ->group(function () {
 
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+        Route::delete('/logbook/{id}', [AdminController::class, 'destroyLogbook'])->name('logbook.destroy');
+        Route::post('/logbook/{id}/reject', [AdminController::class, 'rejectLogbook'])->name('logbook.reject');
 
         // ✅ REKAP ABSENSI (TAMBAHKAN DI SINI)
         Route::get('/rekap-absensi', [AdminAttendanceRecapController::class, 'index'])
@@ -251,6 +255,10 @@ Route::middleware(['auth', 'no-cache', 'role:admin'])
         Route::post('/logbook/{id}/validate', [AdminController::class, 'validateLogbook'])->name('logbook.validate');
         Route::post('/laporan/{id}/validate', [LaporanController::class, 'validateLaporan'])->name('laporan.validate');
         Route::post('/logbook/validate-all', [AdminController::class, 'validateAllLogbook'])->name('logbook.validateAll');
+
+        // Logbook actions
+        Route::post('/logbook/{id}/reject', [AdminController::class, 'rejectLogbook'])->name('logbook.reject');
+        Route::delete('/logbook/{id}', [AdminController::class, 'destroyLogbook'])->name('logbook.destroy');
 
         // Laporan (Admin View)
         Route::get('/laporan/{laporan}/preview', [LaporanController::class, 'preview'])->name('laporan.preview');

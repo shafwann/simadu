@@ -12,11 +12,14 @@ class Logbook extends Model
 
     // Tambahkan baris ini agar Laravel mengizinkan pengisian data
     protected $fillable = [
-        'user_id',
-        'tanggal',
-        'kegiatan',
-        'catatan_pembimbing',
-        'is_validated'
+    'user_id',
+    'tanggal',
+    'kegiatan',
+    'catatan_pembimbing',
+    'is_validated',
+    'is_rejected',
+    'rejected_at',
+    'rejected_note',
     ];
 
     public function user()

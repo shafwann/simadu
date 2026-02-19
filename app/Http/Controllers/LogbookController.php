@@ -97,6 +97,38 @@ class LogbookController extends Controller
 
             return $pdf->download("LOGBOOK_{$user->name}_{$bulan}_{$tahun}.pdf");
         }
+            public function edit(Logbook $logbook)
+    {
+        if ($logbook->user_id !== Auth::id()) abort(403);
+        if (!$logbook->is_rejected) return redirect()->route('logbook.index')->with('error', 'Logbook ini tidak bisa diedit.');
+
+        return view('logbook.edit', compact('logbook'));
+    }
+
+    public function update(Request $request, Logbook $logbook)
+    {
+        if ($logbook->user_id !== Auth::id()) abort(403);
+        if (!$logbook->is_rejected) return redirect()->route('logbook.index')->with('error', 'Logbook ini tidak bisa diajukan ulang.');
+
+        $request->validate([
+            'tanggal' => 'required|date',
+            'kegiatan' => 'required|string|min:5',
+        ]);
+
+        $logbook->update([
+            'tanggal' => $request->tanggal,
+            'kegiatan' => $request->kegiatan,
+
+            // ajukan ulang → balik pending
+            'is_rejected' => false,
+            'rejected_at' => null,
+            'rejected_note' => null,
+            'is_validated' => false,
+        ]);
+
+        return redirect()->route('logbook.index')->with('success', 'Logbook berhasil diperbarui dan diajukan ulang.');
+    }
+
 
 
 }

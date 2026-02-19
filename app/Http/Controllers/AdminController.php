@@ -47,21 +47,24 @@ class AdminController extends Controller
             ->count();
 
         // =========================================
-        // QUERY 3: Logbook Pending (DENGAN PAGINATION)
-        // =========================================
-        // Menggunakan paginate(5) dengan nama halaman 'logbook_page'
-        $pendingLogbooks = Logbook::with('user')
-            ->where('is_validated', false)
-            ->whereHas('user', function ($q) use ($isSuperAdmin, $adminBidang, $search) {
-                if (!$isSuperAdmin) {
-                    $q->where('bidang', $adminBidang);
-                }
-                if ($search) {
-                    $q->where('name', 'like', '%' . $search . '%');
-                }
-            })
-            ->orderBy('tanggal', 'desc')
-            ->paginate(5, ['*'], 'logbook_page'); // ✅ Ganti get() jadi paginate()
+// QUERY 3: Logbook Pending (DENGAN PAGINATION)
+// =========================================
+$pendingLogbooks = Logbook::with('user')
+    ->where('is_validated', false)
+    ->where('is_rejected', false) // ✅ tambahan filter biar yang ditolak hilang
+    ->whereHas('user', function ($q) use ($isSuperAdmin, $adminBidang, $search) {
+
+        if (!$isSuperAdmin) {
+            $q->where('bidang', $adminBidang);
+        }
+
+        if ($search) {
+            $q->where('name', 'like', '%' . $search . '%');
+        }
+
+    })
+    ->orderBy('tanggal', 'desc')
+    ->paginate(5, ['*'], 'logbook_page');
 
         // =========================================
         // QUERY 4: Laporan Pending (DENGAN PAGINATION)
@@ -115,6 +118,44 @@ class AdminController extends Controller
 
         return redirect()->back()->with('success', 'Logbook berhasil divalidasi!');
     }
+
+    public function rejectLogbook(Request $request, $id)
+{
+    $request->validate([
+        'rejected_note' => 'required|string|min:3',
+    ]);
+
+    $logbook = Logbook::with('user')->findOrFail($id);
+    $user = Auth::user();
+
+    // proteksi bidang (sama seperti validate)
+    if ($user->bidang !== 'Administrator Sistem' && $logbook->user->bidang !== $user->bidang) {
+        return back()->with('error', 'Anda tidak berhak menolak mahasiswa dari bidang lain.');
+    }
+
+    $logbook->update([
+        'is_rejected' => true,
+        'rejected_at' => now(),
+        'rejected_note' => $request->input('rejected_note'), // opsional
+        'is_validated' => false, // biar jelas statusnya
+    ]);
+
+    return back()->with('success', 'Logbook berhasil ditolak.');
+}
+
+public function destroyLogbook($id)
+{
+    $logbook = Logbook::with('user')->findOrFail($id);
+    $user = Auth::user();
+
+    if ($user->bidang !== 'Administrator Sistem' && $logbook->user->bidang !== $user->bidang) {
+        return back()->with('error', 'Anda tidak berhak menghapus logbook dari bidang lain.');
+    }
+
+    $logbook->delete();
+    return back()->with('success', 'Logbook berhasil dihapus.');
+}
+
 
     // ✅ TAMBAHAN: VALIDASI SEMUA LOGBOOK (sesuai bidang admin & optional search)
     public function validateAllLogbook(Request $request)
