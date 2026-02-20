@@ -249,4 +249,61 @@ class LaporanController extends Controller
 
         return back()->with('success', 'Laporan berhasil dihapus oleh admin (file ikut terhapus).');
     }
+
+    // ajuan
+    public function ajuan(Laporan $laporan)
+    {
+        if (auth()->id() !== $laporan->user_id) {
+            abort(403);
+        }
+
+        if (!$laporan->is_rejected) {
+            return back()->withErrors('Laporan tidak dalam status ditolak, tidak bisa diajukan kembali.');
+        }
+
+        return view('laporan.ajuan', compact('laporan'));
+    }
+
+    // ajuan-kembali
+    public function ajuanKembali(Request $request, Laporan $laporan)
+    {
+        if (auth()->id() !== $laporan->user_id) {
+            abort(403);
+        }
+
+        if ($laporan->is_validated) {
+            return back()->withErrors('Laporan sudah divalidasi dan tidak dapat diubah.');
+        }
+
+        $request->validate([
+            'file' => 'required|file|mimes:pdf,doc,docx|max:20480',
+        ], [
+            'file.required' => 'Silakan pilih file pengganti.',
+            'file.mimes' => 'Format harus PDF, DOC, atau DOCX.',
+            'file.max' => 'Ukuran maksimal 20 MB.',
+        ]);
+
+        try {
+            $resolved = $this->resolveFile($laporan);
+            Storage::disk($resolved['disk'])->delete($resolved['path']);
+        } catch (\Throwable $e) {
+            // kalau file lama memang hilang, lanjut saja upload baru
+        }
+
+        // simpan file baru
+        $file = $request->file('file');
+        $path = $file->store('laporan');
+
+        $laporan->update([
+            'file_path' => $path,
+            'nama_file' => $file->getClientOriginalName(),
+            'is_validated' => false,
+            'is_rejected' => false,
+            'rejected_at' => null,
+            'rejected_note' => null,
+        ]);
+
+        return redirect()->route('laporan.index')
+            ->with('success', 'Laporan berhasil diperbarui dan diajukan kembali.');
+    }
 }

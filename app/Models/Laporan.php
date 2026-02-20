@@ -14,10 +14,15 @@ class Laporan extends Model
         'file_path',
         'nama_file',
         'is_validated',
+        'is_rejected',
+        'rejected_at',
+        'rejected_note',
     ];
 
     protected $casts = [
         'is_validated' => 'boolean',
+        'is_rejected' => 'boolean',
+        'rejected_at' => 'datetime',
     ];
 
     public function user()

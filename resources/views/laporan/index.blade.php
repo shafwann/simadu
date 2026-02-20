@@ -2,12 +2,12 @@
     <div class="py-12 max-w-3xl mx-auto space-y-6">
 
         {{-- Notifikasi --}}
-        @if(session('success'))
+        @if (session('success'))
             <div class="p-4 bg-green-50 text-green-700 rounded-xl border border-green-100 text-center">
                 {{ session('success') }}
             </div>
         @endif
-        @if($errors->any())
+        @if ($errors->any())
             <div class="p-4 bg-red-50 text-red-700 rounded-xl border border-red-100 text-center">
                 {{ implode(', ', $errors->all()) }}
             </div>
@@ -41,113 +41,121 @@
             <h3 class="font-bold text-lg mb-4">Daftar Laporan Saya</h3>
 
             @forelse($laporans as $lap)
-    <div class="border rounded-xl p-4 mb-4 bg-white">
+                <div class="border rounded-xl p-4 mb-4 bg-white">
 
-        <div class="flex items-start justify-between gap-4">
-            {{-- INFO FILE --}}
-            <div class="space-y-1">
-                <p class="font-semibold text-gray-800">
-                    {{ $lap->nama_file }}
-                </p>
-            </div>
+                    <div class="flex items-start justify-between gap-4">
+                        {{-- INFO FILE --}}
+                        <div class="space-y-1">
+                            <p class="font-semibold text-gray-800">
+                                {{ $lap->nama_file }}
+                            </p>
+                        </div>
 
-            {{-- AKSI --}}
-            <div class="flex items-center gap-3">
-                @if(Str::endsWith($lap->file_path, '.pdf'))
-                    <a href="{{ route('laporan.preview', $lap->id) }}"
-                    target="_blank"
-                    class="px-4 py-2 rounded-xl text-sm font-medium
+                        {{-- AKSI --}}
+                        <div class="flex items-center gap-3">
+                            @if (Str::endsWith($lap->file_path, '.pdf'))
+                                <a href="{{ route('laporan.preview', $lap->id) }}" target="_blank"
+                                    class="px-4 py-2 rounded-xl text-sm font-medium
                             bg-blue-600 text-white
                             hover:bg-blue-400
                             active:bg-blue-200
                             border border-blue-300
                             shadow-sm
                             transition-all duration-150">
-                        Preview
-</a>
+                                    Preview
+                                </a>
+                            @endif
 
+                            @if (!$lap->is_validated && !$lap->is_rejected)
+                                <a href="{{ route('laporan.edit', $lap->id) }}"
+                                    class="px-4 py-2 rounded-xl text-sm font-semibold bg-amber-600 text-white hover:bg-amber-400 active:bg-amber-200 border border-amber-300 shadow-sm transition-all duration-150">
+                                    Edit
+                                </a>
 
-
-                @endif
-
-                @if(!$lap->is_validated)
-                    <a href="{{ route('laporan.edit', $lap->id) }}"
-                    class="px-4 py-2 rounded-xl text-sm font-semibold
-                            bg-amber-600 text-white
-                            hover:bg-amber-400
-                            active:bg-amber-200
-                            border border-amber-300
-                            shadow-sm
-                            transition-all duration-150">
-                        Edit
-                    </a>
-
-
-
-                    <form action="{{ route('laporan.destroy', $lap->id) }}" method="POST"
-                          onsubmit="return confirm('Yakin hapus laporan ini? File juga akan ikut terhapus.');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit"
-                                class="px-4 py-2 rounded-xl text-sm font-semibold
+                                <form action="{{ route('laporan.destroy', $lap->id) }}" method="POST"
+                                    onsubmit="return confirm('Yakin hapus laporan ini? File juga akan ikut terhapus.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                        class="px-4 py-2 rounded-xl text-sm font-semibold
                                         bg-red-600 text-white
                                         hover:bg-red-400
                                         active:bg-red-200
                                         border border-red-300
                                         shadow-sm
                                         transition-all duration-150">
-                            Hapus
-                        </button>
-                    </form>
+                                        Hapus
+                                    </button>
+                                </form>
+                            @elseif ($lap->is_rejected)
+                                <form action="{{ route('laporan.destroy', $lap->id) }}" method="POST"
+                                    onsubmit="return confirm('Yakin hapus laporan ini? File juga akan ikut terhapus.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                        class="px-4 py-2 rounded-xl text-sm font-semibold
+                                        bg-red-600 text-white
+                                        hover:bg-red-400
+                                        active:bg-red-200
+                                        border border-red-300
+                                        shadow-sm
+                                        transition-all duration-150">
+                                        Hapus
+                                    </button>
+                                </form>
+                            @elseif ($lap->is_validated)
+                                <span class="px-4 py-2 text-sm text-gray-400 border rounded-xl cursor-not-allowed">
+                                    Edit
+                                </span>
+                            @endif
+                        </div>
+                    </div>
 
+                    {{-- PREVIEW PDF --}}
+                    @if (Str::endsWith($lap->file_path, '.pdf'))
+                        <iframe src="{{ route('laporan.preview', $lap->id) }}"
+                            class="w-full h-80 mt-4 rounded-lg border" frameborder="0">
+                        </iframe>
+                    @endif
 
-
-                @else
-                    <span class="px-4 py-2 text-sm text-gray-400 border rounded-xl cursor-not-allowed">
-                        Edit
-                    </span>
-                @endif
-            </div>
+                    {{-- STATUS MENUNGGU VALIDASI --}}
+                    @if (!$lap->is_validated && !$lap->is_rejected)
+                        <div class="mt-4 bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+                            <h4 class="text-sm font-bold text-yellow-800 mb-1">
+                                Laporan sedang ditinjau
+                            </h4>
+                            <p class="text-xs text-yellow-700 leading-relaxed">
+                                Laporan yang telah diunggah. Tunggu proses validasi oleh admin.
+                            </p>
+                        </div>
+                    @elseif ($lap->is_validated)
+                        <div class="mt-4 bg-green-50 p-4 rounded-xl border border-green-100">
+                            <h4 class="text-sm font-bold text-green-800 mb-1">
+                                Laporan telah divalidasi
+                            </h4>
+                            <p class="text-xs text-green-700 leading-relaxed">
+                                Laporan Anda telah disetujui oleh admin dan tidak dapat diubah kembali.
+                            </p>
+                        </div>
+                    @elseif ($lap->is_rejected)
+                        <div class="mt-4 bg-red-50 p-4 rounded-xl border border-red-100">
+                            <h4 class="text-sm font-bold text-red-800 mb-1">
+                                Laporan ditolak
+                            </h4>
+                            <p class="text-xs text-red-700 leading-relaxed">
+                                Laporan Anda ditolak oleh admin. Silakan ajukan laporan kembali.
+                            </p>
+                            <a href="{{ route('laporan.ajuan', $lap->id) }}"
+                                class="mt-3 inline-block px-4 py-2 rounded-xl text-sm font-semibold bg-amber-600 text-white hover:bg-amber-400 active:bg-amber-200 border border-amber-300 shadow-sm transition-all duration-150">
+                                Ajukan Kembali
+                            </a>
+                        </div>
+                    @endif
+                </div>
+            @empty
+                <p class="text-gray-400 italic">Belum ada laporan.</p>
+            @endforelse
         </div>
-
-        {{-- PREVIEW PDF --}}
-        @if(Str::endsWith($lap->file_path, '.pdf'))
-            <iframe
-                src="{{ route('laporan.preview', $lap->id) }}"
-                class="w-full h-80 mt-4 rounded-lg border"
-                frameborder="0">
-            </iframe>
-        @endif
-
-        {{-- STATUS MENUNGGU VALIDASI --}}
-        @if(!$lap->is_validated)
-            <div class="mt-4 bg-yellow-50 p-4 rounded-xl border border-yellow-100">
-                <h4 class="text-sm font-bold text-yellow-800 mb-1">
-                    Laporan sedang ditinjau
-                </h4>
-                <p class="text-xs text-yellow-700 leading-relaxed">
-                    Laporan yang telah diunggah tidak dapat diubah
-                    sampai proses validasi oleh admin selesai.
-                </p>
-            </div>
-        @else
-            <div class="mt-4 bg-green-50 p-4 rounded-xl border border-green-100">
-                <h4 class="text-sm font-bold text-green-800 mb-1">
-                    Laporan telah divalidasi
-                </h4>
-                <p class="text-xs text-green-700 leading-relaxed">
-                    Laporan Anda telah disetujui oleh admin dan
-                    tidak dapat diubah kembali.
-                </p>
-            </div>
-        @endif
-
-
-    </div>
-@empty
-    <p class="text-gray-400 italic">Belum ada laporan.</p>
-@endforelse
- </div>
 
     </div>
 </x-app-layout>

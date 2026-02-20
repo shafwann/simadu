@@ -182,6 +182,8 @@ Route::middleware(['auth', 'no-cache', 'role:mahasiswa'])->group(function () {
     Route::get('/laporan/{laporan}/edit', [LaporanController::class, 'edit'])->name('laporan.edit');
     Route::put('/laporan/{laporan}', [LaporanController::class, 'update'])->name('laporan.update');
     Route::delete('/laporan/{laporan}', [LaporanController::class, 'destroy'])->name('laporan.destroy');
+    Route::get('/laporan/{laporan}/ajuan', [LaporanController::class, 'ajuan'])->name('laporan.ajuan');
+    Route::patch('/laporan/{laporan}/ajuan-kembali', [LaporanController::class, 'ajuanKembali'])->name('laporan.ajuan-kembali');
 
     // Bidang
     Route::get('/bidang-divisi', [ProfileController::class, 'showBidang'])->name('mahasiswa.bidang.show');
@@ -242,8 +244,6 @@ Route::middleware(['auth', 'no-cache', 'role:admin'])
     ->group(function () {
 
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
-        Route::delete('/logbook/{id}', [AdminController::class, 'destroyLogbook'])->name('logbook.destroy');
-        Route::post('/logbook/{id}/reject', [AdminController::class, 'rejectLogbook'])->name('logbook.reject');
 
         // ✅ REKAP ABSENSI (TAMBAHKAN DI SINI)
         Route::get('/rekap-absensi', [AdminAttendanceRecapController::class, 'index'])
@@ -259,6 +259,10 @@ Route::middleware(['auth', 'no-cache', 'role:admin'])
         // Logbook actions
         Route::post('/logbook/{id}/reject', [AdminController::class, 'rejectLogbook'])->name('logbook.reject');
         Route::delete('/logbook/{id}', [AdminController::class, 'destroyLogbook'])->name('logbook.destroy');
+
+        // Laporan actions
+        Route::post('/laporan/{id}/reject', [AdminController::class, 'rejectLaporan'])->name('laporan.reject');
+        Route::delete('/laporan/{id}', [AdminController::class, 'adminDestroy'])->name('laporan.destroy');
 
         // Laporan (Admin View)
         Route::get('/laporan/{laporan}/preview', [LaporanController::class, 'preview'])->name('laporan.preview');
