@@ -98,16 +98,22 @@ class AdminPresensiPdfController extends Controller
             $lokasiUrl  = null;
 
             if ($a) {
-                if (!empty($a->location_name)) {
-                    $lokasiText = $a->location_name;
-                } elseif (in_array($a->status, ['Hadir', 'Telat'], true)) {
-                    $lokasiText = 'KANTOR BAPPERIDA';
-                } else {
-                    $lokasiText = $statusFinal;
-                }
+                $hasLocation = filled($a->location);
+                $hasName     = filled($a->location_name);
 
-                if (!empty($a->location) && (str_contains($a->location, 'http') || str_contains($a->location, 'maps'))) {
-                    $lokasiUrl = $a->location;
+                $isUrl = $hasLocation && (
+                    str_contains($a->location, 'http') ||
+                    str_contains($a->location, 'maps')
+                );
+
+                $lokasiText = $hasName
+                    ? $a->location_name
+                    : 'KANTOR BAPPERIDA';
+
+                if ($hasLocation) {
+                    $lokasiUrl = $isUrl
+                        ? $a->location
+                        : "https://maps.google.com/?q=" . urlencode($a->location);
                 }
             }
 
@@ -132,7 +138,12 @@ class AdminPresensiPdfController extends Controller
         $f4 = [0, 0, 595.28, 935.43];
 
         return Pdf::loadView('admin.students.presensi_pdf', compact(
-            'student', 'about', 'year', 'bulanLabel', 'left', 'right'
+            'student',
+            'about',
+            'year',
+            'bulanLabel',
+            'left',
+            'right'
         ))
             ->setPaper($f4, 'portrait')
             ->download("DAFTAR-HADIR-MAGANG-{$student->nim}-{$bulanLabel}-{$year}.pdf");
@@ -185,9 +196,18 @@ class AdminPresensiPdfController extends Controller
     private function bulanIndo(int $m): string
     {
         return [
-            1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',
-            5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',
-            9=>'September',10=>'Oktober',11=>'November',12=>'Desember'
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember'
         ][$m] ?? '-';
     }
 }

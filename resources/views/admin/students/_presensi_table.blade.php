@@ -28,14 +28,31 @@
         overflow-wrap: break-word;
     }
 
-    .col-tanggal { width: 28%; font-weight: 700; }
-    .col-in { width: 14%; }
-    .col-out { width: 14%; }
-    .col-status { width: 16%; }
-    .col-lokasi { width: 28%; }
+    .col-tanggal {
+        width: 28%;
+        font-weight: 700;
+    }
+
+    .col-in {
+        width: 14%;
+    }
+
+    .col-out {
+        width: 14%;
+    }
+
+    .col-status {
+        width: 16%;
+    }
+
+    .col-lokasi {
+        width: 28%;
+    }
 
     /* merah libur */
-    .holiday-row td { background: #d6a8a8; }
+    .holiday-row td {
+        background: #d6a8a8;
+    }
 
     .badge {
         display: inline-block;
@@ -47,15 +64,50 @@
         line-height: 1;
     }
 
-    .badge-hadir { background: #dcfce7; color: #166534; }
-    .badge-telat { background: #fef9c3; color: #854d0e; }
-    .badge-ijin  { background: #dbeafe; color: #1e40af; }
-    .badge-sakit { background: #fde68a; color: #92400e; }
-    .badge-dl    { background: #e9d5ff; color: #6b21a8; }
-    .badge-cuti  { background: #fbcfe8; color: #9d174d; }
-    .badge-tk    { background: #e5e7eb; color: #374151; }
-    .badge-pc    { background: #ffedd5; color: #9a3412; }
-    .badge-tap   { background: #fee2e2; color: #991b1b; }
+    .badge-hadir {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-telat {
+        background: #fef9c3;
+        color: #854d0e;
+    }
+
+    .badge-ijin {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .badge-sakit {
+        background: #fde68a;
+        color: #92400e;
+    }
+
+    .badge-dl {
+        background: #e9d5ff;
+        color: #6b21a8;
+    }
+
+    .badge-cuti {
+        background: #fbcfe8;
+        color: #9d174d;
+    }
+
+    .badge-tk {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .badge-pc {
+        background: #ffedd5;
+        color: #9a3412;
+    }
+
+    .badge-tap {
+        background: #fee2e2;
+        color: #991b1b;
+    }
 
     .holiday-name {
         display: block;
@@ -74,7 +126,10 @@
     }
 
     /* DomPDF kadang kurang suka link style kompleks; ini aman */
-    a.lokasi-link { color:#000; text-decoration:none; }
+    a.lokasi-link {
+        color: #000;
+        text-decoration: none;
+    }
 </style>
 
 <table class="presensi-simple">
@@ -89,13 +144,13 @@
     </thead>
 
     <tbody>
-        @foreach($rows as $r)
+        @foreach ($rows as $r)
             <tr class="{{ !empty($r['isHoliday']) ? 'holiday-row' : '' }}">
                 <td class="col-tanggal">
                     {{ $r['tanggal_label'] }}
 
                     {{-- OPTIONAL: tampilkan nama hari libur dari API/manual --}}
-                    @if(!empty($r['holiday_name']))
+                    @if (!empty($r['holiday_name']))
                         <span class="holiday-name">{{ $r['holiday_name'] }}</span>
                     @endif
                 </td>
@@ -110,35 +165,65 @@
 
                         $main = $parts[0] ?? '-';
                         $extras = $parts;
-                        if (!empty($extras)) array_shift($extras);
+                        if (!empty($extras)) {
+                            array_shift($extras);
+                        }
 
                         $badge = 'badge-tk';
                         $label = $main;
 
                         switch ($main) {
-                            case 'H':  $badge = 'badge-hadir'; $label = 'H'; break;
-                            case 'T':  $badge = 'badge-telat'; $label = 'T'; break;
-                            case 'I':  $badge = 'badge-ijin';  $label = 'I'; break;
-                            case 'S':  $badge = 'badge-sakit'; $label = 'S'; break;
-                            case 'DL': $badge = 'badge-dl';    $label = 'DL'; break;
-                            case 'CT': $badge = 'badge-cuti';  $label = 'CT'; break;
-                            case 'TK': $badge = 'badge-tk';    $label = 'TK'; break;
+                            case 'H':
+                                $badge = 'badge-hadir';
+                                $label = 'H';
+                                break;
+                            case 'T':
+                                $badge = 'badge-telat';
+                                $label = 'T';
+                                break;
+                            case 'I':
+                                $badge = 'badge-ijin';
+                                $label = 'I';
+                                break;
+                            case 'S':
+                                $badge = 'badge-sakit';
+                                $label = 'S';
+                                break;
+                            case 'DL':
+                                $badge = 'badge-dl';
+                                $label = 'DL';
+                                break;
+                            case 'CT':
+                                $badge = 'badge-cuti';
+                                $label = 'CT';
+                                break;
+                            case 'TK':
+                                $badge = 'badge-tk';
+                                $label = 'TK';
+                                break;
                             case '-':
-                            default:   $badge = 'badge-tk';    $label = ($main === '' ? '-' : $main); break;
+                            default:
+                                $badge = 'badge-tk';
+                                $label = $main === '' ? '-' : $main;
+                                break;
                         }
 
-                        $showPC  = in_array('PC', $extras, true);
+                        $showPC = in_array('PC', $extras, true);
                         $showTAP = in_array('TAP', $extras, true);
                     @endphp
 
                     <span class="badge {{ $badge }}">{{ $label }}</span>
-                    @if($showPC)  <span class="badge badge-pc">PC</span> @endif
-                    @if($showTAP) <span class="badge badge-tap">TAP</span> @endif
+                    @if ($showPC)
+                        <span class="badge badge-pc">PC</span>
+                    @endif
+                    @if ($showTAP)
+                        <span class="badge badge-tap">TAP</span>
+                    @endif
                 </td>
 
                 <td class="col-lokasi">
                     @if(!empty($r['location_url']))
-                        <a class="lokasi-link" href="{{ $r['location_url'] }}" target="_blank">
+                        <a class="lokasi-link" href="{{ $r['location_url'] }}">
                             <span class="lokasi-text">{{ $r['location_text'] }}</span>
                         </a>
                     @else

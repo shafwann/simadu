@@ -114,7 +114,7 @@
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Link Google Maps</label>
                                 <input type="text" name="location" placeholder="https://goo.gl/maps/..."
                                     class="w-full rounded-xl border-gray-200 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-800 text-sm">
-                                <p class="text-[10px] text-gray-400 mt-1">*Paste link 'Share' atau 'Embed' dari Google Maps di sini.</p>
+                                <p class="text-[10px] text-gray-400 mt-1">*Paste link 'Share' dari Google Maps di sini.</p>
                             </div>
 
                             <button type="submit"
@@ -432,24 +432,36 @@
                                         </td>
 
                                         <td class="p-4 text-xs">
-                                            @if($a->location)
-                                            <div class="flex flex-col gap-1">
-                                                <a href="{{ $a->location }}" target="_blank"
-                                                    class="flex items-center gap-1 text-blue-600 font-bold hover:underline">
-                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                    </svg>
-                                                    Buka Link Peta
-                                                </a>
-                                                <span class="text-[10px] text-gray-400 truncate max-w-[160px]" title="{{ $a->location }}">
-                                                    {{ $a->location }}
-                                                </span>
-                                            </div>
+                                            @php
+                                                $hasLocation = filled($a->location);
+                                                $isUrl = $hasLocation && (
+                                                    str_starts_with($a->location, 'http') ||
+                                                    str_contains($a->location, 'maps')
+                                                );
+
+                                                $mapUrl = $isUrl
+                                                    ? $a->location
+                                                    : "https://maps.google.com/?q=" . urlencode($a->location);
+                                            @endphp
+
+                                            @if($hasLocation)
+                                                <div class="flex flex-col gap-1">
+                                                    <a href="{{ $mapUrl }}" target="_blank"
+                                                        class="flex items-center gap-1 text-blue-600 font-bold hover:underline">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        </svg>
+                                                        Buka Link Peta
+                                                    </a>
+                                                    <span class="text-[10px] text-gray-400 truncate max-w-[160px]" title="{{ $a->location }}">
+                                                        {{ $a->location }}
+                                                    </span>
+                                                </div>
                                             @else
-                                            <span class="text-gray-400 italic text-[10px]">Lokasi Kosong</span>
+                                                <span class="text-gray-400 italic text-[10px]">Lokasi Kosong</span>
                                             @endif
                                         </td>
 
