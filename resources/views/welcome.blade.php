@@ -314,7 +314,7 @@
                         <h4 class="font-bold text-white text-sm mb-4">Kontak</h4>
                         <ul class="space-y-2 text-xs text-white">
                             <li>{{ $about->office_phone ?? '-' }}</li>
-                            <li>{{ $about->office_email ?? '-' }}</li>
+                            <li><a href="mailto:{{ $about->office_email }}" class="hover:text-blue-600">{{ $about->office_email ?? '-' }}</a></li>
                         </ul>
                     </div>
                 </div>
