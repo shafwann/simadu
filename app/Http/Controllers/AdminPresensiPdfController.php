@@ -94,38 +94,18 @@ class AdminPresensiPdfController extends Controller
 
             $tanggalLabel = $date->translatedFormat('d M Y');
 
-            $lokasiText = '-';
-            $lokasiUrl  = null;
-
-            if ($a) {
-                $hasLocation = filled($a->location);
-                $hasName     = filled($a->location_name);
-
-                $isUrl = $hasLocation && (
-                    str_contains($a->location, 'http') ||
-                    str_contains($a->location, 'maps')
-                );
-
-                $lokasiText = $hasName
-                    ? $a->location_name
-                    : 'KANTOR BAPPERIDA';
-
-                if ($hasLocation) {
-                    $lokasiUrl = $isUrl
-                        ? $a->location
-                        : "https://maps.google.com/?q=" . urlencode($a->location);
-                }
-            }
-
             $rows[] = [
                 'tanggal_label'  => $tanggalLabel,
                 'checkin_label'  => $checkin,
                 'checkout_label' => $checkout,
                 'status'         => $statusFinal,
                 'status_label'   => $statusFinal,
-                'location_text'  => $lokasiText,
-                'location_url'   => $lokasiUrl,
-                'location'       => $lokasiText,
+                'location_text'  => $a?->location_name_formatted ?? null,
+                // 'location_text'  => $lokasiText,
+                'location_url'   => $a?->location_url_formatted ?? null,
+                // 'location_url'   => $lokasiUrl,
+                'location'       => $a?->location_name_formatted ?? null,
+                // 'location'       => $lokasiText,
                 'isHoliday'      => $isHoliday,
             ];
         }

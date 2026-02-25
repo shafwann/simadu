@@ -432,21 +432,9 @@
                                         </td>
 
                                         <td class="p-4 text-xs">
-                                            @php
-                                                $hasLocation = filled($a->location);
-                                                $isUrl = $hasLocation && (
-                                                    str_starts_with($a->location, 'http') ||
-                                                    str_contains($a->location, 'maps')
-                                                );
-
-                                                $mapUrl = $isUrl
-                                                    ? $a->location
-                                                    : "https://maps.google.com/?q=" . urlencode($a->location);
-                                            @endphp
-
-                                            @if($hasLocation)
+                                            @if($a->location_url_formatted)
                                                 <div class="flex flex-col gap-1">
-                                                    <a href="{{ $mapUrl }}" target="_blank"
+                                                    <a href="{{ $a->location_url_formatted }}" target="_blank"
                                                         class="flex items-center gap-1 text-blue-600 font-bold hover:underline">
                                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
