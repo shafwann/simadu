@@ -193,6 +193,9 @@ Route::middleware(['auth', 'no-cache', 'role:mahasiswa'])->group(function () {
     Route::get('/pembimbing/request', [DosenRequestController::class, 'create'])->name('mahasiswa.pembimbing.request.create');
     Route::post('/pembimbing/request', [DosenRequestController::class, 'store'])->name('mahasiswa.pembimbing.request.store');
 
+    // Search Dosen (AJAX)
+    Route::get('/search-dosen', [DosenRequestController::class, 'search'])->name('search.dosen');
+
     // Export
     Route::get('/export-presensi', function () {
         $data = \App\Models\Attendance::where('user_id', Auth::id())->with('user')->get();

@@ -222,11 +222,13 @@
                                         </label>
                                         <input
                                             type="text"
+                                            id="nama_dosen"
                                             name="nama_dosen"
                                             value="{{ old('nama_dosen', $latestRequest->nama_dosen ?? $approvedRequest->nama_dosen ?? '') }}"
                                             class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                             placeholder="Contoh: Dr. Budi Santoso, M.Kom"
                                             required>
+                                        <ul id="suggestions"></ul>
                                     </div>
 
                                     {{-- NIDN --}}
@@ -236,12 +238,16 @@
                                         </label>
                                         <input
                                             type="text"
+                                            id="nidn"
                                             name="nidn"
                                             value="{{ old('nidn', $latestRequest->nidn ?? $approvedRequest->nidn ?? '') }}"
                                             class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                             placeholder="Masukkan NIDN dosen"
                                             required>
                                     </div>
+
+                                    {{-- ID DOSEN jika ada --}}
+                                    <input type="hidden" name="dosen_id" id="dosen_id">
 
                                     {{-- EMAIL DOSEN --}}
                                     <div>
@@ -250,6 +256,7 @@
                                         </label>
                                         <input
                                             type="email"
+                                            id="email"
                                             name="email"
                                             value="{{ old('email', $latestRequest->email ?? $approvedRequest->email ?? '') }}"
                                             class="w-full rounded-xl border-gray-300"
@@ -264,8 +271,9 @@
                                         </label>
                                         <input
                                             type="password"
+                                            id="password"
                                             name="password"
-                                            class="w-full rounded-xl border-gray-300"
+                                            class="w-full rounded-xl border-gray-300 disabled:bg-gray-100 disabled:text-gray-600"
                                             placeholder="Minimal 8 karakter"
                                             required>
                                     </div>
@@ -340,3 +348,49 @@
         </div>
     </div>
 </x-app-layout>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+    const input = document.getElementById('nama_dosen');
+    const list = document.getElementById('suggestions');
+
+    input.addEventListener('input', function () {
+
+        if (this.value.length < 1) {
+            list.innerHTML = '';
+            return;
+        }
+
+        fetch(`/search-dosen?q=${this.value}`)
+            .then(res => res.json())
+            .then(data => {
+
+                list.innerHTML = '';
+
+                data.forEach(dosen => {
+
+                    let li = document.createElement('li');
+                    li.textContent = dosen.name;
+                    li.classList.add('cursor-pointer', 'p-2', 'hover:bg-gray-100');
+
+                    li.onclick = function () {
+
+                        input.value = dosen.name;
+                        document.getElementById('email').value = dosen.email;
+                        document.getElementById('nidn').value = dosen.nidn;
+                        const passwordField = document.getElementById('password');
+                        passwordField.readOnly = true;
+                        passwordField.disabled = true;
+                        document.getElementById('dosen_id').value = dosen.id;
+
+                        list.innerHTML = '';
+                    };
+
+                    list.appendChild(li);
+                });
+            });
+    });
+
+});
+</script>

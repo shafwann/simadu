@@ -20,63 +20,45 @@ class DosenRequestController extends Controller
 
     public function store(Request $request)
     {
-        // ✅ ambil request milik mahasiswa (kalau sudah pernah ajukan)
-        $existing = PembimbingRequest::where('mahasiswa_id', auth()->id())->latest()->first();
-        $existingId = $existing?->id;
-
         $request->validate([
-            'nama_dosen' => ['required', 'string', 'max:255'],
-
-            // ✅ PERUBAHAN SESUAI REQUEST:
-            // nidn/email uniknya dibatasi PER mahasiswa saja (bukan global)
-            // jadi dosen yang sama bisa diajukan oleh banyak mahasiswa (tetap aman untuk 1 mahasiswa)
-            'nidn' => [
-                'nullable',
-                'digits:10',
-                Rule::unique('pembimbing_requests', 'nidn')
-                    ->where(function ($q) {
-                        return $q->where('mahasiswa_id', auth()->id());
-                    })
-                    ->ignore($existingId),
-            ],
-
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                Rule::unique('pembimbing_requests', 'email')
-                    ->where(function ($q) {
-                        return $q->where('mahasiswa_id', auth()->id());
-                    })
-                    ->ignore($existingId),
-            ],
-
-            'password' => ['required', 'string', 'min:8'],
+            'nama_dosen' => 'required|string|max:255',
+            'nidn'       => 'required',
+            'email'      => 'required|email',
+            'password'   => 'nullable|min:8',
         ]);
 
-        $payload = [
-            'nama_dosen'        => $request->nama_dosen,
-            'nidn'              => $request->nidn,
-            'email'             => $request->email,
-            'password'          => bcrypt($request->password),
-            'mahasiswa_id'      => auth()->id(),
-            'instansi'          => auth()->user()->instansi,
-            'prodi'             => auth()->user()->prodi,
-            'fakultas'          => auth()->user()->fakultas,
-            'kategori_instansi' => auth()->user()->kategori_instansi,
-            'status'            => 'pending',
-        ];
+        $mahasiswa = auth()->user();
 
-        // ✅ jika sudah ada -> update saja (agar tidak duplicate dalam 1 mahasiswa)
-        if ($existing) {
-            $existing->update($payload);
-            return back()->with('success', 'Perubahan dikirim. Menunggu persetujuan admin.');
+        $dosen = User::where('nidn', $request->nidn)->first();
+
+        if ($dosen) {
+
+            // DOSEN SUDAH ADA
+            PembimbingRequest::create([
+                'nama_dosen'   => $dosen->name,
+                'nidn'         => $dosen->nidn,
+                'email'        => $dosen->email,
+                'mahasiswa_id' => $mahasiswa->id,
+                'status'       => 'pending',
+            ]);
+        } else {
+
+            // DOSEN BARU
+            PembimbingRequest::create([
+                'nama_dosen'   => $request->nama_dosen,
+                'nidn'         => $request->nidn,
+                'email'        => $request->email,
+                'password'     => bcrypt($request->password),
+                'mahasiswa_id' => $mahasiswa->id,
+                'instansi'          => auth()->user()->instansi,
+                'prodi'             => auth()->user()->prodi,
+                'fakultas'          => auth()->user()->fakultas,
+                'kategori_instansi' => auth()->user()->kategori_instansi,
+                'status'       => 'pending',
+            ]);
         }
 
-        // ✅ jika belum ada -> create
-        PembimbingRequest::create($payload);
-
-        return back()->with('success', 'Pengajuan dikirim. Menunggu persetujuan admin.');
+        return back()->with('success', 'Pengajuan dikirim.');
     }
 
     public function approve($id)
@@ -85,12 +67,10 @@ class DosenRequestController extends Controller
 
             $req = PembimbingRequest::with('mahasiswa')->findOrFail($id);
 
-            // 1️⃣ Cegah approve ulang
             if ($req->status !== 'pending') {
                 abort(403, 'Request sudah diproses');
             }
 
-            // 2️⃣ VALIDASI INSTANSI BERDASARKAN MAHASISWA
             if (
                 auth()->user()->kategori_instansi &&
                 $req->mahasiswa->kategori_instansi !== auth()->user()->kategori_instansi
@@ -98,47 +78,45 @@ class DosenRequestController extends Controller
                 abort(403, 'Akses Ditolak. Beda instansi.');
             }
 
-            // 3️⃣ BUAT / AMBIL DOSEN
-            // ✅ FIX: cari berdasarkan email TANPA global scope AgencyScope
+            // 🔎 Cari berdasarkan NIDN (bukan email)
             $dosen = User::withoutGlobalScope(\App\Models\Scopes\AgencyScope::class)
-                ->where('email', $req->email)
+                ->where('nidn', $req->nidn)
                 ->first();
 
             if (!$dosen) {
+
+                // DOSEN BARU → password WAJIB ada
+                if (!$req->password) {
+                    abort(500, 'Password kosong untuk dosen baru.');
+                }
+
                 $dosen = User::create([
                     'name'              => $req->nama_dosen,
                     'email'             => $req->email,
-                    'password'          => $req->password,
+                    'nidn'              => $req->nidn,
+                    'password'          => $req->password, // sudah hash
                     'role'              => 'pembimbing',
                     'status'            => 'aktif',
                     'kategori_instansi' => $req->mahasiswa->kategori_instansi,
+                    'instansi'          => $req->mahasiswa->instansi,
+                    'prodi'             => $req->mahasiswa->prodi,
+                    'fakultas'          => $req->mahasiswa->fakultas,
+                    'bidang'            => $req->mahasiswa->bidang,
                 ]);
             } else {
-                // OPTIONAL: sinkronkan data dosen
+
+                // DOSEN SUDAH ADA → jangan sentuh password
                 $dosen->update([
-                    'name'     => $req->nama_dosen,
-                    'password' => $req->password,
-                    'status'   => 'aktif',
+                    'name'   => $req->nama_dosen ?? $dosen->name,
+                    'status' => 'aktif',
                 ]);
             }
 
-            // 🔥 SINKRON DATA DOSEN DARI MAHASISWA
-            $mahasiswa = $req->mahasiswa;
-
-            $dosen->instansi  = $mahasiswa->instansi;
-            $dosen->prodi     = $mahasiswa->prodi;
-            $dosen->fakultas  = $mahasiswa->fakultas;
-            $dosen->bidang    = $mahasiswa->bidang;
-            $dosen->nidn      = $req->nidn;
-
-            $dosen->save();
-
-            // 4️⃣ HUBUNGKAN DOSEN ↔ MAHASISWA
+            // Hubungkan dosen ke mahasiswa
             $req->mahasiswa
                 ->dosenPembimbing()
                 ->syncWithoutDetaching([$dosen->id]);
 
-            // 5️⃣ UPDATE STATUS
             $req->update(['status' => 'approved']);
         });
 
@@ -168,5 +146,20 @@ class DosenRequestController extends Controller
         ]);
 
         return back()->with('success', 'Request ditolak');
+    }
+
+    // search dosen untuk autocomplete
+    public function search(Request $request)
+    {
+        $query = $request->q;
+
+        return User::where('role', 'pembimbing')
+            ->where('name', 'like', "%{$query}%")
+            ->where('status', 'aktif')
+            ->where('instansi', auth()->user()->instansi)
+            ->where('fakultas', auth()->user()->fakultas)
+            ->select('id', 'name', 'email', 'nidn')
+            ->limit(10)
+            ->get();
     }
 }
