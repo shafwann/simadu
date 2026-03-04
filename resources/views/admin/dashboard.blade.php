@@ -20,6 +20,11 @@
             </span>
         </div>
     </x-slot>
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
 
     <div class="py-12 bg-white min-h-screen">
         <div class="max-w-7xl mx-auto px-6 lg:px-12 space-y-10">
@@ -180,12 +185,12 @@
                 <div x-data="{
                     open: false,
                     log: null,
-                
+
                     logbookRejectOpen: false,
-                
+
                     rejectId: null,
                     rejectedNote: '',
-                
+
                     show(data) {
                         this.log = data;
                         this.open = true;
@@ -458,12 +463,12 @@
             <div x-data="{
                 open: false,
                 log: null,
-            
+
                 laporanRejectOpen: false,
-            
+
                 rejectId: null,
                 rejectedNote: '',
-            
+
                 show(data) {
                     this.log = data;
                     this.open = true;
