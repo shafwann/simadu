@@ -17,7 +17,10 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
-        $bidangOptions = config('bidang.options');
+        $bidangOptions = array_merge(
+            config('bidang.options', []),
+            \App\Models\AboutSetting::bidangOptions()
+        );
 
         // ✅ TAMBAH: ambil request pembimbing instansi
         $user = $request->user();
