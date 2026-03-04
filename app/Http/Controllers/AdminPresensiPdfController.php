@@ -117,6 +117,8 @@ class AdminPresensiPdfController extends Controller
 
         $f4 = [0, 0, 595.28, 935.43];
 
+        $nimSafe = str_replace(['/', '\\'], '-', $student->nim);
+
         return Pdf::loadView('admin.students.presensi_pdf', compact(
             'student',
             'about',
@@ -126,7 +128,7 @@ class AdminPresensiPdfController extends Controller
             'right'
         ))
             ->setPaper($f4, 'portrait')
-            ->download("DAFTAR-HADIR-MAGANG-{$student->nim}-{$bulanLabel}-{$year}.pdf");
+            ->download("DAFTAR-HADIR-MAGANG-{$nimSafe}-{$bulanLabel}-{$year}.pdf");
     }
 
     private function getIndonesiaHolidaysMerged(int $year): array
