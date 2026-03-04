@@ -210,6 +210,8 @@ class AttendanceController extends Controller
         // F4 points
         $F4 = [0, 0, 595.28, 935.43];
 
+        $nimSafe = str_replace(['/', '\\'], '-', $student->nim);
+
         return Pdf::loadView('admin.students.presensi_pdf', compact(
             'student',
             'about',
@@ -219,7 +221,7 @@ class AttendanceController extends Controller
             'right'
         ))
         ->setPaper($F4, 'portrait')
-        ->download("DAFTAR-HADIR-{$student->nim}-{$bulanLabel}-{$year}.pdf");
+        ->download("DAFTAR-HADIR-{$nimSafe}-{$bulanLabel}-{$year}.pdf");
     }
 
 

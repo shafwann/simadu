@@ -81,7 +81,9 @@ class AdminPresensiPdfController extends Controller
             'student', 'about', 'year', 'bulanLabel', 'left', 'right'
         ))->setPaper('A4', 'portrait');
 
-        $filename = "DAFTAR-HADIR-MAGANG-{$student->nim}-{$bulanLabel}-{$year}.pdf";
+        $nimSafe = str_replace(['/', '\\'], '-', $student->nim);
+
+        $filename = "DAFTAR-HADIR-MAGANG-{$nimSafe}-{$bulanLabel}-{$year}.pdf";
         return $pdf->download($filename);
     }
 }

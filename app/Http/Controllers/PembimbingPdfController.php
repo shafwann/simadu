@@ -144,11 +144,13 @@ class PembimbingPdfController extends Controller
         // ✅ F4 points: 595.28 x 935.43
         $f4 = [0, 0, 595.28, 935.43];
 
+        $nimSafe = str_replace(['/', '\\'], '-', $student->nim);
+
         return Pdf::loadView('admin.students.presensi_pdf', compact(
             'student', 'about', 'year', 'bulanLabel', 'left', 'right'
         ))
             ->setPaper($f4, 'portrait')
-            ->download("DAFTAR-HADIR-MAGANG-{$student->nim}-{$bulanLabel}-{$year}.pdf");
+            ->download("DAFTAR-HADIR-MAGANG-{$nimSafe}-{$bulanLabel}-{$year}.pdf");
     }
 
     public function logbookPdf(Request $request, $id)
