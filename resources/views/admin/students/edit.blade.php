@@ -128,12 +128,12 @@
                         {{-- Tanggal --}}
                         <div>
                             <x-input-label for="tanggal_masuk" :value="__('Tanggal Mulai')" />
-                            <input type="date" name="tanggal_masuk" value="{{ old('tanggal_masuk', $student->tanggal_masuk) }}" class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                            <input type="date" id="tanggal_masuk" name="tanggal_masuk" value="{{ old('tanggal_masuk', $student->tanggal_masuk) }}" class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
                         </div>
 
                         <div>
                             <x-input-label for="tanggal_selesai" :value="__('Tanggal Selesai')" />
-                            <input type="date" name="tanggal_selesai" value="{{ old('tanggal_selesai', $student->tanggal_selesai) }}" class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                            <input id="tanggal_selesai" type="date" name="tanggal_selesai" value="{{ old('tanggal_selesai', $student->tanggal_selesai) }}" class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
                         </div>
 
 
@@ -173,18 +173,42 @@
                                 required />
                             <x-input-error :messages="$errors->get('nip_pembimbing')" class="mt-2" />
                         </div>
+
+                        {{-- Bidang / Divisi Penempatan --}}
+                        <div class="md:col-span-2">
+                            <x-input-label for="bidang" :value="__('Bidang Penempatan')" />
+                            <input
+                                type="text"
+                                name="bidang"
+                                id="bidang"
+                                list="bidangList"
+                                value="{{ old('bidang', $student->bidang) }}"
+                                class="mt-1 block w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                placeholder="Ketik manual atau pilih dari daftar..."
+                                required
+                            >
+
+                            <datalist id="bidangList">
+                                @foreach($bidangOptions as $bidang)
+                                    <option value="{{ $bidang }}"></option>
+                                @endforeach
+                            </datalist>
+
+                            <x-input-error :messages="$errors->get('bidang')" class="mt-2" />
+                        </div>
+
                         {{-- END TAMBAHAN --}}
 
                         {{-- Status Aktif/Nonaktif --}}
                         <div class="md:col-span-2">
                             <x-input-label for="status" :value="__('Status Mahasiswa')" />
                             <div class="mt-2 flex gap-4">
-                                <label class="inline-flex items-center">
-                                    <input type="radio" class="form-radio text-green-600 w-5 h-5" name="status" value="aktif" {{ $student->status == 'aktif' ? 'checked' : '' }}>
+                                <label for="status_aktif" class="inline-flex items-center">
+                                    <input id="status_aktif" type="radio" class="form-radio text-green-600 w-5 h-5" name="status" value="aktif" {{ $student->status == 'aktif' ? 'checked' : '' }}>
                                     <span class="ml-2 font-bold text-gray-700">Aktif</span>
                                 </label>
-                                <label class="inline-flex items-center">
-                                    <input type="radio" class="form-radio text-gray-400 w-5 h-5" name="status" value="nonaktif" {{ $student->status == 'nonaktif' ? 'checked' : '' }}>
+                                <label for="status_nonaktif" class="inline-flex items-center">
+                                    <input id="status_nonaktif" type="radio" class="form-radio text-gray-400 w-5 h-5" name="status" value="nonaktif" {{ $student->status == 'nonaktif' ? 'checked' : '' }}>
                                     <span class="ml-2 text-gray-600">Selesai / Nonaktif</span>
                                 </label>
                             </div>

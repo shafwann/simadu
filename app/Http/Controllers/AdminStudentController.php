@@ -168,7 +168,10 @@ class AdminStudentController extends Controller
             abort(403, 'Anda tidak berhak mengedit data mahasiswa dari bidang lain.');
         }
 
-        $bidangOptions = \App\Models\AboutSetting::bidangOptions();
+        $bidangOptions = array_merge(
+            config('bidang.options', []),
+            \App\Models\AboutSetting::bidangOptions()
+        );
 
         return view('admin.students.edit', compact('student', 'bidangOptions'));
     }
@@ -192,10 +195,10 @@ class AdminStudentController extends Controller
             abort(403, 'Akses Ditolak.');
         }
 
-        $request->validate([
+        $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            // Validasi email unik KECUALI milik user ini sendiri
-            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($student->id)],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($student->id)],
+            'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
             'nim' => ['required', 'string', 'max:20'],
             'prodi' => ['required', 'string', 'max:100'],
             'instansi' => ['required', 'string', 'max:100'],
@@ -204,48 +207,19 @@ class AdminStudentController extends Controller
             'tanggal_masuk' => ['required', 'date'],
             'tanggal_selesai' => ['required', 'date', 'after:tanggal_masuk'],
             'status' => ['required', 'in:aktif,nonaktif'],
-
-            // Validasi Bidang Update
-            'bidang' => ['required', Rule::in([
-                'Ekonomi',
-                'Sekretariat',
-                'Sosial & Budaya',
-                'Fisik & Prasarana',
-                'Penelitian, Pengembangan & Penyusunan Program',
-            ])],
-
             'jabatan_pembimbing' => ['required', 'string', 'max:255'],
             'nama_pembimbing' => ['required', 'string', 'max:255'],
             'nip_pembimbing' => ['required', 'string', 'max:255'],
+            'bidang' => ['nullable', 'string', 'max:255'],
         ]);
 
-        // Update Data Utama
-        $student->fill([
-            'name' => $request->name,
-            'email' => $request->email,
-            'nim' => $request->nim,
-            'prodi' => $request->prodi,
-            'instansi' => $request->instansi,
-            'bidang' => $request->bidang,
-            'status' => $request->status,
-            'fakultas' => $request->fakultas,
-            'kegiatan' => $request->kegiatan,
-            'tanggal_masuk' => $request->tanggal_masuk,
-            'tanggal_selesai' => $request->tanggal_selesai,
-            'jabatan_pembimbing' => $request->jabatan_pembimbing,
-            'nama_pembimbing' => $request->nama_pembimbing,
-            'nip_pembimbing' => $request->nip_pembimbing,
-        ]);
-
-        // Cek Password (Hanya update jika diisi)
-        if ($request->filled('password')) {
-            $request->validate([
-                'password' => ['confirmed', Rules\Password::defaults()],
-            ]);
-            $student->password = Hash::make($request->password);
+        if (!empty($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        } else {
+            unset($data['password']);
         }
 
-        $student->save();
+        $student->update($data);
 
         return redirect()->route('admin.students.index')
             ->with('success', 'Data mahasiswa berhasil diperbarui.');
