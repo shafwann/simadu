@@ -291,7 +291,7 @@
         {{-- FOOTER --}}
         <footer style="background: linear-gradient(231deg, rgb(6, 147, 227) 0%, rgb(155, 81, 224) 94%);" class="text-white py-8 px-4 lg:px-8">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                     <div>
                         <div class="flex items-center gap-2 mb-4">
                             @if(isset($about) && $about->logo_path)
@@ -316,6 +316,48 @@
                             <li>{{ $about->office_phone ?? '-' }}</li>
                             <li><a href="mailto:{{ $about->office_email }}" class="hover:text-blue-600">{{ $about->office_email ?? '-' }}</a></li>
                         </ul>
+                    </div>
+                    {{-- KOLOM 4: STATISTIK KUNJUNGAN --}}
+                    <div class="space-y-3">
+                        {{-- JUDUL (sejajar dengan Tautan & Kontak) --}}
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-bold text-white text-sm">
+                                Statistik Kunjungan
+                            </h4>
+
+                            {{-- LIVE BADGE --}}
+                            <span class="inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full
+                                        bg-green-500 text-white">
+                                <span class="relative flex h-1.5 w-1.5">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
+                                </span>
+                                Live
+                            </span>
+                        </div>
+
+                        {{-- BOX STAT --}}
+                        <div class="bg-white text-gray-900 rounded-lg px-3 py-2 text-[11px]
+                                    shadow-md w-[170px] border border-gray-200">
+                            <div class="space-y-1">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Vis. today</span>
+                                    <span class="font-black">{{ $visitsToday ?? 0 }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Visits</span>
+                                    <span class="font-black">{{ $totalVisits ?? 0 }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Pag. today</span>
+                                    <span class="font-black">{{ $pagesToday ?? 0 }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Pages</span>
+                                    <span class="font-black">{{ $totalPages ?? 0 }}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="border-t border-gray-100 pt-6 text-center">

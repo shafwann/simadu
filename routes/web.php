@@ -28,6 +28,7 @@ use App\Http\Controllers\AdminAttendanceRecapController;
 
 use App\Models\AboutSetting;
 use App\Models\User;
+use App\Models\Visit;
 
 /*
 |--------------------------------------------------------------------------
@@ -118,6 +119,17 @@ Route::get('/', function (Request $request) {
         ->orderByDesc('total')
         ->get();
 
+    $visitsToday = Visit::whereDate('created_at', today())->count();
+    $totalVisits = Visit::count();
+
+    // halaman unik yang dibuka hari ini
+    $pagesToday = Visit::whereDate('created_at', today())
+        ->distinct('path')
+        ->count('path');
+
+    // total halaman unik sepanjang waktu
+    $totalPages = Visit::distinct('path')->count('path');
+
     return view('welcome', compact(
         'total',
         'mahasiswa',
@@ -125,9 +137,13 @@ Route::get('/', function (Request $request) {
         'about',
         'aboutMaster',
         'instansiAktif',
-        'pesertaAktifPerInstansi'
+        'pesertaAktifPerInstansi',
+        'visitsToday',
+        'totalVisits',
+        'pagesToday',
+        'totalPages',
     ));
-});
+})->middleware('track.visits');
 
 // ==========================================
 // 2. LOBBY UTAMA (PENGALIH ARUS)
