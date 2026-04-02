@@ -72,7 +72,7 @@ class AdminManagementController extends Controller
             'bidang'            => $request->bidang,
             'status'            => 'aktif',
 
-            // 🔐 OTOMATIS IKUT SUPER ADMIN
+            // OTOMATIS IKUT SUPER ADMIN
             'kategori_instansi' => Auth::user()->kategori_instansi,
         ]);
 
@@ -90,17 +90,17 @@ class AdminManagementController extends Controller
 
         $admin = User::findOrFail($id);
 
-        // ❌ Tidak boleh hapus diri sendiri
+        // Tidak boleh hapus diri sendiri
         if ($admin->id === Auth::id()) {
             return back()->with('error', 'Tidak dapat menghapus akun sendiri.');
         }
 
-        // ❌ Tidak boleh hapus Super Admin
+        // Tidak boleh hapus Super Admin
         if ($admin->bidang === 'Administrator Sistem') {
             return back()->with('error', 'Tidak dapat menghapus Super Admin.');
         }
 
-        // 🔒 Cegah beda instansi
+        // CEK INSTANSI
         if ($admin->kategori_instansi !== Auth::user()->kategori_instansi) {
             abort(403, 'Akses ditolak. Beda instansi.');
         }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\FaceResetRequest;
 use App\Models\User;
 use App\Models\Logbook;
 use App\Models\Laporan;
@@ -51,7 +52,7 @@ class AdminController extends Controller
         // =========================================
         $pendingLogbooks = Logbook::with('user')
             ->where('is_validated', false)
-            ->where('is_rejected', false) // ✅ tambahan filter biar yang ditolak hilang
+            ->where('is_rejected', false) // filter yang ditolak hilang
             ->whereHas('user', function ($q) use ($isSuperAdmin, $adminBidang, $search) {
 
                 if (!$isSuperAdmin) {
@@ -71,14 +72,14 @@ class AdminController extends Controller
         // Menggunakan paginate(5) dengan nama halaman 'laporan_page'
         $pendingLaporans = Laporan::with('user')
             ->where('is_validated', false)
-            ->where('is_rejected', false) // tambahan filter biar yang ditolak hilang
+            ->where('is_rejected', false) // filter yang ditolak hilang
             ->whereHas('user', function ($q) use ($isSuperAdmin, $adminBidang) {
                 if (!$isSuperAdmin) {
                     $q->where('bidang', $adminBidang);
                 }
             })
             ->latest()
-            ->paginate(5, ['*'], 'laporan_page'); // ✅ Ganti get() jadi paginate()
+            ->paginate(5, ['*'], 'laporan_page');
 
         // =========================================
         // QUERY 5: Daftar Mahasiswa (Tabel Bawah - Opsional)
@@ -95,11 +96,25 @@ class AdminController extends Controller
             ->orderBy('name')
             ->get();
 
+        // =========================================
+        // QUERY 6: Pending Face Reset Requests
+        // =========================================
+        $pendingFaceResets = FaceResetRequest::with('user')
+            ->where('status', 'pending')
+            ->whereHas('user', function ($q) use ($isSuperAdmin, $adminBidang) {
+                if (!$isSuperAdmin) {
+                    $q->where('bidang', $adminBidang);
+                }
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(5, ['*'], 'face_reset_page');
+
         return view('admin.dashboard', compact(
             'activeStudents',
             'finishedStudents',
             'pendingLogbooks',
             'pendingLaporans',
+            'pendingFaceResets',
             'search',
             'students'
         ));
@@ -156,8 +171,7 @@ class AdminController extends Controller
         return back()->with('success', 'Logbook berhasil dihapus.');
     }
 
-
-    // ✅ TAMBAHAN: VALIDASI SEMUA LOGBOOK (sesuai bidang admin & optional search)
+    // VALIDASI SEMUA LOGBOOK (sesuai bidang admin & optional search)
     public function validateAllLogbook(Request $request)
     {
         $user = Auth::user();
@@ -169,12 +183,12 @@ class AdminController extends Controller
         $query = Logbook::where('is_validated', false)
             ->whereHas('user', function ($q) use ($user, $search) {
 
-                // ✅ jika bukan Super Admin, batasi bidang
+                // jika bukan Super Admin, batasi bidang
                 if ($user->bidang !== 'Administrator Sistem') {
                     $q->where('bidang', $user->bidang);
                 }
 
-                // ✅ kalau ada search, batasi nama mahasiswa
+                // kalau ada search, batasi nama mahasiswa
                 if (!empty($search)) {
                     $q->where('name', 'like', '%' . $search . '%');
                 }

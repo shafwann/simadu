@@ -25,7 +25,8 @@ use App\Http\Controllers\DosenRequestController;
 use App\Http\Controllers\MasterAgencyController;
 use App\Http\Controllers\MasterSettingController;
 use App\Http\Controllers\AdminAttendanceRecapController;
-
+use App\Http\Controllers\FaceResetRequestController;
+use App\Http\Controllers\FaceVerificationController;
 use App\Models\AboutSetting;
 use App\Models\User;
 use App\Models\Visit;
@@ -148,9 +149,7 @@ Route::get('/', function (Request $request) {
 // ==========================================
 // 2. LOBBY UTAMA (PENGALIH ARUS)
 // ==========================================
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified', 'no-cache'])
-    ->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified', 'no-cache'])->name('dashboard');
 
 // ==========================================
 // 3. GROUP: AUTHENTICATED USERS (SHARED)
@@ -179,9 +178,7 @@ Route::middleware(['auth', 'no-cache', 'role:mahasiswa'])->group(function () {
     Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkout');
     Route::get('/attendance/history', [AttendanceController::class, 'history'])->name('attendance.history');
 
-    Route::get('/attendance/presensi-pdf', [AdminPresensiPdfController::class, 'myPresensiPdf'])
-        ->name('attendance.presensi_pdf');
-
+    Route::get('/attendance/presensi-pdf', [AdminPresensiPdfController::class, 'myPresensiPdf'])->name('attendance.presensi_pdf');
 
     // Logbook
     Route::get('/logbook', [LogbookController::class, 'index'])->name('logbook.index');
@@ -211,6 +208,16 @@ Route::middleware(['auth', 'no-cache', 'role:mahasiswa'])->group(function () {
 
     // Search Dosen (AJAX)
     Route::get('/search-dosen', [DosenRequestController::class, 'search'])->name('search.dosen');
+
+    // Face Reset Request
+    Route::get('/face-reset-request', [FaceResetRequestController::class, 'create'])->name('face-reset-request.create');
+    Route::post('/face-reset-request', [FaceResetRequestController::class, 'store'])->name('face-reset-request.store');
+
+    // Face Verification
+    Route::get('/face-setup', [FaceVerificationController::class, 'setupView'])->name('face.setup');
+    Route::post('/face-setup', [FaceVerificationController::class, 'storeSetup'])->name('face.setup.store');
+    Route::get('/face-verification', [FaceVerificationController::class, 'verifyView'])->name('face.verify');
+    Route::post('/face-verify', [FaceVerificationController::class, 'verify'])->name('face.verify.submit');
 
     // Export
     Route::get('/export-presensi', function () {
@@ -264,11 +271,8 @@ Route::middleware(['auth', 'no-cache', 'role:admin'])
 
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
 
-        // ✅ REKAP ABSENSI (TAMBAHKAN DI SINI)
-        Route::get('/rekap-absensi', [AdminAttendanceRecapController::class, 'index'])
-            ->name('attendance.recap');
-
-        // route admin lain..
+        // Rekap Absensi
+        Route::get('/rekap-absensi', [AdminAttendanceRecapController::class, 'index'])->name('attendance.recap');
 
         // Validasi
         Route::post('/logbook/{id}/validate', [AdminController::class, 'validateLogbook'])->name('logbook.validate');
@@ -286,13 +290,17 @@ Route::middleware(['auth', 'no-cache', 'role:admin'])
         // Laporan (Admin View)
         Route::get('/laporan/{laporan}/preview', [LaporanController::class, 'preview'])->name('laporan.preview');
         Route::get('/laporan/{laporan}/download', [LaporanController::class, 'download'])->name('laporan.download');
-        Route::delete('laporan/{laporan}/destroy', [LaporanController::class, 'adminDestroy'])
-            ->name('laporan.destroy');
-
+        Route::delete('laporan/{laporan}/destroy', [LaporanController::class, 'adminDestroy'])->name('laporan.destroy');
 
         // CRUD Mahasiswa
         Route::resource('students', AdminStudentController::class);
         Route::patch('/students/{user}/status', [AdminStudentController::class, 'updateStatus'])->name('students.updateStatus');
+
+        // Face Reset Management
+        Route::get('/face-reset-requests', [AdminStudentController::class, 'faceResetRequests'])->name('face-reset.index');
+        Route::post('/students/{id}/face-reset', [AdminStudentController::class, 'resetFaceDescriptor'])->name('students.face.reset');
+        Route::post('/face-reset-requests/{id}/approve', [AdminStudentController::class, 'approveFaceReset'])->name('face-reset.approve');
+        Route::post('/face-reset-requests/{id}/reject', [AdminStudentController::class, 'rejectFaceReset'])->name('face-reset.reject');
 
         // PDF & Export
         Route::get('/students/{id}/presensi-pdf', [AdminPresensiPdfController::class, 'download'])->name('students.presensi.pdf');
@@ -325,13 +333,10 @@ Route::middleware(['auth', 'no-cache', 'role:admin'])
             Route::delete('/{assessment}', [AssessmentController::class, 'destroy'])->name('destroy');
             Route::get('/certificate/{user}', [AssessmentController::class, 'certificate'])->name('certificate');
 
-            // ✅ upload & delete scan sertifikat
+            // upload & delete scan sertifikat
             Route::patch('/{assessment}/scan', [AssessmentController::class, 'uploadScan'])->name('scan.upload');
             Route::delete('/{assessment}/scan', [AssessmentController::class, 'destroyScan'])->name('scan.destroy');
         });
-
-
-
 
         // Manage Admins
         Route::prefix('manage-admins')->name('manage.')->group(function () {

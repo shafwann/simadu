@@ -9,9 +9,54 @@ use Carbon\Carbon;
 use App\Models\Logbook;
 use App\Models\AboutSetting;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\RedirectResponse;
 
 class AttendanceController extends Controller
 {
+    private function ensureFaceSetupOrRedirect()
+    {
+        $user = Auth::user();
+
+        if (is_null($user->face_descriptor)) {
+            return redirect()->route('face.setup')->with('warning', 'Silakan setup wajah Anda terlebih dahulu.');
+        }
+
+        return null;
+    }
+
+    private function ensureFaceVerifiedForActionOrRedirect(Request $request, string $action): ?RedirectResponse
+    {
+        $setupGate = $this->ensureFaceSetupOrRedirect();
+        if ($setupGate) {
+            return $setupGate;
+        }
+
+        $requestToken = $request->input('face_verification_token');
+        $sessionToken = session('face_verification_token');
+        $verifiedAction = session('face_verified_action');
+
+        if ($verifiedAction !== $action || !$requestToken || !$sessionToken || !hash_equals($sessionToken, $requestToken)) {
+            session([
+                'face_intended_action' => $action,
+                'face_pending_location' => $request->input('location'),
+            ]);
+            session()->forget('face_verified_action');
+            session()->forget('face_verification_token');
+            return redirect()->route('face.verify')->with('warning', 'Silakan verifikasi wajah sebelum ' . $action . '.');
+        }
+
+        return null;
+    }
+
+    private function attendanceResponse(Request $request, string $type, string $message)
+    {
+        if ($request->filled('face_verification_token')) {
+            return redirect()->route('attendance.index')->with($type, $message);
+        }
+
+        return back()->with($type, $message);
+    }
+
     // ============================
     // Helper: ambil AboutSetting sesuai instansi user
     // ============================
@@ -25,6 +70,11 @@ class AttendanceController extends Controller
 
     public function index()
     {
+        $faceGate = $this->ensureFaceSetupOrRedirect();
+        if ($faceGate) {
+            return $faceGate;
+        }
+
         $attendance = Attendance::where('user_id', Auth::id())
             ->whereDate('tanggal', Carbon::today())
             ->orderByDesc('id')
@@ -85,7 +135,7 @@ class AttendanceController extends Controller
         $student = Auth::user();
         $kategori = $student->kategori_instansi ?? 'UMUM';
 
-        // ✅ penting: sesuai instansi user, bukan first()
+        // penting: sesuai instansi user, bukan first()
         $about = AboutSetting::where('kategori_instansi', $kategori)->first();
 
         $month = (int) $request->get('month', now()->month);
@@ -98,7 +148,7 @@ class AttendanceController extends Controller
         $end   = $start->copy()->endOfMonth();
         $daysInMonth = $start->daysInMonth;
 
-        // ✅ PAKSA LOCALE INDONESIA BIAR NAMA BULAN INDONESIA (Januari, Februari, dst)
+        // PAKSA LOCALE INDONESIA BIAR NAMA BULAN INDONESIA (Januari, Februari, dst)
         // (agar tidak keluar "January")
         $bulanLabel = $start->locale('id')->translatedFormat('F');
 
@@ -108,7 +158,7 @@ class AttendanceController extends Controller
             ->get()
             ->keyBy(fn ($a) => Carbon::parse($a->tanggal)->format('Y-m-d'));
 
-        // ✅ map checkout_selesai per hari untuk TAP
+        // map checkout_selesai per hari untuk TAP
         $checkoutEndMap = [
             1 => $about?->senin_checkout_selesai,
             2 => $about?->selasa_checkout_selesai,
@@ -342,24 +392,30 @@ class AttendanceController extends Controller
     {
         $user = Auth::user();
         if ($user->status !== 'aktif') {
-            return back()->with('error', 'Akun Anda tidak aktif, tidak bisa melakukan presensi.');
+            return $this->attendanceResponse($request, 'error', 'Akun Anda tidak aktif, tidak bisa melakukan presensi.');
         }
 
         $schedule = $this->getTodayAbsensiSchedule();
         if (isset($schedule['error'])) {
-            return back()->with('error', $schedule['error']);
+            return $this->attendanceResponse($request, 'error', $schedule['error']);
         }
 
         $request->validate([
             'location' => ['required', 'regex:/^-?\d+(\.\d+)?,-?\d+(\.\d+)?$/'],
+            'face_verification_token' => ['nullable', 'string'],
         ]);
+
+        $faceGate = $this->ensureFaceVerifiedForActionOrRedirect($request, 'check-in');
+        if ($faceGate) {
+            return $faceGate;
+        }
 
         $exists = Attendance::where('user_id', $user->id)
             ->whereDate('tanggal', Carbon::today())
             ->exists();
 
         if ($exists) {
-            return back()->with('error', 'Anda sudah melakukan check-in hari ini.');
+            return $this->attendanceResponse($request, 'error', 'Anda sudah melakukan check-in hari ini.');
         }
 
         $now = Carbon::now('Asia/Jakarta');
@@ -367,7 +423,7 @@ class AttendanceController extends Controller
         $checkinEnd   = Carbon::createFromTimeString($schedule['checkin_selesai'], 'Asia/Jakarta');
 
         if ($now->lt($checkinStart)) {
-            return back()->with('error', "Absensi masuk belum dibuka. Mulai pukul {$checkinStart->format('H:i')} WIB.");
+            return $this->attendanceResponse($request, 'error', "Absensi masuk belum dibuka. Mulai pukul {$checkinStart->format('H:i')} WIB.");
         }
 
         [$officeLat, $officeLng, $maxRadius] = $this->getOfficeConfig();
@@ -375,7 +431,7 @@ class AttendanceController extends Controller
         $distance = $this->calculateDistance($officeLat, $officeLng, (float)$latStr, (float)$lngStr);
 
         if ($distance > $maxRadius) {
-            return back()->with('error', 'Gagal! Jarak Anda ' . round($distance) . 'm dari kantor.');
+            return $this->attendanceResponse($request, 'error', 'Gagal! Jarak Anda ' . round($distance) . 'm dari kantor.');
         }
 
         $status = $now->gt($checkinEnd) ? 'Telat' : 'Hadir';
@@ -390,39 +446,50 @@ class AttendanceController extends Controller
             'location'  => $request->location,
         ]);
 
+        session()->forget('face_verified_action');
+        session()->forget('face_intended_action');
+        session()->forget('face_pending_location');
+        session()->forget('face_verification_token');
+
         $pesan = ($status === 'Telat')
             ? 'Check-in berhasil, namun Anda TERLAMBAT.'
             : 'Check-in berhasil.';
 
-        return back()->with('success', $pesan);
+        return $this->attendanceResponse($request, 'success', $pesan);
     }
 
     public function checkOut(Request $request)
     {
         $user = Auth::user();
         if ($user->status !== 'aktif') {
-            return back()->with('error', 'Akun Anda tidak aktif, tidak bisa melakukan presensi.');
+            return $this->attendanceResponse($request, 'error', 'Akun Anda tidak aktif, tidak bisa melakukan presensi.');
         }
 
         $schedule = $this->getTodayAbsensiSchedule();
         if (isset($schedule['error'])) {
-            return back()->with('error', $schedule['error']);
+            return $this->attendanceResponse($request, 'error', $schedule['error']);
         }
 
         $request->validate([
             'location' => ['required', 'regex:/^-?\d+(\.\d+)?,-?\d+(\.\d+)?$/'],
+            'face_verification_token' => ['nullable', 'string'],
         ]);
+
+        $faceGate = $this->ensureFaceVerifiedForActionOrRedirect($request, 'check-out');
+        if ($faceGate) {
+            return $faceGate;
+        }
 
         $attendance = Attendance::where('user_id', $user->id)
             ->whereDate('tanggal', Carbon::today('Asia/Jakarta'))
             ->first();
 
         if (!$attendance || !$attendance->check_in) {
-            return back()->with('error', 'Anda belum melakukan check-in hari ini.');
+            return $this->attendanceResponse($request, 'error', 'Anda belum melakukan check-in hari ini.');
         }
 
         if ($attendance->check_out) {
-            return back()->with('error', 'Anda sudah melakukan check-out hari ini.');
+            return $this->attendanceResponse($request, 'error', 'Anda sudah melakukan check-out hari ini.');
         }
 
         $now = Carbon::now('Asia/Jakarta');
@@ -430,7 +497,7 @@ class AttendanceController extends Controller
         $checkoutEnd   = Carbon::createFromTimeString($schedule['checkout_selesai'], 'Asia/Jakarta');
 
         if ($now->gt($checkoutEnd)) {
-            return back()->with('error', "Absensi pulang sudah ditutup (maks {$checkoutEnd->format('H:i')} WIB).");
+            return $this->attendanceResponse($request, 'error', "Absensi pulang sudah ditutup (maks {$checkoutEnd->format('H:i')} WIB).");
         }
 
         [$officeLat, $officeLng, $maxRadius] = $this->getOfficeConfig();
@@ -438,7 +505,7 @@ class AttendanceController extends Controller
         $distance = $this->calculateDistance($officeLat, $officeLng, (float)$latStr, (float)$lngStr);
 
         if ($distance > $maxRadius) {
-            return back()->with('error', 'Gagal! Anda masih di luar area kantor (' . round($distance) . 'm).');
+            return $this->attendanceResponse($request, 'error', 'Gagal! Anda masih di luar area kantor (' . round($distance) . 'm).');
         }
 
         $pulangCepat = $now->lt($checkoutStart);
@@ -449,14 +516,19 @@ class AttendanceController extends Controller
             'location'   => $request->location,
         ]);
 
-        return back()->with(
+        session()->forget('face_verified_action');
+        session()->forget('face_intended_action');
+        session()->forget('face_pending_location');
+        session()->forget('face_verification_token');
+
+        return $this->attendanceResponse(
+            $request,
             'success',
             $pulangCepat
                 ? 'Absen pulang berhasil, status: PULANG CEPAT.'
                 : 'Hati-hati di jalan! Absen pulang berhasil.'
         );
     }
-
 
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
     {

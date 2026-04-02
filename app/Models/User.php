@@ -33,10 +33,13 @@ class User extends Authenticatable
         'tanggal_masuk',
         'tanggal_selesai',
 
-        // ✅ TAMBAHAN (yang kamu minta)
+        // TAMBAHAN (yang kamu minta)
         'jabatan_pembimbing',
         'nama_pembimbing',
         'nip_pembimbing',
+
+        'face_descriptor',
+        'face_image_path',
     ];
 
     protected $hidden = [
@@ -47,6 +50,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'face_descriptor' => 'array',
     ];
 
     public function attendances()
@@ -83,7 +87,7 @@ class User extends Authenticatable
      * ============================
      */
 
-    // ✅ ALIAS (biar kompatibel kalau ada kode lama yang memanggil $user->mahasiswa())
+    // ALIAS (biar kompatibel kalau ada kode lama yang memanggil $user->mahasiswa())
     // dosen -> banyak mahasiswa
     public function mahasiswa()
     {
@@ -115,6 +119,11 @@ class User extends Authenticatable
             'mahasiswa_id',
             'dosen_id'
         );
+    }
+
+    public function faceResetRequests()
+    {
+        return $this->hasMany(FaceResetRequest::class);
     }
 
     protected static function booted()

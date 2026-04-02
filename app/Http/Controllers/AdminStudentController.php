@@ -7,9 +7,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule; // Penting untuk validasi Enum/Pilihan
+use Illuminate\Validation\Rule; // Untuk validasi Enum/Pilihan
 use App\Models\Attendance;
+use App\Models\FaceResetRequest;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
+
 
 class AdminStudentController extends Controller
 {
@@ -21,7 +24,7 @@ class AdminStudentController extends Controller
 
         // Ambil input dari URL
         $search = $request->input('search');
-        $status = $request->input('status'); // <--- 1. Ambil input status
+        $status = $request->input('status'); // Ambil input status
 
         $students = User::where('role', 'mahasiswa')
             //  FILTER INSTANSI SISTEM
@@ -74,7 +77,7 @@ class AdminStudentController extends Controller
             'tanggal_masuk' => ['required', 'date'],
             'tanggal_selesai' => ['required', 'date', 'after:tanggal_masuk'],
 
-            // ✅ Bidang DIBUAT OPTIONAL (karena di form create mau dihapus)
+            // Bidang DIBUAT OPTIONAL (karena di form create mau dihapus)
             // Kalau suatu saat masih terkirim dari request, tetap divalidasi agar aman.
             'bidang' => ['nullable', Rule::in([
                 'Ekonomi',
@@ -96,7 +99,7 @@ class AdminStudentController extends Controller
             'role' => 'mahasiswa',
 
             'kategori_instansi' => Auth::user()->kategori_instansi,
-            // ✅ Bidang tidak diinput di create, jadi default null (mahasiswa isi sendiri)
+            // Bidang tidak diinput di create, jadi default null (mahasiswa isi sendiri)
             'bidang' => null,
 
             'status' => 'aktif',
@@ -120,11 +123,11 @@ class AdminStudentController extends Controller
     public function show($id)
     {
         $student = User::with([
-            'laporans' => fn ($q) => $q->latest(),
+            'laporans' => fn($q) => $q->latest(),
             'assessment'
         ])->findOrFail($id);
 
-        // 🔒 CEK INSTANSI
+        // CEK INSTANSI
         if (
             Auth::user()->kategori_instansi &&
             $student->kategori_instansi !== Auth::user()->kategori_instansi
@@ -132,7 +135,7 @@ class AdminStudentController extends Controller
             abort(403, 'Akses Ditolak. Beda instansi.');
         }
 
-        // 🔒 CEK BIDANG (LOGIKA LAMA)
+        // CEK BIDANG (LOGIKA LAMA)
         $admin = Auth::user();
         if ($admin->bidang !== 'Administrator Sistem' && $student->bidang !== $admin->bidang) {
             abort(403, 'Akses Ditolak.');
@@ -155,7 +158,7 @@ class AdminStudentController extends Controller
     {
         $student = User::findOrFail($id);
 
-        // 🔒 CEK INSTANSI
+        // CEK INSTANSI
         if (
             Auth::user()->kategori_instansi &&
             $student->kategori_instansi !== Auth::user()->kategori_instansi
@@ -182,7 +185,7 @@ class AdminStudentController extends Controller
     {
         $student = User::findOrFail($id);
 
-        // 🔒 CEK INSTANSI
+        // CEK INSTANSI
         if (
             Auth::user()->kategori_instansi &&
             $student->kategori_instansi !== Auth::user()->kategori_instansi
@@ -230,7 +233,7 @@ class AdminStudentController extends Controller
     {
         $student = User::findOrFail($id);
 
-        // 🔒 CEK INSTANSI
+        // CEK INSTANSI
         if (
             Auth::user()->kategori_instansi &&
             $student->kategori_instansi !== Auth::user()->kategori_instansi
@@ -248,13 +251,12 @@ class AdminStudentController extends Controller
         return redirect()->back()->with('success', 'Data mahasiswa berhasil dihapus.');
     }
 
-
     // 8. UPDATE STATUS (Tombol Cepat di Show)
     public function updateStatus(Request $request, $id)
     {
         $student = User::findOrFail($id);
 
-        // 🔒 CEK INSTANSI
+        // CEK INSTANSI
         if (
             Auth::user()->kategori_instansi &&
             $student->kategori_instansi !== Auth::user()->kategori_instansi
@@ -270,53 +272,138 @@ class AdminStudentController extends Controller
         $newStatus = $student->status === 'aktif' ? 'nonaktif' : 'aktif';
         $student->update(['status' => $newStatus]);
 
-        return back()->with('success',
+        return back()->with(
+            'success',
             $newStatus === 'aktif'
                 ? 'Mahasiswa diaktifkan kembali.'
                 : 'Mahasiswa dinonaktifkan.'
         );
     }
-    // public function monthlyRecap(Request $request)
-    // {
-    //     $admin = Auth::user();
-    //     // Ambil tanggal awal & akhir bulan ini
-    //     $startOfMonth = Carbon::now()->startOfMonth();
-    //     $endOfMonth   = Carbon::now()->endOfMonth();
-    //     $monthName    = Carbon::now()->translatedFormat('F Y'); // Contoh: Januari 2026
 
-    //     // Query Mahasiswa (Sama seperti sebelumnya)
-    //     $studentsQuery = User::where('role', 'mahasiswa')->where('status', 'aktif');
+    // ========================================
+    // 9. FACE VERIFICATION MANAGEMENT
+    // ========================================
 
-    //     if ($admin->kategori_instansi) {
-    //         $studentsQuery->where('kategori_instansi', $admin->kategori_instansi);
-    //     }
-    //     if ($admin->bidang !== 'Administrator Sistem') {
-    //         $studentsQuery->where('bidang', $admin->bidang);
-    //     }
+    public function resetFaceDescriptor(Request $request, $id)
+    {
+        $student = User::findOrFail($id);
 
-    //     $students = $studentsQuery->orderBy('name')->get();
+        // CEK INSTANSI
+        if (
+            Auth::user()->kategori_instansi &&
+            $student->kategori_instansi !== Auth::user()->kategori_instansi
+        ) {
+            abort(403, 'Akses Ditolak. Beda instansi.');
+        }
 
-    //     $rekap = [];
+        $admin = Auth::user();
+        if ($admin->bidang !== 'Administrator Sistem' && $student->bidang !== $admin->bidang) {
+            abort(403, 'Akses Ditolak.');
+        }
 
-    //     foreach ($students as $student) {
-    //         // Ambil semua data presensi bulan ini punya mahasiswa tsb
-    //         $attendances = Attendance::where('user_id', $student->id)
-    //             ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
-    //             ->get();
+        if (!empty($student->face_image_path) && Storage::disk('public')->exists($student->face_image_path)) {
+            Storage::disk('public')->delete($student->face_image_path);
+        }
 
-    //         // Hitung Statistik
-    //         $rekap[] = [
-    //             'user' => $student,
-    //             'total_hadir'     => $attendances->where('status', 'Hadir')->count(),
-    //             'total_terlambat' => $attendances->where('is_late', true)->count(),
-    //             'total_izin'      => $attendances->whereIn('status', ['Izin', 'Sakit'])->count(),
-    //             'total_alpha'     => $attendances->where('status', 'Alpha')->count(),
-    //             // Hitung persentase kehadiran (opsional, biar keren)
-    //             'attendance_count'=> $attendances->count()
-    //         ];
-    //     }
+        // Clear face data
+        $student->update([
+            'face_descriptor' => null,
+            'face_image_path' => null,
+        ]);
 
-    //     return view('admin.students.monthly_recap', compact('rekap', 'monthName'));
-    // }
+        // Mark all pending requests as approved because admin has completed the reset manually
+        FaceResetRequest::where('user_id', $id)
+            ->where('status', 'pending')
+            ->update([
+                'status' => 'approved',
+                'approved_at' => now(),
+                'approved_by' => Auth::id(),
+            ]);
 
+        return back()->with('success', 'Data wajah mahasiswa telah direset. Mahasiswa perlu setup ulang.');
+    }
+
+    public function faceResetRequests()
+    {
+        $admin = Auth::user();
+
+        $faceResetRequests = FaceResetRequest::with('user')
+            ->whereHas('user', function ($q) use ($admin) {
+                if ($admin->kategori_instansi) {
+                    $q->where('kategori_instansi', $admin->kategori_instansi);
+                }
+
+                if ($admin->bidang !== 'Administrator Sistem') {
+                    $q->where('bidang', $admin->bidang);
+                }
+            })
+            ->latest()
+            ->paginate(15);
+
+        return view('admin.face_reset_requests.index', compact('faceResetRequests'));
+    }
+
+    public function approveFaceReset($id)
+    {
+        $faceRequest = FaceResetRequest::findOrFail($id);
+        $student = $faceRequest->user;
+
+        // CEK INSTANSI
+        if (
+            Auth::user()->kategori_instansi &&
+            $student->kategori_instansi !== Auth::user()->kategori_instansi
+        ) {
+            abort(403, 'Akses Ditolak. Beda instansi.');
+        }
+
+        $admin = Auth::user();
+        if ($admin->bidang !== 'Administrator Sistem' && $student->bidang !== $admin->bidang) {
+            abort(403, 'Akses Ditolak.');
+        }
+
+        if (!empty($student->face_image_path) && Storage::disk('public')->exists($student->face_image_path)) {
+            Storage::disk('public')->delete($student->face_image_path);
+        }
+
+        // Clear face data
+        $student->update([
+            'face_descriptor' => null,
+            'face_image_path' => null,
+        ]);
+
+        // Mark request as approved
+        $faceRequest->update([
+            'status' => 'approved',
+            'approved_at' => now(),
+            'approved_by' => Auth::id(),
+        ]);
+
+        return back()->with('success', 'Permintaan reset wajah disetujui. Mahasiswa dapat setup ulang.');
+    }
+
+    public function rejectFaceReset($id)
+    {
+        $faceRequest = FaceResetRequest::findOrFail($id);
+        $student = $faceRequest->user;
+
+        // CEK INSTANSI
+        if (
+            Auth::user()->kategori_instansi &&
+            $student->kategori_instansi !== Auth::user()->kategori_instansi
+        ) {
+            abort(403, 'Akses Ditolak. Beda instansi.');
+        }
+
+        $admin = Auth::user();
+        if ($admin->bidang !== 'Administrator Sistem' && $student->bidang !== $admin->bidang) {
+            abort(403, 'Akses Ditolak.');
+        }
+
+        // Mark request as rejected
+        $faceRequest->update([
+            'status' => 'rejected',
+        ]);
+
+        return back()->with('success', 'Permintaan reset wajah ditolak.');
+    }
 }

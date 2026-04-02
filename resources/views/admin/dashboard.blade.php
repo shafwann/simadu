@@ -143,7 +143,6 @@
                 </div>
             </div>
 
-
             {{-- 2. TABEL PERSETUJUAN LOGBOOK --}}
             <div id="logbook"
                 class="bg-white border border-gray-100 rounded-[2rem] shadow-2xl shadow-gray-100/50 overflow-hidden">
@@ -167,7 +166,7 @@
                             </button>
                         </form>
 
-                        {{-- ✅ VALIDASI SEMUA --}}
+                        {{-- VALIDASI SEMUA --}}
                         @if ($pendingLogbooks->count() > 0)
                             <form action="{{ route('admin.logbook.validateAll') }}" method="POST"
                                 onsubmit="return confirm('Validasi semua logbook yang pending?');">
@@ -181,16 +180,16 @@
                     </div>
                 </div>
 
-                {{-- ✅ WRAPPER ALPINE: MODAL + TABLE (JANGAN DIPISAH) --}}
+                {{-- WRAPPER ALPINE: MODAL + TABLE (JANGAN DIPISAH) --}}
                 <div x-data="{
                     open: false,
                     log: null,
-
+                
                     logbookRejectOpen: false,
-
+                
                     rejectId: null,
                     rejectedNote: '',
-
+                
                     show(data) {
                         this.log = data;
                         this.open = true;
@@ -201,7 +200,7 @@
                     }
                 }">
 
-                    {{-- ✅ MODAL DETAIL LOGBOOK (FIX: TANPA OPTIONAL CHAINING + UI BAGUS) --}}
+                    {{-- MODAL DETAIL LOGBOOK (FIX: TANPA OPTIONAL CHAINING + UI BAGUS) --}}
                     <div x-show="open" x-cloak x-transition.opacity
                         class="fixed inset-0 z-50 flex items-center justify-center p-4">
                         <div class="absolute inset-0 bg-black/50" @click="close()"></div>
@@ -235,7 +234,7 @@
 
                                 <div class="mt-6 flex justify-end gap-3">
 
-                                    {{-- ✅ Validasi --}}
+                                    {{-- Validasi --}}
                                     <form method="POST" :action="`/admin/logbook/${log ? log.id : ''}/validate`">
                                         @csrf
                                         <button type="submit"
@@ -252,7 +251,7 @@
                                         </button>
                                     </form>
 
-                                    {{-- ⛔ Tolak --}}
+                                    {{-- Tolak --}}
                                     <button type="button"
                                         class="w-10 h-10 flex items-center justify-center rounded-2xl
                bg-white border border-gray-200
@@ -267,7 +266,7 @@
                                         </svg>
                                     </button>
 
-                                    {{-- 🗑 Hapus --}}
+                                    {{-- Hapus --}}
                                     <form method="POST" :action="`/admin/logbook/${log ? log.id : ''}`"
                                         onsubmit="return confirm('Yakin hapus logbook ini?');">
                                         @csrf
@@ -286,9 +285,7 @@
                                             </svg>
                                         </button>
                                     </form>
-
                                 </div>
-
                             </div>
                         </div>
                     </div>
@@ -297,7 +294,6 @@
                     <div x-show="logbookRejectOpen" x-cloak
                         class="fixed inset-0 z-50 flex items-center justify-center p-4">
                         <div class="absolute inset-0 bg-black/40" @click="logbookRejectOpen=false"></div>
-
                         <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-xl p-6">
                             <div class="flex items-start justify-between">
                                 <div>
@@ -393,7 +389,7 @@
                                         <td class="px-8 py-4 align-middle" @click.stop>
                                             <div class="flex items-center justify-center gap-2">
 
-                                                {{-- ✅ Validasi --}}
+                                                {{-- Validasi --}}
                                                 <form action="{{ route('admin.logbook.validate', $log->id) }}"
                                                     method="POST">
                                                     @csrf
@@ -409,7 +405,7 @@
                                                     </button>
                                                 </form>
 
-                                                {{-- ⛔ Tolak --}}
+                                                {{-- Tolak --}}
                                                 <button type="button"
                                                     class="w-10 h-10 flex items-center justify-center rounded-xl border border-yellow-300
                                                     text-yellow-500 bg-white hover:bg-yellow-50 hover:shadow-md transition"
@@ -422,7 +418,7 @@
                                                     </svg>
                                                 </button>
 
-                                                {{-- 🗑 Hapus --}}
+                                                {{-- Hapus --}}
                                                 <form action="{{ route('admin.logbook.destroy', $log->id) }}"
                                                     method="POST"
                                                     onsubmit="return confirm('Yakin hapus logbook ini?');">
@@ -463,12 +459,12 @@
             <div x-data="{
                 open: false,
                 log: null,
-
+            
                 laporanRejectOpen: false,
-
+            
                 rejectId: null,
                 rejectedNote: '',
-
+            
                 show(data) {
                     this.log = data;
                     this.open = true;
@@ -582,7 +578,7 @@
                                         <td class="px-8 py-4 align-middle" @click.stop>
                                             <div class="flex items-center justify-center gap-2">
 
-                                                {{-- ✅ Validasi --}}
+                                                {{-- Validasi --}}
                                                 <form action="{{ route('admin.laporan.validate', $laporan->id) }}"
                                                     method="POST">
                                                     @csrf
@@ -598,7 +594,7 @@
                                                     </button>
                                                 </form>
 
-                                                {{-- ⛔ Tolak --}}
+                                                {{-- Tolak --}}
                                                 <button type="button"
                                                     class="w-10 h-10 flex items-center justify-center rounded-xl border border-yellow-300
                                                     text-yellow-500 bg-white hover:bg-yellow-50 hover:shadow-md transition"
@@ -611,7 +607,7 @@
                                                     </svg>
                                                 </button>
 
-                                                {{-- 🗑 Hapus --}}
+                                                {{-- Hapus --}}
                                                 <form action="{{ route('admin.laporan.destroy', $laporan->id) }}"
                                                     method="POST"
                                                     onsubmit="return confirm('Yakin hapus laporan ini?');">
@@ -633,17 +629,6 @@
 
                                             </div>
                                         </td>
-
-                                        {{-- <td class="px-6 py-4 text-center flex justify-center gap-2">
-                                        <form action="{{ route('admin.laporan.validate', $laporan->id) }}"
-                                            method="POST">
-                                            @csrf
-                                            <button type="submit"
-                                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition shadow-md shadow-blue-200">
-                                                Validasi
-                                            </button>
-                                        </form>
-                                    </td> --}}
                                     </tr>
                                 @empty
                                     <tr>
@@ -657,6 +642,97 @@
                         </table>
                     </div>
                 </div>
+
+                {{-- FACE RESET REQUESTS PANEL --}}
+                @if ($pendingFaceResets->count() > 0)
+                    <div id="face-reset"
+                        class="bg-white border border-gray-100 rounded-[2rem] shadow-2xl shadow-blue-50/50 overflow-hidden mt-10">
+                        <div class="p-8 border-b border-red-50">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="p-3 bg-red-50 text-red-600 rounded-xl">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-black text-gray-800">Permintaan Reset Wajah</h3>
+                                    <p class="text-sm text-gray-400">Mahasiswa yang meminta reset face verification</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50 border-b border-gray-200">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">
+                                            Mahasiswa
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">
+                                            Diajukan
+                                        </th>
+                                        <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase">
+                                            Aksi
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    @foreach ($pendingFaceResets as $faceReset)
+                                        <tr class="hover:bg-gray-50 transition">
+                                            <td class="px-6 py-4">
+                                                <div class="flex items-center gap-3">
+                                                    <div
+                                                        class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-bold text-sm">
+                                                        {{ substr($faceReset->user->name, 0, 1) }}
+                                                    </div>
+                                                    <div>
+                                                        <p class="font-bold text-gray-800">
+                                                            {{ $faceReset->user->name }}</p>
+                                                        <p class="text-xs text-gray-400">
+                                                            {{ $faceReset->user->nim }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-600">
+                                                {{ $faceReset->created_at->format('d M Y H:i') }}
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <div class="flex justify-center gap-2">
+                                                    <form
+                                                        action="{{ route('admin.face-reset.approve', $faceReset->id) }}"
+                                                        method="POST" class="inline">
+                                                        @csrf
+                                                        <button type="submit"
+                                                            class="px-3 py-1 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg text-xs font-bold transition">
+                                                            ✓ Setujui
+                                                        </button>
+                                                    </form>
+                                                    <form
+                                                        action="{{ route('admin.face-reset.reject', $faceReset->id) }}"
+                                                        method="POST" class="inline">
+                                                        @csrf
+                                                        <button type="submit"
+                                                            class="px-3 py-1 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-xs font-bold transition">
+                                                            ✕ Tolak
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {{-- Pagination --}}
+                        @if ($pendingFaceResets->hasPages())
+                            <div class="px-8 py-4 border-t border-gray-200 flex justify-center">
+                                {{ $pendingFaceResets->links() }}
+                            </div>
+                        @endif
+                    </div>
+                @endif
             </div>
 
         </div>
