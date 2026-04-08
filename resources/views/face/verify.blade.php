@@ -45,12 +45,6 @@
             <h2 class="text-xl font-bold text-gray-800 text-center">Face Verification Sebelum Absen</h2>
             <p class="text-sm text-gray-500 text-center">Verifikasi wajah diperlukan sebelum membuka halaman absensi.</p>
 
-            <form id="verifiedAttendanceForm" method="POST" action="{{ $actionRoute ?? '' }}" class="hidden">
-                @csrf
-                <input type="hidden" name="location" id="verifiedLocationInput" value="{{ $pendingLocation ?? '' }}">
-                <input type="hidden" name="face_verification_token" id="verifiedTokenInput" value="">
-            </form>
-
             <div class="relative rounded-xl overflow-hidden border bg-slate-900 aspect-[4/3]">
                 <video id="webcam" autoplay muted playsinline class="w-full h-full object-cover block"></video>
                 <canvas id="overlay"></canvas>
@@ -80,6 +74,19 @@
                     stabil.
                 </p>
             </div>
+
+            <form id="verifiedAttendanceForm" method="POST" action="{{ $actionRoute ?? '' }}" class="space-y-3">
+                @csrf
+                <input type="hidden" name="location" id="verifiedLocationInput" value="{{ $pendingLocation ?? '' }}">
+                <input type="hidden" name="face_verification_token" id="verifiedTokenInput" value="">
+
+                <div id="attendanceReadyBox">
+                    <button type="submit" id="verifiedAttendanceSubmit" disabled
+                        class="w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:bg-gray-300">
+                        Absen Sekarang
+                    </button>
+                </div>
+            </form>
 
             <div class="flex justify-center gap-3 text-sm">
                 <a href="{{ route('face.setup') }}" class="text-blue-600 hover:underline">Setup Ulang Wajah</a>
@@ -111,6 +118,8 @@
             const verifiedAttendanceForm = document.getElementById('verifiedAttendanceForm');
             const verifiedLocationInput = document.getElementById('verifiedLocationInput');
             const verifiedTokenInput = document.getElementById('verifiedTokenInput');
+            const attendanceReadyBox = document.getElementById('attendanceReadyBox');
+            const verifiedAttendanceSubmit = document.getElementById('verifiedAttendanceSubmit');
             const actionRoute = @json($actionRoute);
             const pendingLocation = @json($pendingLocation);
             const intendedAction = @json($intendedAction);
@@ -366,7 +375,23 @@
                 if (json.match && json.verification_token) {
                     verifiedLocationInput.value = pendingLocation;
                     verifiedTokenInput.value = json.verification_token;
-                    verifiedAttendanceForm.submit();
+
+                    if (attendanceReadyBox) {
+                        attendanceReadyBox.classList.remove('hidden');
+                    }
+
+                    if (verifiedAttendanceSubmit) {
+                        verifiedAttendanceSubmit.disabled = false;
+                    }
+
+                    document.getElementById('statusBox').textContent =
+                        'Verifikasi berhasil. Silakan klik tombol absen.';
+                    setTimeout(() => {
+                        document.getElementById('statusBox').scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }, 200);
                 } else {
                     document.getElementById('statusBox').textContent = 'Verifikasi gagal. Coba lagi.';
                     setTimeout(() => location.reload(), 2000);
