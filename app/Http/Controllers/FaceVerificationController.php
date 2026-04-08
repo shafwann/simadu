@@ -9,6 +9,8 @@ use Illuminate\Support\Str;
 
 class FaceVerificationController extends Controller
 {
+    private const FACE_DISTANCE_THRESHOLD = 0.45;
+
     private function normalizeDescriptor(mixed $descriptor): ?array
     {
         if (is_array($descriptor)) {
@@ -70,7 +72,7 @@ class FaceVerificationController extends Controller
         }
 
         auth()->user()->update([
-            'face_descriptor' => $descriptor,  // Store array, model will JSON-encode it
+            'face_descriptor' => $descriptor,  // ✅ Store array, model will JSON-encode it
             'face_image_path' => $fileName,
         ]);
 
@@ -111,8 +113,9 @@ class FaceVerificationController extends Controller
             return response()->json(['match' => false, 'similarity' => 0, 'message' => 'Descriptor harus 128-dimensional'], 422);
         }
 
-        $similarity = $this->calculateSimilarity($storedDescriptor, $currentDescriptor);
-        $match = $similarity > 0.6;
+        $distance = $this->calculateDistance($storedDescriptor, $currentDescriptor);
+        $similarity = max(0, min(1, 1 - $distance));
+        $match = $distance <= self::FACE_DISTANCE_THRESHOLD;
 
         if ($match) {
             $intendedAction = session('face_intended_action');
@@ -121,6 +124,7 @@ class FaceVerificationController extends Controller
                 return response()->json([
                     'match' => false,
                     'similarity' => $similarity,
+                    'distance' => $distance,
                     'message' => 'Aksi absensi tidak ditemukan',
                 ], 409);
             }
@@ -134,19 +138,23 @@ class FaceVerificationController extends Controller
             return response()->json([
                 'match' => true,
                 'similarity' => $similarity,
+                'distance' => $distance,
                 'verification_token' => $verificationToken,
             ]);
         }
 
-        return response()->json(['match' => $match, 'similarity' => $similarity]);
+        return response()->json(['match' => $match, 'similarity' => $similarity, 'distance' => $distance]);
     }
 
-    private function calculateSimilarity($desc1, $desc2)
+    private function calculateDistance(array $desc1, array $desc2): float
     {
-        $dotProduct = array_sum(array_map(fn($a, $b) => $a * $b, $desc1, $desc2));
-        $norm1 = sqrt(array_sum(array_map(fn($x) => $x ** 2, $desc1)));
-        $norm2 = sqrt(array_sum(array_map(fn($x) => $x ** 2, $desc2)));
+        $sum = 0.0;
+        foreach ($desc1 as $i => $v1) {
+            $v2 = $desc2[$i] ?? 0;
+            $diff = ((float) $v1) - ((float) $v2);
+            $sum += $diff * $diff;
+        }
 
-        return $dotProduct / ($norm1 * $norm2);
+        return sqrt($sum);
     }
 }

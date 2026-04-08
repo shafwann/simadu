@@ -285,7 +285,6 @@ Route::middleware(['auth', 'no-cache', 'role:admin'])
 
         // Laporan actions
         Route::post('/laporan/{id}/reject', [AdminController::class, 'rejectLaporan'])->name('laporan.reject');
-        Route::delete('/laporan/{id}', [AdminController::class, 'adminDestroy'])->name('laporan.destroy');
 
         // Laporan (Admin View)
         Route::get('/laporan/{laporan}/preview', [LaporanController::class, 'preview'])->name('laporan.preview');

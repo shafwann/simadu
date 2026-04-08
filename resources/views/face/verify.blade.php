@@ -76,7 +76,8 @@
                         class="bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 h-full transition-all duration-300"
                         style="width: 0%"></div>
                 </div>
-                <p class="text-xs text-gray-500">Posisikan wajah Anda. Verifikasi otomatis saat kemiripan mencapai 60%+
+                <p class="text-xs text-gray-500">Posisikan wajah Anda. Sistem akan memverifikasi otomatis jika kecocokan
+                    stabil.
                 </p>
             </div>
 
@@ -222,7 +223,7 @@
 
                 console.log('✓ Descriptor valid!');
             } catch (e) {
-                setStatus('Error: Descriptor tidak valid - ' + e.message + '. Silakan re-setup wajah.', 'error');
+                setStatus('❌ Error: Descriptor tidak valid - ' + e.message + '. Silakan re-setup wajah.', 'error');
                 console.error('DESCRIPTOR ERROR:', e);
                 return;
             }
@@ -230,8 +231,8 @@
             const ctx = overlayEl.getContext('2d');
 
             let stableFrameCount = 0;
-            const SIMILARITY_THRESHOLD = 0.6;
-            const STABLE_FRAMES_NEEDED = 3;
+            const DISTANCE_THRESHOLD = 0.45;
+            const STABLE_FRAMES_NEEDED = 4;
             let isVerifying = false;
             let detectionFrameCount = 0;
 
@@ -261,26 +262,25 @@
                     }
 
                     const currentDescriptor = Array.from(detections.descriptor);
-                    const similarity = calculateSimilarityJS(storedDescriptor, currentDescriptor);
-
-                    const confidencePercVal = Math.round(Math.min(similarity * 100, 100));
+                    const distance = calculateDistanceJS(storedDescriptor, currentDescriptor);
+                    const confidencePercVal = Math.round(Math.max(0, Math.min((1 - distance) * 100, 100)));
                     confidencePercent.textContent = confidencePercVal + '%';
                     confidenceBar.style.width = confidencePercVal + '%';
 
                     // Draw detection box
                     const box = detections.detection.box;
-                    drawCornerBox(ctx, box, similarity >= SIMILARITY_THRESHOLD);
+                    drawCornerBox(ctx, box, distance <= DISTANCE_THRESHOLD);
 
                     if (detectionFrameCount % 10 === 0) {
-                        console.log('Frame', detectionFrameCount, ': Similarity =', similarity.toFixed(3),
+                        console.log('Frame', detectionFrameCount, ': Distance =', distance.toFixed(3),
                             'Stable frames:', stableFrameCount);
                     }
 
-                    if (similarity >= SIMILARITY_THRESHOLD) {
+                    if (distance <= DISTANCE_THRESHOLD) {
                         stableFrameCount++;
                         const framesLeft = STABLE_FRAMES_NEEDED - stableFrameCount;
                         setStatus(
-                            `✓ Wajah cocok! Kemiripan ${confidencePercVal}% - Verifikasi dalam ${Math.max(0, framesLeft)} frame...`,
+                            `✓ Wajah cocok! Akurasi ${confidencePercVal}% - Verifikasi dalam ${Math.max(0, framesLeft)} frame...`,
                             'success');
 
                         if (stableFrameCount >= STABLE_FRAMES_NEEDED && !isVerifying) {
@@ -293,7 +293,7 @@
                         }
                     } else {
                         stableFrameCount = 0;
-                        setStatus(`Kemiripan ${confidencePercVal}% - Butuh minimal 60%`, 'neutral');
+                        setStatus(`Akurasi ${confidencePercVal}% - Wajah belum cocok`, 'neutral');
                     }
 
                 } catch (e) {
@@ -307,11 +307,12 @@
             detectionLoop();
         }
 
-        function calculateSimilarityJS(desc1, desc2) {
-            const dotProduct = desc1.reduce((sum, a, i) => sum + a * desc2[i], 0);
-            const norm1 = Math.sqrt(desc1.reduce((sum, x) => sum + x * x, 0));
-            const norm2 = Math.sqrt(desc2.reduce((sum, x) => sum + x * x, 0));
-            return dotProduct / (norm1 * norm2);
+        function calculateDistanceJS(desc1, desc2) {
+            const sum = desc1.reduce((acc, a, i) => {
+                const diff = a - (desc2[i] || 0);
+                return acc + (diff * diff);
+            }, 0);
+            return Math.sqrt(sum);
         }
 
         function drawCornerBox(ctx, box, isMatch) {
