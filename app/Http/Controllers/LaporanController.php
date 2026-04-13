@@ -94,7 +94,7 @@ class LaporanController extends Controller
         $file = $request->file('file');
         $filename = $file->getClientOriginalName();
 
-        // ✅ BIARKAN seperti semula: ikut default disk (biar tidak mengubah perilaku lama)
+        // BIARKAN seperti semula: ikut default disk (biar tidak mengubah perilaku lama)
         $path = $file->store('laporan'); // bisa masuk local atau public tergantung config
 
         Laporan::create([
@@ -183,7 +183,7 @@ class LaporanController extends Controller
             'file.max' => 'Ukuran maksimal 20 MB.',
         ]);
 
-        // ✅ hapus file lama: coba cari dulu di disk local/public
+        // hapus file lama: coba cari dulu di disk local/public
         try {
             $resolved = $this->resolveFile($laporan);
             Storage::disk($resolved['disk'])->delete($resolved['path']);
@@ -205,7 +205,7 @@ class LaporanController extends Controller
             ->with('success', 'Laporan berhasil diperbarui.');
     }
 
-    // ✅ Tambahan: Hapus laporan (mahasiswa owner / admin sesuai kebutuhan)
+    // Tambahan: Hapus laporan (mahasiswa owner / admin sesuai kebutuhan)
     public function destroy(Laporan $laporan)
     {
         $user = auth()->user();
@@ -229,7 +229,7 @@ class LaporanController extends Controller
         return back()->with('success', 'Laporan berhasil dihapus.');
     }
 
-    // ✅ TAMBAHAN BARU: Hapus laporan oleh ADMIN (hapus juga file & record DB)
+    // TAMBAHAN BARU: Hapus laporan oleh ADMIN (hapus juga file & record DB)
     public function adminDestroy(Laporan $laporan)
     {
         if (auth()->user()->role !== 'admin') {

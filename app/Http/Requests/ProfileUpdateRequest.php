@@ -18,7 +18,7 @@ class ProfileUpdateRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $this->user()->id],
 
-            // ✅ TAMBAHAN supaya form profile.update boleh menyimpan ini
+            // TAMBAHAN supaya form profile.update boleh menyimpan ini
             'bidang' => ['nullable', 'string', 'max:255'],
 
             'jabatan_pembimbing' => ['nullable', 'string', 'max:255'],

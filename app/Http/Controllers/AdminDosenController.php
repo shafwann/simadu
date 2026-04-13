@@ -13,7 +13,7 @@ use App\Models\PembimbingRequest;
 class AdminDosenController extends Controller
 {
     // ==================================================
-    // 1. DAFTAR DOSEN (🔥 FIX AGENCY SCOPE 🔥)
+    // 1. DAFTAR DOSEN (FIX AGENCY SCOPE)
     // ==================================================
     public function index()
     {

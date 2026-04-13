@@ -76,7 +76,7 @@ class AssessmentController extends Controller
 
         if ($request->hasFile('certificate_scan')) {
             $file = $request->file('certificate_scan');
-            $scanOriginalName = $file->getClientOriginalName();              // ✅ nama asli
+            $scanOriginalName = $file->getClientOriginalName();              // nama asli
             $scanPath = $file->store('certificates/scans', 'public');        // path (boleh random)
         }
 
@@ -87,7 +87,7 @@ class AssessmentController extends Controller
                 'certificate_date' => $validated['certificate_date'],
 
                 'certificate_scan' => $scanPath,
-                'certificate_scan_original_name' => $scanOriginalName, // ✅ simpan
+                'certificate_scan_original_name' => $scanOriginalName, // simpan
 
                 'aspek_1' => (int)$validated['aspek_1'],
                 'aspek_2' => (int)$validated['aspek_2'],
@@ -143,7 +143,7 @@ class AssessmentController extends Controller
             }
 
             $file = $request->file('certificate_scan');
-            $newOriginalName = $file->getClientOriginalName();           // ✅ nama asli
+            $newOriginalName = $file->getClientOriginalName();           // nama asli
             $newScanPath = $file->store('certificates/scans', 'public'); // path (boleh random)
         }
 

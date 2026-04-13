@@ -20,7 +20,7 @@ class AdminBidangSeeder extends Seeder
             'Penelitian, Pengembangan & Penyusunan Program'
         ];
 
-        // ✅ Tentukan nama instansi untuk admin-admin ini
+        // Tentukan nama instansi untuk admin-admin ini
         $kategoriDefault = 'BAPPERIDA';
 
         foreach ($bidangs as $bidang) {
@@ -45,7 +45,7 @@ class AdminBidangSeeder extends Seeder
                     'email_verified_at' => now(),
                     'status' => 'aktif',
 
-                    // ✅ TAMBAHAN: KATEGORI INSTANSI
+                    // TAMBAHAN: KATEGORI INSTANSI
                     // Wajib diisi agar admin ini bisa login dan melihat data 'BAPPERIDA'
                     'kategori_instansi' => $kategoriDefault,
                 ]

@@ -94,7 +94,7 @@
                 <div class="p-8 bg-white border border-gray-200 rounded-[2rem] shadow-sm">
                     <h3 class="text-lg font-bold text-gray-800 mb-6 border-b pb-2">2. Data Akademik & Instansi</h3>
 
-                    {{-- ✅ INI YANG KURANG TADI: GRID WRAPPER --}}
+                    {{-- INI YANG KURANG TADI: GRID WRAPPER --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                         <div class="md:col-span-2">

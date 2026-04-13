@@ -121,7 +121,7 @@ class MasterSettingController extends Controller
 
             $canvas = imagecreatetruecolor($targetWidth, $targetHeight);
 
-            // 🔑 WAJIB untuk transparansi PNG
+            // WAJIB untuk transparansi PNG
             imagealphablending($canvas, false);
             imagesavealpha($canvas, true);
             $transparent = imagecolorallocatealpha($canvas, 0, 0, 0, 127);

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
-use App\Models\PembimbingRequest; // ✅ TAMBAH
+use App\Models\PembimbingRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +22,7 @@ class ProfileController extends Controller
             \App\Models\AboutSetting::bidangOptions()
         );
 
-        // ✅ TAMBAH: ambil request pembimbing instansi
+        // TAMBAH: ambil request pembimbing instansi
         $user = $request->user();
 
         // request terbaru (buat status & isi form putih)
@@ -40,7 +40,7 @@ class ProfileController extends Controller
             'user' => $user,
             'bidangOptions' => $bidangOptions,
 
-            // ✅ dikirim ke blade
+            // dikirim ke blade
             'latestRequest' => $latestRequest,
             'approvedRequest' => $approvedRequest,
         ]);
@@ -63,7 +63,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * ✅ TAMBAHAN: Mahasiswa update Bidang/Divisi sendiri
+     * TAMBAHAN: Mahasiswa update Bidang/Divisi sendiri
      */
     public function updateBidang(Request $request): RedirectResponse
     {
@@ -79,7 +79,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * ✅ TAMBAHAN: Halaman Bidang/Divisi (halaman sendiri)
+     * TAMBAHAN: Halaman Bidang/Divisi (halaman sendiri)
      */
     public function showBidang(): View
     {

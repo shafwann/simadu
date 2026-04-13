@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
 use App\Models\AboutSetting;
-use Illuminate\Support\Facades\URL; // ✅ PENTING
+use Illuminate\Support\Facades\URL; // PENTING
 use Illuminate\Support\Facades\DB;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Event;
@@ -21,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // 🔥 PERBAIKAN DI SINI:
+        // PERBAIKAN DI SINI:
         // Kita paksa HTTPS tanpa peduli environment 'local' atau bukan.
         // Ini wajib agar CSS/JS terbaca saat pakai Pinggy/Ngrok.
 
@@ -34,7 +34,7 @@ class AppServiceProvider extends ServiceProvider
         // URL::forceScheme('https');
 
 
-        // ✅ LOGIKA MULTI-TENANCY VIEW
+        // LOGIKA MULTI-TENANCY VIEW
         View::composer('*', function ($view) {
 
             $targetKategori = 'MASTER';
@@ -75,14 +75,14 @@ class AppServiceProvider extends ServiceProvider
             $view->with('globalAbout', $setting);
 
             Event::listen(Login::class, function ($event) {
-            DB::table('authentication_logs')->insert([
-                'user_id'    => $event->user->id,
-                'name'       => $event->user->name,
-                'ip_address' => Request::ip(),
-                'user_agent' => Request::userAgent(),
-                'login_at'   => now(),
-            ]);
-        });
+                DB::table('authentication_logs')->insert([
+                    'user_id'    => $event->user->id,
+                    'name'       => $event->user->name,
+                    'ip_address' => Request::ip(),
+                    'user_agent' => Request::userAgent(),
+                    'login_at'   => now(),
+                ]);
+            });
         });
     }
 }

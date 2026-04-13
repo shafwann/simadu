@@ -27,7 +27,7 @@
                     </button>
                 </div>
 
-                {{-- ✅ Badge style --}}
+                {{-- Badge style --}}
                 <style>
                     .badgex {
                         display: inline-flex;
@@ -115,95 +115,87 @@
                         </thead>
                         <tbody>
                             @forelse ($presensi as $p)
-                            @php
-                            // ============================
-                            // ✅ NORMALISASI STATUS (TAMPIL LENGKAP)
-                            // ============================
-                            $rawStatus = strtoupper(trim((string) ($p->status ?? '')));
+                                @php
+                                    // ============================
+                                    // NORMALISASI STATUS (TAMPIL LENGKAP)
+                                    // ============================
+                                    $rawStatus = strtoupper(trim((string) ($p->status ?? '')));
 
-                            // Label utama (lengkap)
-                            if ($rawStatus === '' || $rawStatus === '-') {
-                            $mainLabel = '-';
-                            $mainClass = 'b-na';
-                            }
-                            elseif (in_array($rawStatus, ['ALPHA','TANPA KETERANGAN','TK'], true)) {
-                            $mainLabel = 'Tanpa Keterangan';
-                            $mainClass = 'b-tk';
-                            }
-                            elseif ($rawStatus === 'HADIR') {
-                            $mainLabel = 'Hadir';
-                            $mainClass = 'b-h';
-                            }
-                            elseif ($rawStatus === 'TELAT' || $rawStatus === 'TERLAMBAT') {
-                            $mainLabel = 'Terlambat';
-                            $mainClass = 'b-t';
-                            }
-                            elseif (in_array($rawStatus, ['IJIN','IZIN','I'], true)) {
-                            $mainLabel = 'Ijin';
-                            $mainClass = 'b-i';
-                            }
-                            elseif (in_array($rawStatus, ['SAKIT','S'], true)) {
-                            $mainLabel = 'Sakit';
-                            $mainClass = 'b-s';
-                            }
-                            elseif (in_array($rawStatus, ['DINAS LUAR','DL'], true)) {
-                            $mainLabel = 'Dinas Luar';
-                            $mainClass = 'b-dl';
-                            }
-                            elseif (in_array($rawStatus, ['CUTI','CT'], true)) {
-                            $mainLabel = 'Cuti';
-                            $mainClass = 'b-ct';
-                            }
-                            else {
-                            // fallback kalau ada status lain
-                            $mainLabel = ucwords(strtolower($p->status ?? '-'));
-                            $mainClass = 'b-na';
-                            }
+                                    // Label utama (lengkap)
+                                    if ($rawStatus === '' || $rawStatus === '-') {
+                                        $mainLabel = '-';
+                                        $mainClass = 'b-na';
+                                    } elseif (in_array($rawStatus, ['ALPHA', 'TANPA KETERANGAN', 'TK'], true)) {
+                                        $mainLabel = 'Tanpa Keterangan';
+                                        $mainClass = 'b-tk';
+                                    } elseif ($rawStatus === 'HADIR') {
+                                        $mainLabel = 'Hadir';
+                                        $mainClass = 'b-h';
+                                    } elseif ($rawStatus === 'TELAT' || $rawStatus === 'TERLAMBAT') {
+                                        $mainLabel = 'Terlambat';
+                                        $mainClass = 'b-t';
+                                    } elseif (in_array($rawStatus, ['IJIN', 'IZIN', 'I'], true)) {
+                                        $mainLabel = 'Ijin';
+                                        $mainClass = 'b-i';
+                                    } elseif (in_array($rawStatus, ['SAKIT', 'S'], true)) {
+                                        $mainLabel = 'Sakit';
+                                        $mainClass = 'b-s';
+                                    } elseif (in_array($rawStatus, ['DINAS LUAR', 'DL'], true)) {
+                                        $mainLabel = 'Dinas Luar';
+                                        $mainClass = 'b-dl';
+                                    } elseif (in_array($rawStatus, ['CUTI', 'CT'], true)) {
+                                        $mainLabel = 'Cuti';
+                                        $mainClass = 'b-ct';
+                                    } else {
+                                        // fallback kalau ada status lain
+                                        $mainLabel = ucwords(strtolower($p->status ?? '-'));
+                                        $mainClass = 'b-na';
+                                    }
 
-                            // ============================
-                            // ✅ TAG TAMBAHAN (LENGKAP)
-                            // ============================
-                            // Pulang Cepat (ambil dari kolom keterangan jika kamu pakai itu)
-                            $pc = strtoupper(trim((string) ($p->keterangan ?? ''))) === 'PULANG CEPAT';
+                                    // ============================
+                                    // TAG TAMBAHAN (LENGKAP)
+                                    // ============================
+                                    // Pulang Cepat (ambil dari kolom keterangan jika kamu pakai itu)
+                                    $pc = strtoupper(trim((string) ($p->keterangan ?? ''))) === 'PULANG CEPAT';
 
-                            // Tidak Absen Pulang (punya check_in tapi check_out kosong)
-                            $tap = !empty($p->check_in) && empty($p->check_out);
-                            @endphp
+                                    // Tidak Absen Pulang (punya check_in tapi check_out kosong)
+                                    $tap = !empty($p->check_in) && empty($p->check_out);
+                                @endphp
 
-                            <tr>
-                                <td class="px-3 py-2 border">{{ $p->tanggal }}</td>
+                                <tr>
+                                    <td class="px-3 py-2 border">{{ $p->tanggal }}</td>
 
-                                {{-- ✅ STATUS LENGKAP --}}
-                                <td class="px-3 py-2 border">
-                                    <div class="flex flex-wrap gap-2">
-                                        <span class="badgex {{ $mainClass }}">{{ $mainLabel }}</span>
+                                    {{-- STATUS LENGKAP --}}
+                                    <td class="px-3 py-2 border">
+                                        <div class="flex flex-wrap gap-2">
+                                            <span class="badgex {{ $mainClass }}">{{ $mainLabel }}</span>
 
-                                        @if($pc)
-                                        <span class="badgex b-pc">Pulang Cepat</span>
-                                        @endif
+                                            @if ($pc)
+                                                <span class="badgex b-pc">Pulang Cepat</span>
+                                            @endif
 
-                                        @if($tap)
-                                        <span class="badgex b-tap">Tidak Absen Pulang</span>
-                                        @endif
-                                    </div>
-                                </td>
+                                            @if ($tap)
+                                                <span class="badgex b-tap">Tidak Absen Pulang</span>
+                                            @endif
+                                        </div>
+                                    </td>
 
 
-                                <td class="px-3 py-2 border">
-                                    {{ $p->check_in ? \Carbon\Carbon::parse($p->check_in)->format('H:i') : '-' }}
-                                </td>
+                                    <td class="px-3 py-2 border">
+                                        {{ $p->check_in ? \Carbon\Carbon::parse($p->check_in)->format('H:i') : '-' }}
+                                    </td>
 
-                                <td class="px-3 py-2 border">
-                                    {{ $p->check_out ? \Carbon\Carbon::parse($p->check_out)->format('H:i') : '-' }}
-                                </td>
+                                    <td class="px-3 py-2 border">
+                                        {{ $p->check_out ? \Carbon\Carbon::parse($p->check_out)->format('H:i') : '-' }}
+                                    </td>
 
-                            </tr>
+                                </tr>
                             @empty
-                            <tr>
-                                <td colspan="4" class="text-center py-4 text-gray-500">
-                                    Belum ada data presensi
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-gray-500">
+                                        Belum ada data presensi
+                                    </td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -229,18 +221,18 @@
 
                 <div class="space-y-3">
                     @forelse ($logbooks as $log)
-                    <div class="border rounded-lg p-4">
-                        <p class="text-sm text-gray-500">
-                            {{ $log->tanggal }}
-                        </p>
-                        <p class="text-gray-800 mt-1">
-                            {{ $log->kegiatan }}
-                        </p>
-                    </div>
+                        <div class="border rounded-lg p-4">
+                            <p class="text-sm text-gray-500">
+                                {{ $log->tanggal }}
+                            </p>
+                            <p class="text-gray-800 mt-1">
+                                {{ $log->kegiatan }}
+                            </p>
+                        </div>
                     @empty
-                    <p class="text-gray-500 text-sm">
-                        Belum ada logbook
-                    </p>
+                        <p class="text-gray-500 text-sm">
+                            Belum ada logbook
+                        </p>
                     @endforelse
                 </div>
 
@@ -251,8 +243,7 @@
 
             {{-- BACK --}}
             <div>
-                <a href="{{ route('pembimbing.dashboard') }}"
-                    class="text-blue-600 hover:underline text-sm">
+                <a href="{{ route('pembimbing.dashboard') }}" class="text-blue-600 hover:underline text-sm">
                     ← Kembali ke Dashboard
                 </a>
             </div>
@@ -278,18 +269,17 @@
                     <p class="text-sm text-gray-500 mt-1">Pilih bulan & tahun yang ingin dicetak.</p>
                 </div>
 
-                <form class="p-5 space-y-4"
-                    method="GET"
+                <form class="p-5 space-y-4" method="GET"
                     action="{{ route('pembimbing.mahasiswa.presensi.pdf', $mahasiswa->id) }}">
 
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Bulan</label>
                         <select name="month" class="w-full rounded-xl border-gray-200 bg-gray-50 font-bold">
-                            @for($m=1; $m<=12; $m++)
-                                <option value="{{ $m }}" {{ $m==now()->month ? 'selected' : '' }}>
-                                {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                            @for ($m = 1; $m <= 12; $m++)
+                                <option value="{{ $m }}" {{ $m == now()->month ? 'selected' : '' }}>
+                                    {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
                                 </option>
-                                @endfor
+                            @endfor
                         </select>
                     </div>
 
@@ -326,18 +316,17 @@
                     <p class="text-sm text-gray-500 mt-1">Pilih bulan & tahun yang ingin dicetak.</p>
                 </div>
 
-                <form class="p-5 space-y-4"
-                    method="GET"
+                <form class="p-5 space-y-4" method="GET"
                     action="{{ route('pembimbing.mahasiswa.logbook.pdf', $mahasiswa->id) }}">
 
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Bulan</label>
                         <select name="month" class="w-full rounded-xl border-gray-200 bg-gray-50 font-bold">
-                            @for($m=1; $m<=12; $m++)
-                                <option value="{{ $m }}" {{ $m==now()->month ? 'selected' : '' }}>
-                                {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                            @for ($m = 1; $m <= 12; $m++)
+                                <option value="{{ $m }}" {{ $m == now()->month ? 'selected' : '' }}>
+                                    {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
                                 </option>
-                                @endfor
+                            @endfor
                         </select>
                     </div>
 

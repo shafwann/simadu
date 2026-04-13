@@ -65,7 +65,7 @@
                                             {{ $d->instansi }}
                                         </td>
 
-                                        {{-- 🔥 INI TEMPAT APPROVE / REJECT --}}
+                                        {{-- INI TEMPAT APPROVE / REJECT --}}
                                         <td class="px-6 py-4 text-center">
                                             <div class="flex justify-center gap-2">
 

@@ -12,10 +12,12 @@
                 <div class="p-8 text-gray-900 flex items-center justify-between">
                     <div>
                         <h3 class="text-2xl font-bold text-blue-600">Selamat Datang, {{ Auth::user()->name }}! 👋</h3>
-                        <p class="text-gray-500 mt-1">Jangan lupa untuk melakukan presensi dan mengisi logbook hari ini.</p>
+                        <p class="text-gray-500 mt-1">Jangan lupa untuk melakukan presensi dan mengisi logbook hari ini.
+                        </p>
                     </div>
                     <div class="hidden md:block">
-                        <span class="text-sm font-medium text-gray-400">Role: <span class="text-blue-500 uppercase">{{ Auth::user()->role }}</span></span>
+                        <span class="text-sm font-medium text-gray-400">Role: <span
+                                class="text-blue-500 uppercase">{{ Auth::user()->role }}</span></span>
                     </div>
                 </div>
             </div>
@@ -23,11 +25,13 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                 <a href="{{ Auth::user()->status === 'aktif' ? route('attendance.index') : '#' }}"
-                   class="bg-white p-6 rounded-2xl shadow-sm border {{ Auth::user()->status === 'aktif' ? 'border-gray-100 hover:border-blue-500' : 'border-gray-200 cursor-not-allowed' }} transition group {{ Auth::user()->status !== 'aktif' ? 'opacity-50' : '' }}">
+                    class="bg-white p-6 rounded-2xl shadow-sm border {{ Auth::user()->status === 'aktif' ? 'border-gray-100 hover:border-blue-500' : 'border-gray-200 cursor-not-allowed' }} transition group {{ Auth::user()->status !== 'aktif' ? 'opacity-50' : '' }}">
                     <div class="flex items-center space-x-4">
-                        <div class="p-3 {{ Auth::user()->status === 'aktif' ? 'bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white' : 'bg-gray-100 text-gray-400' }} rounded-xl transition">
+                        <div
+                            class="p-3 {{ Auth::user()->status === 'aktif' ? 'bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white' : 'bg-gray-100 text-gray-400' }} rounded-xl transition">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
                         <div>
@@ -38,13 +42,16 @@
                 </a>
 
                 <a href="{{ Auth::user()->status === 'aktif' ? route('logbook.index') : '#' }}"
-                   class="bg-white p-6 rounded-2xl shadow-sm border
+                    class="bg-white p-6 rounded-2xl shadow-sm border
                         {{ Auth::user()->status === 'aktif' ? 'border-gray-100 hover:border-indigo-500' : 'border-gray-200 cursor-not-allowed opacity-50' }}
                         transition group">
                     <div class="flex items-center space-x-4">
-                        <div class="p-3 {{ Auth::user()->status === 'aktif' ? 'bg-indigo-100 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white' : 'bg-gray-100 text-gray-400' }} rounded-xl transition">
+                        <div
+                            class="p-3 {{ Auth::user()->status === 'aktif' ? 'bg-indigo-100 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white' : 'bg-gray-100 text-gray-400' }} rounded-xl transition">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                </path>
                             </svg>
                         </div>
                         <div>
@@ -63,14 +70,17 @@
                                 {{ ucfirst($status) }}
                             </p>
                         </div>
-                        <div class="p-3 {{ $status === 'aktif' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400' }} rounded-xl">
-                            @if($status === 'aktif')
+                        <div
+                            class="p-3 {{ $status === 'aktif' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400' }} rounded-xl">
+                            @if ($status === 'aktif')
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                             @else
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
                             @endif
                         </div>
@@ -78,13 +88,15 @@
                 </div>
 
                 {{-- Card Laporan hanya muncul kalau status aktif --}}
-                @if(Auth::user()->status == 'aktif')
+                @if (Auth::user()->status == 'aktif')
                     <a href="{{ route('laporan.index') }}"
-                       class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:border-green-500 transition group">
+                        class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:border-green-500 transition group">
                         <div class="flex items-center space-x-4">
-                            <div class="p-3 bg-green-100 text-green-600 group-hover:bg-green-600 group-hover:text-white rounded-xl transition">
+                            <div
+                                class="p-3 bg-green-100 text-green-600 group-hover:bg-green-600 group-hover:text-white rounded-xl transition">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                             </div>
                             <div>
@@ -95,7 +107,7 @@
                     </a>
                 @endif
 
-                {{-- ✅ GANTI: Hapus Penilaian Magang, Ganti jadi Scan Sertifikat --}}
+                {{-- GANTI: Hapus Penilaian Magang, Ganti jadi Scan Sertifikat --}}
                 @php
                     $ass = Auth::user()->assessment;
                     $scanPath = $ass?->certificate_scan;
@@ -106,30 +118,28 @@
                     $scanDisplayName = $scanOriginalName ?: ($scanPath ? basename($scanPath) : null);
                 @endphp
 
-                @if($scanUrl)
+                @if ($scanUrl)
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 md:col-span-3">
                         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                             <div>
                                 <h4 class="font-bold text-gray-800 text-lg">Sertifikat Magang</h4>
                                 <p class="text-sm text-gray-500 mt-1">
-                                    File: 
+                                    File:
                                     <a href="{{ $scanUrl }}" target="_blank"
-                                       class="font-bold text-blue-600 hover:underline break-all">
+                                        class="font-bold text-blue-600 hover:underline break-all">
                                         {{ $scanDisplayName }}
                                     </a>
                                 </p>
                             </div>
 
                             <div class="flex flex-wrap gap-2">
-                                <button type="button"
-                                        id="btnPreviewScanMahasiswa"
-                                        data-url="{{ $scanUrl }}"
-                                        class="px-4 py-2 rounded-xl bg-gray-900 text-white font-bold text-sm hover:bg-black transition shadow">
+                                <button type="button" id="btnPreviewScanMahasiswa" data-url="{{ $scanUrl }}"
+                                    class="px-4 py-2 rounded-xl bg-gray-900 text-white font-bold text-sm hover:bg-black transition shadow">
                                     Preview
                                 </button>
 
                                 <a href="{{ $scanUrl }}" download
-                                   class="px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 transition shadow">
+                                    class="px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 transition shadow">
                                     Download
                                 </a>
                             </div>
@@ -137,7 +147,8 @@
 
                         {{-- Preview Iframe --}}
                         <div class="mt-8 w-full h-[560px] border border-gray-200 rounded-xl overflow-hidden">
-                            <iframe id="preview-scan-iframe" class="w-full h-full" src="" frameborder="0"></iframe>
+                            <iframe id="preview-scan-iframe" class="w-full h-full" src=""
+                                frameborder="0"></iframe>
                         </div>
                     </div>
 
@@ -152,7 +163,10 @@
                                 if (!url) return;
 
                                 iframe.src = url;
-                                iframe.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                iframe.scrollIntoView({
+                                    behavior: 'smooth',
+                                    block: 'start'
+                                });
                             });
 
                             // optional: auto preview saat load pertama

@@ -8,7 +8,7 @@ use App\Models\User;
 
 class DashboardController extends Controller
 {
-public function index(Request $request) // 👈 Tambahkan Request $request
+public function index(Request $request)
 {
     $user = Auth::user();
 

@@ -13,7 +13,7 @@ class MasterAgencyController extends Controller
 {
     public function index()
     {
-        // ✅ FILTER: Hanya ambil 'Administrator Sistem' (Super Admin) dari setiap instansi
+        // FILTER: Hanya ambil 'Administrator Sistem' (Super Admin) dari setiap instansi
         $agencies = User::where('role', 'admin')
             ->where('bidang', 'Administrator Sistem') // Agar admin divisi tidak muncul
             ->orderBy('created_at', 'desc')
@@ -66,14 +66,14 @@ class MasterAgencyController extends Controller
             ->with('success', 'Instansi & Super Admin berhasil dibuat!');
     }
 
-    // ✅ METHOD EDIT
+    // METHOD EDIT
     public function edit($id)
     {
         $agency = User::findOrFail($id);
         return view('master.agencies.edit', compact('agency'));
     }
 
-    // ✅ METHOD UPDATE
+    // METHOD UPDATE
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);

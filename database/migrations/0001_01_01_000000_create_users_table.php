@@ -21,14 +21,14 @@ return new class extends Migration
             $table->date('tanggal_masuk')->nullable();
             $table->date('tanggal_selesai')->nullable();
 
-            // ✅ TAMBAHAN: Pembimbing Lapangan
+            // TAMBAHAN: Pembimbing Lapangan
             $table->string('jabatan_pembimbing')->nullable();
             $table->string('nama_pembimbing')->nullable();
             $table->string('nip_pembimbing')->nullable();
 
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['master','mahasiswa', 'pembimbing', 'admin'])->default('mahasiswa');
+            $table->enum('role', ['master', 'mahasiswa', 'pembimbing', 'admin'])->default('mahasiswa');
             $table->enum('bidang', [
                 'Administrator Sistem',
                 'Ekonomi',

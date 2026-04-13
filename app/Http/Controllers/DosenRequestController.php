@@ -127,12 +127,12 @@ class DosenRequestController extends Controller
     {
         $req = PembimbingRequest::with('mahasiswa')->findOrFail($id);
 
-        // 1️⃣ Cegah reject ulang
+        // Cegah reject ulang
         if ($req->status !== 'pending') {
             abort(403, 'Request sudah diproses');
         }
 
-        // 2️⃣ VALIDASI INSTANSI (PAKAI MAHASISWA)
+        // VALIDASI INSTANSI (PAKAI MAHASISWA)
         if (
             auth()->user()->kategori_instansi &&
             $req->mahasiswa->kategori_instansi !== auth()->user()->kategori_instansi
@@ -140,7 +140,7 @@ class DosenRequestController extends Controller
             abort(403, 'Akses Ditolak. Beda instansi.');
         }
 
-        // 3️⃣ UPDATE STATUS
+        // UPDATE STATUS
         $req->update([
             'status' => 'rejected'
         ]);

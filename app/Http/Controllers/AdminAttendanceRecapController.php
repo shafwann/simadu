@@ -53,7 +53,7 @@ class AdminAttendanceRecapController extends Controller
             ->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()])
             ->when($status !== 'all', function ($q) use ($status) {
 
-                // 🛠️ FIX: Mapping dari Filter Frontend ke Nilai Database (Enum)
+                // FIX: Mapping dari Filter Frontend ke Nilai Database (Enum)
                 // Frontend kirim: 'alpha', 'izin', 'hadir' (huruf kecil)
                 // Database simpan: 'Tanpa Keterangan', 'Ijin', 'Hadir' (Sesuai Enum)
 
@@ -86,7 +86,7 @@ class AdminAttendanceRecapController extends Controller
             // Ambil data absensi milik mahasiswa ini saja
             $rows = $attendances->where('user_id', $s->id);
 
-            // 🛠️ FIX: Normalisasi Data untuk Perhitungan
+            // FIX: Normalisasi Data untuk Perhitungan
             // Kita samakan semua istilah agar 'Ijin' menjadi 'izin', 'Tanpa Keterangan' menjadi 'alpha'
             $rows = $rows->map(function ($r) {
                 $st = strtolower(trim($r->status)); // ubah ke huruf kecil

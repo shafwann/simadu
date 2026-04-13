@@ -133,7 +133,7 @@ class AdminAttendanceController extends Controller
         return view('admin.attendance.edit', compact('attendance'));
     }
 
-    // ✅ UPDATE: PC akan hilang jika check_out kosong (biar TAP yang muncul)
+    // UPDATE: PC akan hilang jika check_out kosong (biar TAP yang muncul)
     public function update(Request $request, $id)
     {
         $attendance = Attendance::findOrFail($id);
@@ -156,7 +156,7 @@ class AdminAttendanceController extends Controller
         // checkbox PC
         $pcChecked = $request->has('pulang_cepat');
 
-        // ✅ keterangan PC hanya valid jika:
+        // keterangan PC hanya valid jika:
         // - status Hadir/Telat
         // - check_out TERISI
         // - checkbox dicentang
@@ -167,7 +167,7 @@ class AdminAttendanceController extends Controller
             }
         }
 
-        // ✅ jika check_out kosong => pastikan PC hilang (TAP akan dihitung dari VIEW)
+        // jika check_out kosong => pastikan PC hilang (TAP akan dihitung dari VIEW)
         if (empty($checkOut)) {
             $keterangan = null;
         }

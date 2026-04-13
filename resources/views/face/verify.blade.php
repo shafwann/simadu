@@ -232,7 +232,7 @@
 
                 console.log('✓ Descriptor valid!');
             } catch (e) {
-                setStatus('❌ Error: Descriptor tidak valid - ' + e.message + '. Silakan re-setup wajah.', 'error');
+                setStatus('Error: Descriptor tidak valid - ' + e.message + '. Silakan re-setup wajah.', 'error');
                 console.error('DESCRIPTOR ERROR:', e);
                 return;
             }

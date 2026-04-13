@@ -141,13 +141,18 @@ class PembimbingPdfController extends Controller
 
         $bulanLabel = $this->bulanIndo($month);
 
-        // ✅ F4 points: 595.28 x 935.43
+        // F4 points: 595.28 x 935.43
         $f4 = [0, 0, 595.28, 935.43];
 
         $nimSafe = str_replace(['/', '\\'], '-', $student->nim);
 
         return Pdf::loadView('admin.students.presensi_pdf', compact(
-            'student', 'about', 'year', 'bulanLabel', 'left', 'right'
+            'student',
+            'about',
+            'year',
+            'bulanLabel',
+            'left',
+            'right'
         ))
             ->setPaper($f4, 'portrait')
             ->download("DAFTAR-HADIR-MAGANG-{$nimSafe}-{$bulanLabel}-{$year}.pdf");
@@ -247,9 +252,18 @@ class PembimbingPdfController extends Controller
     private function bulanIndo(int $m): string
     {
         return [
-            1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',
-            5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',
-            9=>'September',10=>'Oktober',11=>'November',12=>'Desember'
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember'
         ][$m] ?? '-';
     }
 }

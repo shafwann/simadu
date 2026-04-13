@@ -72,7 +72,7 @@ class FaceVerificationController extends Controller
         }
 
         auth()->user()->update([
-            'face_descriptor' => $descriptor,  // ✅ Store array, model will JSON-encode it
+            'face_descriptor' => $descriptor,  // Store array, model will JSON-encode it
             'face_image_path' => $fileName,
         ]);
 

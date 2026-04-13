@@ -5,7 +5,8 @@
 
             {{-- HEADER JUDUL --}}
             <div class="mb-10 text-center md:text-left">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-100 border border-purple-200 mb-4">
+                <div
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-100 border border-purple-200 mb-4">
                     <span class="w-2 h-2 rounded-full bg-purple-600"></span>
                     <span class="text-xs font-bold text-purple-700 uppercase tracking-wider">Super Admin Area</span>
                 </div>
@@ -14,18 +15,23 @@
             </div>
 
             {{-- CARD FORM --}}
-            <div class="p-8 bg-white border border-gray-200 rounded-[2rem] shadow-xl shadow-purple-50/50 relative overflow-hidden">
+            <div
+                class="p-8 bg-white border border-gray-200 rounded-[2rem] shadow-xl shadow-purple-50/50 relative overflow-hidden">
 
                 {{-- Hiasan Background Abstrak (Opsional) --}}
-                <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-purple-50 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+                <div
+                    class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-purple-50 rounded-full blur-3xl opacity-50 pointer-events-none">
+                </div>
 
                 <form method="POST" action="{{ route('admin.manage.store') }}" class="space-y-6 relative z-10">
                     @csrf
 
                     <div>
                         <x-input-label for="name" :value="__('Nama Lengkap Admin')" class="text-gray-700 font-bold" />
-                        <x-text-input id="name" class="block mt-2 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl"
-                                      type="text" name="name" :value="old('name')" required autofocus placeholder="Contoh: Budi Santoso" />
+                        <x-text-input id="name"
+                            class="block mt-2 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl"
+                            type="text" name="name" :value="old('name')" required autofocus
+                            placeholder="Contoh: Budi Santoso" />
                         <x-input-error :messages="$errors->get('name')" class="mt-2" />
                     </div>
 
@@ -33,12 +39,16 @@
                     <div>
                         <x-input-label for="bidang" :value="__('Divisi / Bidang yang Dikelola')" class="text-gray-700 font-bold" />
                         <div class="relative mt-2">
-                            <select id="bidang" name="bidang" class="block w-full border-gray-300 rounded-xl shadow-sm focus:border-purple-500 focus:ring-purple-500 appearance-none py-3 px-4" required>
-                                <option value="" disabled selected class="text-gray-400">-- Pilih Bidang --</option>
+                            <select id="bidang" name="bidang"
+                                class="block w-full border-gray-300 rounded-xl shadow-sm focus:border-purple-500 focus:ring-purple-500 appearance-none py-3 px-4"
+                                required>
+                                <option value="" disabled selected class="text-gray-400">-- Pilih Bidang --
+                                </option>
 
-                                {{-- ✅ LOOPING OPSI DINAMIS DARI CONTROLLER --}}
-                                @foreach($bidangOptions as $option)
-                                    <option value="{{ $option }}" {{ old('bidang') == $option ? 'selected' : '' }}>
+                                {{-- LOOPING OPSI DINAMIS DARI CONTROLLER --}}
+                                @foreach ($bidangOptions as $option)
+                                    <option value="{{ $option }}"
+                                        {{ old('bidang') == $option ? 'selected' : '' }}>
                                         {{ $option }}
                                     </option>
                                 @endforeach
@@ -51,33 +61,41 @@
 
                     <div>
                         <x-input-label for="email" :value="__('Email Login')" class="text-gray-700 font-bold" />
-                        <x-text-input id="email" class="block mt-2 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl"
-                                      type="email" name="email" :value="old('email')" required placeholder="email@bapperlitbang.com" />
+                        <x-text-input id="email"
+                            class="block mt-2 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl"
+                            type="email" name="email" :value="old('email')" required
+                            placeholder="email@bapperlitbang.com" />
                         <x-input-error :messages="$errors->get('email')" class="mt-2" />
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <x-input-label for="password" :value="__('Password')" class="text-gray-700 font-bold" />
-                            <x-text-input id="password" class="block mt-2 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl"
-                                          type="password" name="password" required autocomplete="new-password" placeholder="Minimal 8 karakter" />
+                            <x-text-input id="password"
+                                class="block mt-2 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl"
+                                type="password" name="password" required autocomplete="new-password"
+                                placeholder="Minimal 8 karakter" />
                             <x-input-error :messages="$errors->get('password')" class="mt-2" />
                         </div>
 
                         <div>
-                            <x-input-label for="password_confirmation" :value="__('Konfirmasi Password')" class="text-gray-700 font-bold" />
-                            <x-text-input id="password_confirmation" class="block mt-2 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl"
-                                          type="password" name="password_confirmation" required placeholder="Ulangi password" />
+                            <x-input-label for="password_confirmation" :value="__('Konfirmasi Password')"
+                                class="text-gray-700 font-bold" />
+                            <x-text-input id="password_confirmation"
+                                class="block mt-2 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl"
+                                type="password" name="password_confirmation" required placeholder="Ulangi password" />
                             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                         </div>
                     </div>
 
                     <div class="flex items-center gap-4 pt-6 border-t border-gray-100 mt-6">
-                        <x-primary-button class="bg-blue-600 hover:bg-blue-700 py-3 px-8 text-base shadow-lg shadow-blue-200">
+                        <x-primary-button
+                            class="bg-blue-600 hover:bg-blue-700 py-3 px-8 text-base shadow-lg shadow-blue-200">
                             {{ __('Simpan Data') }}
                         </x-primary-button>
 
-                        <a href="{{ route('admin.manage.index') }}" class="px-6 py-3 rounded-xl font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition">
+                        <a href="{{ route('admin.manage.index') }}"
+                            class="px-6 py-3 rounded-xl font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition">
                             Batal
                         </a>
                     </div>
