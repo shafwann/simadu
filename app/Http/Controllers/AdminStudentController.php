@@ -59,7 +59,12 @@ class AdminStudentController extends Controller
     // 2. FORM TAMBAH MAHASISWA
     public function create()
     {
-        return view('admin.students.create');
+        $bidangOptions = array_merge(
+            config('bidang.options', []),
+            \App\Models\AboutSetting::bidangOptions()
+        );
+
+        return view('admin.students.create', compact('bidangOptions'));
     }
 
     // 3. SIMPAN MAHASISWA BARU
@@ -76,20 +81,13 @@ class AdminStudentController extends Controller
             'fakultas' => ['nullable', 'string'],
             'tanggal_masuk' => ['required', 'date'],
             'tanggal_selesai' => ['required', 'date', 'after:tanggal_masuk'],
-
-            // Bidang DIBUAT OPTIONAL (karena di form create mau dihapus)
-            // Kalau suatu saat masih terkirim dari request, tetap divalidasi agar aman.
-            'bidang' => ['nullable', Rule::in([
-                'Ekonomi',
-                'Sekretariat',
-                'Sosial & Budaya',
-                'Fisik & Prasarana',
-                'Penelitian, Pengembangan & Penyusunan Program',
-            ])],
+            'bidang' => ['required', 'string', 'max:255'],
 
             'jabatan_pembimbing' => ['required', 'string', 'max:255'],
             'nama_pembimbing' => ['required', 'string', 'max:255'],
             'nip_pembimbing' => ['required', 'string', 'max:255'],
+        ], [
+            'password.confirmed' => 'Password dan konfirmasi password tidak sama.',
         ]);
 
         User::create([
@@ -99,8 +97,7 @@ class AdminStudentController extends Controller
             'role' => 'mahasiswa',
 
             'kategori_instansi' => Auth::user()->kategori_instansi,
-            // Bidang tidak diinput di create, jadi default null (mahasiswa isi sendiri)
-            'bidang' => null,
+            'bidang' => $request->bidang,
 
             'status' => 'aktif',
             'nim' => $request->nim,

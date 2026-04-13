@@ -10,6 +10,13 @@
             <form method="POST" action="{{ route('admin.students.store') }}" class="space-y-8">
                 @csrf
 
+                @if ($errors->any())
+                    <div class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+                        <p class="font-bold">Gagal menyimpan data.</p>
+                        <p class="mt-1">Periksa kembali form, lalu coba lagi.</p>
+                    </div>
+                @endif
+
                 {{-- CARD 1: DATA AKUN --}}
                 <div class="p-8 bg-white border border-gray-200 rounded-[2rem] shadow-sm">
                     <h3 class="text-lg font-bold text-gray-800 mb-6 border-b pb-2">1. Informasi Akun</h3>
@@ -17,65 +24,69 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <x-input-label for="name" :value="__('Nama Lengkap')" />
-                            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus />
+                            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name"
+                                :value="old('name')" required autofocus />
                             <x-input-error :messages="$errors->get('name')" class="mt-2" />
                         </div>
 
                         <div>
                             <x-input-label for="email" :value="__('Email')" />
-                            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required />
+                            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email"
+                                :value="old('email')" required />
                             <x-input-error :messages="$errors->get('email')" class="mt-2" />
                         </div>
 
                         <div>
                             <x-input-label for="password" :value="__('Password')" />
-                            <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required />
+                            <x-text-input id="password" class="block mt-1 w-full" type="password" name="password"
+                                required />
+                            <x-input-error :messages="$errors->get('password')" class="mt-2" />
                         </div>
 
                         <div>
                             <x-input-label for="password_confirmation" :value="__('Konfirmasi Password')" />
-                            <x-text-input id="password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" required />
+                            <x-text-input id="password_confirmation" class="block mt-1 w-full" type="password"
+                                name="password_confirmation" required />
+                            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                         </div>
 
                         <div class="md:col-span-2">
                             <x-input-label for="jabatan_pembimbing" :value="__('Jabatan Pembimbing Lapangan')" />
-                            <x-text-input
-                                id="jabatan_pembimbing"
-                                class="block mt-1 w-full"
-                                type="text"
-                                name="jabatan_pembimbing"
-                                :value="old('jabatan_pembimbing', 'Sekretaris')"
-                                required
-                            />
+                            <x-text-input id="jabatan_pembimbing" class="block mt-1 w-full" type="text"
+                                name="jabatan_pembimbing" :value="old('jabatan_pembimbing', 'Sekretaris')" required />
                             <x-input-error :messages="$errors->get('jabatan_pembimbing')" class="mt-2" />
                         </div>
 
                         <div class="md:col-span-2">
                             <x-input-label for="nama_pembimbing" :value="__('Nama Pembimbing Lapangan')" />
-                            <x-text-input
-                                id="nama_pembimbing"
-                                class="block mt-1 w-full"
-                                type="text"
-                                name="nama_pembimbing"
-                                :value="old('nama_pembimbing', 'Dr. Nining Indrastuti, S.T., M.T.')"
-                                required
-                            />
+                            <x-text-input id="nama_pembimbing" class="block mt-1 w-full" type="text"
+                                name="nama_pembimbing" :value="old('nama_pembimbing', 'Dr. Nining Indrastuti, S.T., M.T.')" required />
                             <x-input-error :messages="$errors->get('nama_pembimbing')" class="mt-2" />
                         </div>
 
                         <div class="md:col-span-2">
                             <x-input-label for="nip_pembimbing" :value="__('NIP Pembimbing Lapangan')" />
-                            <x-text-input
-                                id="nip_pembimbing"
-                                class="block mt-1 w-full"
-                                type="text"
-                                name="nip_pembimbing"
-                                :value="old('nip_pembimbing', '19761026 200604 2 022')"
-                                required
-                            />
+                            <x-text-input id="nip_pembimbing" class="block mt-1 w-full" type="text"
+                                name="nip_pembimbing" :value="old('nip_pembimbing', '19761026 200604 2 022')" required />
                             <x-input-error :messages="$errors->get('nip_pembimbing')" class="mt-2" />
                         </div>
-                        {{-- END TAMBAHAN --}}
+
+                        <div class="md:col-span-2">
+                            <x-input-label for="bidang" :value="__('Bidang / Divisi Penempatan')" />
+
+                            <input type="text" name="bidang" id="bidang" list="bidangList"
+                                value="{{ old('bidang') }}"
+                                class="mt-1 block w-full rounded-xl border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                placeholder="Ketik manual atau pilih dari daftar..." required>
+
+                            <datalist id="bidangList">
+                                @foreach ($bidangOptions as $bidang)
+                                    <option value="{{ $bidang }}"></option>
+                                @endforeach
+                            </datalist>
+
+                            <x-input-error :messages="$errors->get('bidang')" class="mt-2" />
+                        </div>
                     </div>
                 </div>
 
@@ -89,17 +100,11 @@
                         <div class="md:col-span-2">
                             <x-input-label for="kegiatan" :value="__('Jenis Kegiatan')" />
 
-                            <input
-                                type="text"
-                                name="kegiatan"
-                                id="kegiatan"
-                                list="kegiatanList"
-                                value="{{ old('kegiatan') }}"
-                                placeholder="Silahkan Isi"
+                            <input type="text" name="kegiatan" id="kegiatan" list="kegiatanList"
+                                value="{{ old('kegiatan') }}" placeholder="Silahkan Isi"
                                 class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm
                                     focus:border-blue-500 focus:ring-blue-500"
-                                required
-                            >
+                                required>
 
                             <datalist id="kegiatanList">
                                 <option value="Magang Reguler (Mahasiswa)">
@@ -111,22 +116,26 @@
 
                         <div>
                             <x-input-label for="instansi" :value="__('Asal Instansi / Sekolah')" />
-                            <x-text-input id="instansi" class="block mt-1 w-full" type="text" name="instansi" :value="old('instansi')" required placeholder="Contoh: Universitas Sebelas Maret" />
+                            <x-text-input id="instansi" class="block mt-1 w-full" type="text" name="instansi"
+                                :value="old('instansi')" required placeholder="Contoh: Universitas Sebelas Maret" />
                         </div>
 
                         <div>
                             <x-input-label for="fakultas" :value="__('Fakultas (Opsional)')" />
-                            <x-text-input id="fakultas" class="block mt-1 w-full" type="text" name="fakultas" :value="old('fakultas')" placeholder="Kosongi jika siswa SMK" />
+                            <x-text-input id="fakultas" class="block mt-1 w-full" type="text" name="fakultas"
+                                :value="old('fakultas')" placeholder="Kosongi jika siswa SMK" />
                         </div>
 
                         <div>
                             <x-input-label for="prodi" :value="__('Program Studi / Jurusan')" />
-                            <x-text-input id="prodi" class="block mt-1 w-full" type="text" name="prodi" :value="old('prodi')" required placeholder="Contoh: Teknik Informatika" />
+                            <x-text-input id="prodi" class="block mt-1 w-full" type="text" name="prodi"
+                                :value="old('prodi')" required placeholder="Contoh: Teknik Informatika" />
                         </div>
 
                         <div>
                             <x-input-label for="nim" :value="__('NIM / NISN')" />
-                            <x-text-input id="nim" class="block mt-1 w-full" type="text" name="nim" :value="old('nim')" required />
+                            <x-text-input id="nim" class="block mt-1 w-full" type="text" name="nim"
+                                :value="old('nim')" required />
                         </div>
 
                     </div>
@@ -139,22 +148,28 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <x-input-label for="tanggal_masuk" :value="__('Tanggal Mulai')" />
-                            <input type="date" name="tanggal_masuk" class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                            <input type="date" name="tanggal_masuk"
+                                class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                required>
                         </div>
 
                         <div>
                             <x-input-label for="tanggal_selesai" :value="__('Tanggal Selesai')" />
-                            <input type="date" name="tanggal_selesai" class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                            <input type="date" name="tanggal_selesai"
+                                class="block mt-1 w-full border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                required>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-4 pt-4 pb-12">
-                    <x-primary-button class="bg-blue-600 hover:bg-blue-700 py-3 px-8 text-base shadow-lg shadow-blue-200">
+                    <x-primary-button
+                        class="bg-blue-600 hover:bg-blue-700 py-3 px-8 text-base shadow-lg shadow-blue-200">
                         {{ __('Simpan Data') }}
                     </x-primary-button>
 
-                    <a href="{{ route('admin.students.index') }}" class="text-gray-500 font-bold text-sm hover:text-gray-800 px-4">
+                    <a href="{{ route('admin.students.index') }}"
+                        class="text-gray-500 font-bold text-sm hover:text-gray-800 px-4">
                         Batal
                     </a>
                 </div>
