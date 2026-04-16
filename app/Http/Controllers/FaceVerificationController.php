@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Models\Logbook;
+use Carbon\Carbon;
 
 class FaceVerificationController extends Controller
 {
@@ -87,6 +89,25 @@ class FaceVerificationController extends Controller
 
         $intendedAction = session('face_intended_action');
         $pendingLocation = session('face_pending_location');
+
+        // Validasi logbook sebelum checkout
+        if ($intendedAction === 'check-out') {
+            $hasLogbookToday = Logbook::where('user_id', auth()->id())
+                ->whereDate('tanggal', Carbon::today())
+                ->exists();
+
+            if (!$hasLogbookToday) {
+                session(['pending_checkout' => true]);
+                return redirect()->route('logbook.index')
+                    ->with('warning', 'Anda harus mengisi logbook terlebih dahulu sebelum absen pulang.');
+            }
+
+            if (empty($pendingLocation)) {
+                return redirect()->route('attendance.index')
+                    ->with('warning', 'Lokasi checkout tidak ditemukan. Silakan klik absen pulang lagi.');
+            }
+        }
+
         $actionRoute = match ($intendedAction) {
             'check-in' => route('attendance.checkin'),
             'check-out' => route('attendance.checkout'),
