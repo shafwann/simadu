@@ -186,6 +186,7 @@ Route::middleware(['auth', 'no-cache', 'role:mahasiswa'])->group(function () {
     Route::get('/logbook/pdf', [LogbookController::class, 'exportPdf'])->name('logbook.export.pdf');
     Route::get('/logbook/{logbook}/edit', [LogbookController::class, 'edit'])->name('logbook.edit');
     Route::put('/logbook/{logbook}', [LogbookController::class, 'update'])->name('logbook.update');
+    Route::delete('/logbook/{logbook}', [LogbookController::class, 'destroy'])->name('logbook.destroy');
 
     // Laporan
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');

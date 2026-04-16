@@ -19,6 +19,7 @@ class LogbookController extends Controller
 
         $logbooks = \App\Models\Logbook::where('user_id', $userId)
             ->orderBy('tanggal', 'desc')
+            ->orderBy('updated_at', 'desc')
             ->get();
 
         // Ambil tahun unik dari logbook user
@@ -126,24 +127,40 @@ class LogbookController extends Controller
     public function update(Request $request, Logbook $logbook)
     {
         if ($logbook->user_id !== Auth::id()) abort(403);
-        if (!$logbook->is_rejected) return redirect()->route('logbook.index')->with('error', 'Logbook ini tidak bisa diajukan ulang.');
 
         $request->validate([
             'tanggal' => 'required|date',
             'kegiatan' => 'required|string|min:5',
         ]);
 
-        $logbook->update([
+        $updateData = [
             'tanggal' => $request->tanggal,
             'kegiatan' => $request->kegiatan,
+        ];
 
-            // ajukan ulang → balik pending
-            'is_rejected' => false,
-            'rejected_at' => null,
-            'rejected_note' => null,
-            'is_validated' => false,
-        ]);
+        // Jika ditolak, reset status rejected saat update
+        if ($logbook->is_rejected) {
+            $updateData['is_rejected'] = false;
+            $updateData['rejected_at'] = null;
+            $updateData['rejected_note'] = null;
+            $updateData['is_validated'] = false;
+            $message = 'Logbook berhasil diperbarui dan diajukan ulang.';
+        } else {
+            // Untuk pending dan validated, tetap di status sebelumnya
+            $message = 'Logbook berhasil diperbarui.';
+        }
 
-        return redirect()->route('logbook.index')->with('success', 'Logbook berhasil diperbarui dan diajukan ulang.');
+        $logbook->update($updateData);
+
+        return redirect()->route('logbook.index')->with('success', $message);
+    }
+
+    public function destroy(Logbook $logbook)
+    {
+        if ($logbook->user_id !== Auth::id()) abort(403);
+
+        $logbook->delete();
+
+        return redirect()->route('logbook.index')->with('success', 'Logbook berhasil dihapus.');
     }
 }

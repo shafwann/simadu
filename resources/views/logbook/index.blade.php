@@ -132,18 +132,111 @@
 
                                         {{-- Aksi --}}
                                         <td class="px-6 md:px-8 py-5">
-                                            @if ($log->is_rejected)
-                                                <button type="button"
-                                                    class="px-3 py-1.5 text-sm rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition shadow-sm"
-                                                    data-open-edit-logbook data-id="{{ $log->id }}"
-                                                    data-tanggal="{{ $log->tanggal }}"
-                                                    data-kegiatan="{{ e($log->kegiatan) }}"
-                                                    data-rejected-note="{{ e($log->rejected_note) }}">
-                                                    Edit & Ajukan Ulang
-                                                </button>
-                                            @else
-                                                <span class="text-sm text-gray-400">-</span>
-                                            @endif
+                                            <div class="flex items-center gap-2">
+                                                @if ($log->is_rejected)
+                                                    {{-- Ditolak: Ajukan Kembali + Hapus --}}
+                                                    <button type="button" title="Ajukan Kembali"
+                                                        class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 hover:bg-amber-200 transition flex items-center justify-center"
+                                                        data-open-edit-logbook data-id="{{ $log->id }}"
+                                                        data-tanggal="{{ $log->tanggal }}"
+                                                        data-kegiatan="{{ e($log->kegiatan) }}"
+                                                        data-rejected-note="{{ e($log->catatan_pembimbing) }}"
+                                                        data-is-rejected="true">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                                            </path>
+                                                        </svg>
+                                                    </button>
+                                                    <form method="POST"
+                                                        action="{{ route('logbook.destroy', $log->id) }}"
+                                                        style="display: inline;"
+                                                        onsubmit="return confirm('Hapus logbook ini?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" title="Hapus"
+                                                            class="w-8 h-8 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition flex items-center justify-center">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                                </path>
+                                                            </svg>
+                                                        </button>
+                                                    </form>
+                                                @elseif($log->is_validated)
+                                                    {{-- Diterima: Edit + Hapus --}}
+                                                    <button type="button" title="Edit"
+                                                        class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 hover:bg-indigo-200 transition flex items-center justify-center"
+                                                        data-open-edit-logbook data-id="{{ $log->id }}"
+                                                        data-tanggal="{{ $log->tanggal }}"
+                                                        data-kegiatan="{{ e($log->kegiatan) }}"
+                                                        data-rejected-note="{{ e($log->catatan_pembimbing) }}"
+                                                        data-is-rejected="false" data-is-validated="true">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                            </path>
+                                                        </svg>
+                                                    </button>
+                                                    <form method="POST"
+                                                        action="{{ route('logbook.destroy', $log->id) }}"
+                                                        style="display: inline;"
+                                                        onsubmit="return confirm('Hapus logbook ini?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" title="Hapus"
+                                                            class="w-8 h-8 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition flex items-center justify-center">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                                </path>
+                                                            </svg>
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    {{-- Pending: Edit + Hapus --}}
+                                                    <button type="button" title="Edit"
+                                                        class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 hover:bg-indigo-200 transition flex items-center justify-center"
+                                                        data-open-edit-logbook data-id="{{ $log->id }}"
+                                                        data-tanggal="{{ $log->tanggal }}"
+                                                        data-kegiatan="{{ e($log->kegiatan) }}"
+                                                        data-rejected-note="{{ e($log->catatan_pembimbing) }}"
+                                                        data-is-rejected="false" data-is-validated="false">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                            </path>
+                                                        </svg>
+                                                    </button>
+                                                    <form method="POST"
+                                                        action="{{ route('logbook.destroy', $log->id) }}"
+                                                        style="display: inline;"
+                                                        onsubmit="return confirm('Hapus logbook ini?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" title="Hapus"
+                                                            class="w-8 h-8 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition flex items-center justify-center">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                                </path>
+                                                            </svg>
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
@@ -251,8 +344,9 @@
                         &times;
                     </button>
 
-                    <h2 class="text-xl font-black text-gray-900 text-center">Edit Logbook (Ditolak)</h2>
-                    <p class="text-sm text-gray-500 mt-1 text-center">Perbaiki data lalu ajukan ulang.</p>
+                    <h2 class="text-xl font-black text-gray-900 text-center" id="editModalTitle">Edit Logbook</h2>
+                    <p class="text-sm text-gray-500 mt-1 text-center" id="editModalSubtitle">Perbarui data logbook.
+                    </p>
                 </div>
 
                 <form id="editLogbookForm" class="p-5 space-y-4" method="POST" action="">
@@ -260,10 +354,11 @@
                     @method('PUT')
 
                     {{-- Alasan ditolak hanya di popup (tabel tidak menampilkan) --}}
-                    <div id="rejectedNoteBox" class="p-4 rounded-2xl bg-red-50 border border-red-100 text-red-700">
-                        <p class="text-sm text-red-600">
-                            Alasan ditolak: <span class="font-semibold" id="rejectedNoteText"></span>
-                        </p>
+                    <div id="rejectedNoteBox" class="hidden space-y-2">
+                        <label class="block text-sm font-semibold text-red-700">Alasan Ditolak</label>
+                        <textarea id="rejectedNoteText" rows="3" readonly
+                            class="w-full rounded-xl border border-red-100 bg-red-50 text-red-700 shadow-sm focus:border-red-300 focus:ring-red-300"
+                            placeholder="Alasan penolakan dari admin akan tampil di sini."></textarea>
                     </div>
 
                     <div>
@@ -283,9 +378,9 @@
                             class="px-5 py-2.5 text-sm rounded-xl bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition w-full md:w-auto">
                             Batal
                         </button>
-                        <button type="submit"
+                        <button type="submit" id="editLogbookSubmitBtn"
                             class="px-5 py-2.5 text-sm rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition w-full md:w-auto shadow-sm">
-                            Simpan & Ajukan Ulang
+                            Simpan
                         </button>
                     </div>
                 </form>
@@ -379,6 +474,8 @@
                     const tanggal = button.dataset.tanggal || '';
                     const kegiatan = button.dataset.kegiatan || '';
                     const rejectedNote = button.dataset.rejectedNote || '';
+                    const isRejected = button.dataset.isRejected === 'true';
+                    const isValidated = button.dataset.isValidated === 'true';
 
                     // set action update (mengikuti logika route PUT /logbook/{id})
                     editForm.action = `{{ url('/logbook') }}/${id}`;
@@ -386,13 +483,34 @@
                     editTanggal.value = tanggal;
                     editKegiatan.value = kegiatan;
 
-                    // tampil alasan di popup saja
-                    if (rejectedNote && rejectedNote.trim() !== '') {
+                    // Update modal title dan subtitle berdasarkan status
+                    const editModalTitle = document.getElementById('editModalTitle');
+                    const editModalSubtitle = document.getElementById('editModalSubtitle');
+                    const editLogbookSubmitBtn = document.getElementById('editLogbookSubmitBtn');
+
+                    if (isRejected) {
+                        editModalTitle.textContent = 'Edit Logbook (Ditolak)';
+                        editModalSubtitle.textContent = 'Perbaiki data lalu ajukan ulang.';
+                        editLogbookSubmitBtn.textContent = 'Simpan & Ajukan Ulang';
+                    } else if (isValidated) {
+                        editModalTitle.textContent = 'Edit Logbook (Tervalidasi)';
+                        editModalSubtitle.textContent =
+                            'Perbarui data logbook yang sudah tervalidasi.';
+                        editLogbookSubmitBtn.textContent = 'Simpan Perubahan';
+                    } else {
+                        editModalTitle.textContent = 'Edit Logbook (Pending)';
+                        editModalSubtitle.textContent =
+                            'Perbarui data logbook yang sedang pending.';
+                        editLogbookSubmitBtn.textContent = 'Simpan Perubahan';
+                    }
+
+                    // tampil alasan di popup jika ditolak
+                    if (isRejected && rejectedNote && rejectedNote.trim() !== '') {
                         rejectedNoteBox.classList.remove('hidden');
-                        rejectedNoteText.textContent = rejectedNote;
+                        rejectedNoteText.value = rejectedNote;
                     } else {
                         rejectedNoteBox.classList.add('hidden');
-                        rejectedNoteText.textContent = '';
+                        rejectedNoteText.value = '';
                     }
 
                     openEditModal();
