@@ -76,6 +76,37 @@
                 {{-- KIRI: Absensi Manual --}}
                 <div class="space-y-6">
                     <div class="bg-white border border-blue-100 rounded-[2rem] p-6 shadow-xl shadow-blue-50/50">
+                        <div class="flex justify-center mb-6">
+                            <div class="relative group">
+
+                                {{-- LOGIKA FOTO (PERBAIKAN SAKTI) --}}
+                                @if ($student->face_image_path)
+                                    {{-- JIKA MAHASISWA SUDAH REGISTRASI WAJAH --}}
+                                    <img src="/storage/{{ $student->face_image_path }}"
+                                        alt="Foto Profil {{ $student->name }}"
+                                        class="w-40 h-40 aspect-square rounded-full object-cover border-4 border-white shadow-xl ring-1 ring-blue-100">
+
+                                    <div
+                                        class="absolute inset-0 rounded-full border-4 border-transparent shadow-[inset_0_0_20px_rgba(0,0,0,0.15)] pointer-events-none">
+                                    </div>
+                                @else
+                                    {{-- JIKA MAHASISWA BELUM REGISTRASI WAJAH (PLACEHOLDER) --}}
+                                    <div
+                                        class="w-40 h-40 aspect-square rounded-full border-4 border-white shadow-lg ring-1 ring-blue-50 bg-blue-50 flex items-center justify-center">
+                                        <div class="text-center text-blue-300">
+                                            <svg class="w-20 h-20 mx-auto" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
+                                                </path>
+                                            </svg>
+                                            <p class="text-xs mt-1 font-medium">Belum Setup Wajah</p>
+                                        </div>
+                                    </div>
+                                @endif
+
+                            </div>
+                        </div>
                         <h3 class="text-lg font-black text-gray-800 mb-4 flex items-center gap-2">
                             <span class="w-2 h-6 bg-blue-600 rounded-full"></span>
                             Input Absensi Manual
@@ -514,7 +545,8 @@
                                                                 </path>
                                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                                     stroke-width="2"
-                                                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z">
+                                                                </path>
                                                             </svg>
                                                             Buka Link Peta
                                                         </a>
