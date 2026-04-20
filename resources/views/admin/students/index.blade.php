@@ -24,16 +24,22 @@
                     <form action="{{ route('admin.students.index') }}" method="GET"
                         class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
 
-                        {{-- 1. FILTER STATUS (BARU) --}}
-                        <div class="relative">
-                            <select name="status" onchange="this.form.submit()"
-                                class="appearance-none pl-4 pr-10 py-3 rounded-2xl border-gray-200 text-sm font-bold focus:border-blue-500 focus:ring-blue-500 shadow-sm cursor-pointer bg-white text-gray-700 w-full md:w-40 hover:border-blue-300 transition">
-                                <option value="">Semua Status</option>
-                                <option value="aktif" {{ request('status') == 'aktif' ? 'selected' : '' }}>Aktif
-                                </option>
-                                <option value="nonaktif" {{ request('status') == 'nonaktif' ? 'selected' : '' }}>Selesai
-                                </option>
-                            </select>
+                        {{-- 1. FILTER STATUS --}}
+                        <div class="flex rounded-2xl border border-gray-200 bg-white p-1 shadow-sm">
+                            <button type="submit" name="status" value="aktif"
+                                class="px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap
+                                {{ ($status ?? 'aktif') === 'aktif'
+                                    ? 'bg-blue-600 text-white shadow-sm'
+                                    : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700' }}">
+                                Aktif
+                            </button>
+                            <button type="submit" name="status" value="nonaktif"
+                                class="px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap
+                                {{ ($status ?? 'aktif') === 'nonaktif'
+                                    ? 'bg-red-600 text-white shadow-sm'
+                                    : 'text-gray-600 hover:bg-red-50 hover:text-red-700' }}">
+                                Nonaktif
+                            </button>
                         </div>
 
                         {{-- 2. SEARCH INPUT --}}
@@ -45,7 +51,7 @@
                     </form>
 
                     {{-- Tombol Rekap Absensi --}}
-                    <a href="{{ route('admin.attendance.recap') }}"
+                    <a href="{{ route('admin.attendance.recap', ['student_status' => $status ?? 'aktif']) }}"
                         class="group flex items-center justify-center gap-2 bg-blue-600 text-white px-5 py-3 rounded-2xl font-bold
                             hover:bg-blue-700 transition shadow-lg shadow-blue-100 hover:shadow-blue-200 whitespace-nowrap text-sm w-full md:w-auto">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

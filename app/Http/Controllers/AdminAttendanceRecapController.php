@@ -19,26 +19,31 @@ class AdminAttendanceRecapController extends Controller
         $adminBidang  = $admin->bidang;
 
         // 2. Filter Input
-        $mode   = $request->get('mode', 'harian');   // harian | mingguan | bulanan
-        $status = $request->get('status', 'all');    // all | hadir | izin | sakit | alpha | telat
-        $bidang = $request->get('bidang', 'all');    // hanya dipakai super admin
+        $mode          = $request->get('mode', 'harian');            // harian | mingguan | bulanan
+        $status        = $request->get('status', 'all');             // all | hadir | izin | sakit | alpha | telat
+        $studentStatus = $request->get('student_status', 'aktif');   // aktif | nonaktif
+        $bidang        = $request->get('bidang', 'all');             // hanya dipakai super admin
 
         // 3. Tentukan Range Tanggal
         [$start, $end, $labelPeriode] = $this->resolveDateRange($mode, $request);
 
         // 4. Query Mahasiswa
-        $studentsQ = User::query()
+        $studentsBaseQuery = User::query()
             ->where('role', 'mahasiswa')
+            ->where('status', $studentStatus)
             // Filter Instansi (Wajib ada jika admin punya instansi)
             ->when($admin->kategori_instansi, fn($q) => $q->where('kategori_instansi', $admin->kategori_instansi))
             // Filter Bidang (Admin Biasa vs Super Admin)
             ->when(!$isSuperAdmin, fn($q) => $q->where('bidang', $adminBidang))
             ->when($isSuperAdmin && $bidang !== 'all', fn($q) => $q->where('bidang', $bidang));
 
-        $students = $studentsQ->select('id', 'name', 'nim', 'bidang', 'instansi')->orderBy('name')->get();
+        $students = (clone $studentsBaseQuery)
+            ->select('id', 'name', 'nim', 'bidang', 'instansi')
+            ->orderBy('name')
+            ->get();
 
         // Ambil daftar bidang untuk dropdown filter (hanya utk super admin)
-        $bidangList = (clone $studentsQ)
+        $bidangList = (clone $studentsBaseQuery)
             ->whereNotNull('bidang')
             ->select('bidang')
             ->distinct()
@@ -140,7 +145,7 @@ class AdminAttendanceRecapController extends Controller
         ];
 
         return view('admin.attendance.recap', compact(
-            'rekap', 'summary', 'isSuperAdmin', 'mode', 'status', 'bidang', 'labelPeriode', 'bidangList'
+            'rekap', 'summary', 'isSuperAdmin', 'mode', 'status', 'studentStatus', 'bidang', 'labelPeriode', 'bidangList'
         ));
     }
 

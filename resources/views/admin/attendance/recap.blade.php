@@ -16,12 +16,12 @@
                 </div>
 
                 <div class="flex gap-2 w-full md:w-auto">
-                    <a href="{{ route('admin.students.index') }}"
+                    <a href="{{ route('admin.students.index', ['status' => $studentStatus ?? 'aktif']) }}"
                        class="w-full md:w-auto px-4 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 text-sm font-bold text-center transition">
                         ← Kembali
                     </a>
 
-                    <a href="{{ route('admin.attendance.recap') }}"
+                    <a href="{{ route('admin.attendance.recap', ['student_status' => $studentStatus ?? 'aktif']) }}"
                        class="w-full md:w-auto px-4 py-3 rounded-2xl bg-white border border-gray-200 hover:bg-gray-50 text-sm font-bold text-center transition">
                         Reset
                     </a>
@@ -32,6 +32,28 @@
             <div class="bg-white border border-gray-100 rounded-2xl shadow-lg p-5">
                 <form method="GET" action="{{ route('admin.attendance.recap') }}"
                       class="flex flex-col md:flex-row gap-3 md:items-center">
+                    @php $studentStatusVal = $studentStatus ?? 'aktif'; @endphp
+                    <input type="hidden" name="student_status" value="{{ $studentStatusVal }}">
+
+                    {{-- STATUS MAHASISWA --}}
+                    <div class="flex rounded-2xl border border-gray-200 bg-white p-1 shadow-sm w-full md:w-auto">
+                        <button type="submit" name="student_status" value="aktif"
+                                onclick="this.form.student_status.value='aktif'"
+                                class="px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap
+                                {{ $studentStatusVal === 'aktif'
+                                    ? 'bg-blue-600 text-white shadow-sm'
+                                    : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700' }}">
+                            Aktif
+                        </button>
+                        <button type="submit" name="student_status" value="nonaktif"
+                                onclick="this.form.student_status.value='nonaktif'"
+                                class="px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap
+                                {{ $studentStatusVal === 'nonaktif'
+                                    ? 'bg-red-600 text-white shadow-sm'
+                                    : 'text-gray-600 hover:bg-red-50 hover:text-red-700' }}">
+                            Nonaktif
+                        </button>
+                    </div>
 
                     {{-- MODE --}}
                     <select name="mode" onchange="this.form.submit()"

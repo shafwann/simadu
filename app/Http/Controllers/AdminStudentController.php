@@ -24,7 +24,7 @@ class AdminStudentController extends Controller
 
         // Ambil input dari URL
         $search = $request->input('search');
-        $status = $request->input('status'); // Ambil input status
+        $status = $request->input('status', 'aktif');
 
         $students = User::where('role', 'mahasiswa')
             //  FILTER INSTANSI SISTEM
@@ -44,9 +44,7 @@ class AdminStudentController extends Controller
                 });
             })
             // 2. FILTER STATUS (BARU)
-            ->when($status, function ($query, $status) {
-                return $query->where('status', $status);
-            })
+            ->where('status', $status)
             ->latest()
             ->paginate(10)
             ->withQueryString(); // Agar filter tetap ada saat pindah halaman
