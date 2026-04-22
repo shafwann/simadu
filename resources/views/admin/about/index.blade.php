@@ -5,23 +5,26 @@
                 About Instansi: <span class="text-blue-600">{{ Auth::user()->kategori_instansi ?? 'UMUM' }}</span>
             </h2>
             <p class="text-sm text-gray-500 mt-1">
-                Data ini hanya berlaku untuk mahasiswa di lingkungan <b>{{ Auth::user()->kategori_instansi ?? 'UMUM' }}</b>.
+                Data ini hanya berlaku untuk mahasiswa di lingkungan
+                <b>{{ Auth::user()->kategori_instansi ?? 'UMUM' }}</b>.
             </p>
         </div>
     </x-slot>
 
     <div class="py-8">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-8">
-
             {{-- Flash Message --}}
-            @if(session('success'))
-                <div class="p-4 rounded-xl bg-green-50 text-green-700 font-bold border border-green-100 flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            @if (session('success'))
+                <div
+                    class="p-4 rounded-xl bg-green-50 text-green-700 font-bold border border-green-100 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
                     {{ session('success') }}
                 </div>
             @endif
 
-            @if(session('error'))
+            @if (session('error'))
                 <div class="p-4 rounded-xl bg-red-50 text-red-700 font-bold border border-red-100">
                     {{ session('error') }}
                 </div>
@@ -29,35 +32,42 @@
 
             {{-- ================= FORM 1: BRANDING ================= --}}
             <form method="POST" action="{{ route('admin.about.update') }}" enctype="multipart/form-data"
-                  class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100">
+                class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100">
                 @csrf @method('PUT')
                 <input type="hidden" name="section" value="branding">
 
                 <div class="mb-6 border-b pb-4">
                     <h3 class="font-bold text-lg text-blue-800">1. Branding Aplikasi</h3>
-                    <p class="text-xs text-gray-400 mt-1">Mengatur nama, deskripsi, dan logo yang tampil di Navbar/Login.</p>
+                    <p class="text-xs text-gray-400 mt-1">Mengatur nama, deskripsi, dan logo yang tampil di
+                        Navbar/Login.</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <x-input-label for="app_name" value="Nama Aplikasi" />
-                        <x-text-input id="app_name" name="app_name" type="text" class="mt-1 block w-full font-bold" value="{{ old('app_name', $about->app_name) }}" placeholder="Bapperida" />
+                        <x-text-input id="app_name" name="app_name" type="text" class="mt-1 block w-full font-bold"
+                            value="{{ old('app_name', $about->app_name) }}" placeholder="Bapperida" />
                     </div>
                     <div>
                         <x-input-label for="agency_name" value="Sub Judul (Instansi)" />
-                        <x-text-input id="agency_name" name="agency_name" type="text" class="mt-1 block w-full" value="{{ old('agency_name', $about->agency_name) }}" placeholder="Kab. Karanganyar" />
+                        <x-text-input id="agency_name" name="agency_name" type="text" class="mt-1 block w-full"
+                            value="{{ old('agency_name', $about->agency_name) }}" placeholder="Kab. Karanganyar" />
                     </div>
                     <div class="md:col-span-2">
                         <x-input-label for="app_description" value="Deskripsi Singkat" />
-                        <x-text-input id="app_description" name="app_description" type="text" class="mt-1 block w-full text-sm" value="{{ old('app_description', $about->app_description) }}" />
+                        <x-text-input id="app_description" name="app_description" type="text"
+                            class="mt-1 block w-full text-sm"
+                            value="{{ old('app_description', $about->app_description) }}" />
                     </div>
                     <div class="md:col-span-2">
                         <x-input-label for="logo" value="Logo Aplikasi" />
                         <div class="flex items-center gap-4 mt-2">
-                            @if($about->logo_path)
-                                <img src="{{ asset('storage/' . $about->logo_path) }}" class="h-12 w-auto border p-1 rounded">
+                            @if ($about->logo_path)
+                                <img src="{{ asset('storage/' . $about->logo_path) }}"
+                                    class="h-12 w-auto border p-1 rounded">
                             @endif
-                            <input type="file" name="logo" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            <input type="file" name="logo"
+                                class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                         </div>
                     </div>
                 </div>
@@ -69,8 +79,7 @@
 
             {{-- ================= FORM 2: BIDANG / DIVISI (INLINE ALPINE) ================= --}}
             <form method="POST" action="{{ route('admin.about.update') }}"
-                class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100"
-                {{-- LOGIKA ALPINE LANGSUNG DISINI --}}
+                class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100" {{-- LOGIKA ALPINE LANGSUNG DISINI --}}
                 x-data="{
                     items: [],
                     serialized: '',
@@ -99,8 +108,7 @@
                         // Gabung array jadi string (pisahkan enter \n)
                         this.serialized = this.items.filter(s => s.trim() !== '').join('\n');
                     }
-                }"
-                x-init="init()">
+                }" x-init="init()">
 
                 @csrf @method('PUT')
                 <input type="hidden" name="section" value="bidang">
@@ -121,19 +129,18 @@
                         <div class="relative">
                             <input type="text"
                                 class="w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                                x-model="items[index]"
-                                @input="sync()"
-                                placeholder="Nama Bidang">
+                                x-model="items[index]" @input="sync()" placeholder="Nama Bidang">
 
                             <button type="button" x-show="items.length > 1" @click="remove(index)"
-                                    class="absolute right-2 top-2 text-gray-400 hover:text-red-500 font-bold px-2">
+                                class="absolute right-2 top-2 text-gray-400 hover:text-red-500 font-bold px-2">
                                 &times;
                             </button>
                         </div>
                     </template>
                 </div>
 
-                <button type="button" @click="add()" class="text-sm text-blue-600 font-bold hover:underline flex items-center gap-1">
+                <button type="button" @click="add()"
+                    class="text-sm text-blue-600 font-bold hover:underline flex items-center gap-1">
                     <span>+</span> Tambah Baris Baru
                 </button>
 
@@ -143,7 +150,8 @@
             </form>
 
             {{-- ================= FORM 3: INFO INSTANSI ================= --}}
-            <form method="POST" action="{{ route('admin.about.update') }}" class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100">
+            <form method="POST" action="{{ route('admin.about.update') }}"
+                class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100">
                 @csrf @method('PUT')
                 <input type="hidden" name="section" value="instansi">
 
@@ -155,16 +163,19 @@
                 <div class="space-y-4">
                     <div>
                         <x-input-label value="Nama Instansi Resmi" />
-                        <x-text-input name="nama_instansi" class="mt-1 block w-full" value="{{ old('nama_instansi', $about->nama_instansi) }}" required />
+                        <x-text-input name="nama_instansi" class="mt-1 block w-full"
+                            value="{{ old('nama_instansi', $about->nama_instansi) }}" required />
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <x-input-label value="Kepala Instansi" />
-                            <x-text-input name="kepala_instansi" class="mt-1 block w-full" value="{{ old('kepala_instansi', $about->kepala_instansi) }}" required />
+                            <x-text-input name="kepala_instansi" class="mt-1 block w-full"
+                                value="{{ old('kepala_instansi', $about->kepala_instansi) }}" required />
                         </div>
                         <div>
                             <x-input-label value="Nomor ID / Nomor Induk" />
-                            <x-text-input name="nip_kepala_instansi" class="mt-1 block w-full" value="{{ old('nip_kepala_instansi', $about->nip_kepala_instansi) }}" required />
+                            <x-text-input name="nip_kepala_instansi" class="mt-1 block w-full"
+                                value="{{ old('nip_kepala_instansi', $about->nip_kepala_instansi) }}" required />
                         </div>
                     </div>
                 </div>
@@ -175,7 +186,8 @@
             </form>
 
             {{-- ================= FORM 4: LOKASI GPS ================= --}}
-            <form method="POST" action="{{ route('admin.about.update') }}" class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100">
+            <form method="POST" action="{{ route('admin.about.update') }}"
+                class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100">
                 @csrf @method('PUT')
                 <input type="hidden" name="section" value="lokasi">
 
@@ -187,17 +199,20 @@
                 <div class="space-y-4">
                     <div>
                         <x-input-label value="Nama Lokasi (Label Absen)" />
-                        <x-text-input name="office_name" class="mt-1 block w-full uppercase" value="{{ old('office_name', $about->office_name) }}" />
+                        <x-text-input name="office_name" class="mt-1 block w-full uppercase"
+                            value="{{ old('office_name', $about->office_name) }}" />
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <x-input-label value="Koordinat GPS (Latitude, Longitude)" />
-                            <x-text-input name="office_gps" class="mt-1 block w-full" placeholder="-7.5949963811058385, 110.94069955794491"
-                                        value="{{ old('office_gps', $about->office_latitude . ', ' . $about->office_longitude) }}" />
+                            <x-text-input name="office_gps" class="mt-1 block w-full"
+                                placeholder="-7.5949963811058385, 110.94069955794491"
+                                value="{{ old('office_gps', $about->office_latitude . ', ' . $about->office_longitude) }}" />
                         </div>
                         <div>
                             <x-input-label value="Radius (Meter)" />
-                            <x-text-input name="radius_meter" type="number" class="mt-1 block w-full" value="{{ old('radius_meter', $about->radius_meter) }}" required />
+                            <x-text-input name="radius_meter" type="number" class="mt-1 block w-full"
+                                value="{{ old('radius_meter', $about->radius_meter) }}" required />
                         </div>
                     </div>
                 </div>
@@ -208,7 +223,8 @@
             </form>
 
             {{-- ================= FORM 5: JADWAL ABSENSI ================= --}}
-            <form method="POST" action="{{ route('admin.about.update') }}" class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100">
+            <form method="POST" action="{{ route('admin.about.update') }}"
+                class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100">
                 @csrf @method('PUT')
                 <input type="hidden" name="section" value="jadwal">
 
@@ -223,16 +239,21 @@
                             <span class="w-2 h-2 bg-green-500 rounded-full"></span> Check-IN (Masuk)
                         </h4>
                         <div class="grid grid-cols-1 gap-3">
-                            @foreach(['senin', 'selasa', 'rabu', 'kamis', 'jumat'] as $day)
-                            <div class="grid grid-cols-12 gap-2 items-center">
-                                <div class="col-span-2 text-sm font-bold capitalize">{{ $day }}</div>
-                                <div class="col-span-5">
-                                    <x-text-input name="{{ $day }}_mulai" type="time" class="w-full text-xs" value="{{ old($day.'_mulai', $about->{$day.'_mulai'}) }}" required />
+                            @foreach (['senin', 'selasa', 'rabu', 'kamis', 'jumat'] as $day)
+                                <div class="grid grid-cols-12 gap-2 items-center">
+                                    <div class="col-span-2 text-sm font-bold capitalize">{{ $day }}</div>
+                                    <div class="col-span-5">
+                                        <x-text-input name="{{ $day }}_mulai" type="time"
+                                            class="w-full text-xs"
+                                            value="{{ old($day . '_mulai', $about->{$day . '_mulai'}) }}" required />
+                                    </div>
+                                    <div class="col-span-5">
+                                        <x-text-input name="{{ $day }}_selesai" type="time"
+                                            class="w-full text-xs"
+                                            value="{{ old($day . '_selesai', $about->{$day . '_selesai'}) }}"
+                                            required />
+                                    </div>
                                 </div>
-                                <div class="col-span-5">
-                                    <x-text-input name="{{ $day }}_selesai" type="time" class="w-full text-xs" value="{{ old($day.'_selesai', $about->{$day.'_selesai'}) }}" required />
-                                </div>
-                            </div>
                             @endforeach
                         </div>
                     </div>
@@ -242,16 +263,22 @@
                             <span class="w-2 h-2 bg-orange-500 rounded-full"></span> Check-OUT (Pulang)
                         </h4>
                         <div class="grid grid-cols-1 gap-3">
-                            @foreach(['senin', 'selasa', 'rabu', 'kamis', 'jumat'] as $day)
-                            <div class="grid grid-cols-12 gap-2 items-center">
-                                <div class="col-span-2 text-sm font-bold capitalize">{{ $day }}</div>
-                                <div class="col-span-5">
-                                    <x-text-input name="{{ $day }}_checkout_mulai" type="time" class="w-full text-xs" value="{{ old($day.'_checkout_mulai', $about->{$day.'_checkout_mulai'}) }}" required />
+                            @foreach (['senin', 'selasa', 'rabu', 'kamis', 'jumat'] as $day)
+                                <div class="grid grid-cols-12 gap-2 items-center">
+                                    <div class="col-span-2 text-sm font-bold capitalize">{{ $day }}</div>
+                                    <div class="col-span-5">
+                                        <x-text-input name="{{ $day }}_checkout_mulai" type="time"
+                                            class="w-full text-xs"
+                                            value="{{ old($day . '_checkout_mulai', $about->{$day . '_checkout_mulai'}) }}"
+                                            required />
+                                    </div>
+                                    <div class="col-span-5">
+                                        <x-text-input name="{{ $day }}_checkout_selesai" type="time"
+                                            class="w-full text-xs"
+                                            value="{{ old($day . '_checkout_selesai', $about->{$day . '_checkout_selesai'}) }}"
+                                            required />
+                                    </div>
                                 </div>
-                                <div class="col-span-5">
-                                    <x-text-input name="{{ $day }}_checkout_selesai" type="time" class="w-full text-xs" value="{{ old($day.'_checkout_selesai', $about->{$day.'_checkout_selesai'}) }}" required />
-                                </div>
-                            </div>
                             @endforeach
                         </div>
                     </div>
@@ -264,8 +291,8 @@
 
             {{-- ================= FORM 6: FOOTER ================= --}}
             <form method="POST" action="{{ route('admin.about.update') }}"
-                  class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100"
-                  x-data="dynamicLinksForm()" x-init="init()">
+                class="bg-white shadow-sm sm:rounded-2xl p-6 border border-gray-100" x-data="dynamicLinksForm()"
+                x-init="init()">
                 @csrf @method('PUT')
                 <input type="hidden" name="section" value="footer">
 
@@ -283,29 +310,41 @@
                                 <textarea name="office_address" class="w-full rounded-xl border-gray-200 text-sm" rows="2">{{ old('office_address', $about->office_address) }}</textarea>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><x-input-label value="No. Telepon" /><x-text-input name="office_phone" class="w-full" value="{{ old('office_phone', $about->office_phone) }}" /></div>
-                                <div><x-input-label value="Email" /><x-text-input name="office_email" class="w-full" value="{{ old('office_email', $about->office_email) }}" /></div>
+                                <div><x-input-label value="No. Telepon" /><x-text-input name="office_phone"
+                                        class="w-full" value="{{ old('office_phone', $about->office_phone) }}" />
+                                </div>
+                                <div><x-input-label value="Email" /><x-text-input name="office_email" class="w-full"
+                                        value="{{ old('office_email', $about->office_email) }}" /></div>
                             </div>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 gap-4">
                         <div>
-                        <x-input-label value="Jam Operasional (Footer)" />
-                        <x-text-input name="jam_operasional" class="mt-1 block w-full" value="{{ old('jam_operasional', nl2br(e($about->jam_operasional))) }}" placeholder="Senin:08.00-16.00, Selasa:08.00-16.00, ..." required />
+                            <x-input-label value="Jam Operasional (Footer)" />
+                            <x-text-input name="jam_operasional" class="mt-1 block w-full"
+                                value="{{ old('jam_operasional', nl2br(e($about->jam_operasional))) }}"
+                                placeholder="Senin:08.00-16.00, Selasa:08.00-16.00, ..." required />
                             <p class="text-xs text-gray-400 mt-1">
-                                Masukkan hari dan jam buka-tutup, pisahkan dengan koma. Contoh: Senin:08.00-16.00, Selasa:08.00-16.00
+                                Masukkan hari dan jam buka-tutup, pisahkan dengan koma. Contoh: Senin:08.00-16.00,
+                                Selasa:08.00-16.00
                             </p>
-                    </div>
+                        </div>
                     </div>
 
                     <div class="border-t pt-4">
                         <h4 class="font-bold text-sm text-blue-600 uppercase mb-3">Media Sosial</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><x-input-label value="Instagram" /><x-text-input name="social_instagram" class="w-full" value="{{ old('social_instagram', $about->social_instagram) }}" /></div>
-                            <div><x-input-label value="Facebook" /><x-text-input name="social_facebook" class="w-full" value="{{ old('social_facebook', $about->social_facebook) }}" /></div>
-                            <div><x-input-label value="YouTube" /><x-text-input name="social_youtube" class="w-full" value="{{ old('social_youtube', $about->social_youtube) }}" /></div>
-                            <div><x-input-label value="X (Twitter)" /><x-text-input name="social_x" class="w-full" value="{{ old('social_x', $about->social_x) }}" /></div>
+                            <div><x-input-label value="Instagram" /><x-text-input name="social_instagram"
+                                    class="w-full" value="{{ old('social_instagram', $about->social_instagram) }}" />
+                            </div>
+                            <div><x-input-label value="Facebook" /><x-text-input name="social_facebook"
+                                    class="w-full" value="{{ old('social_facebook', $about->social_facebook) }}" />
+                            </div>
+                            <div><x-input-label value="YouTube" /><x-text-input name="social_youtube" class="w-full"
+                                    value="{{ old('social_youtube', $about->social_youtube) }}" /></div>
+                            <div><x-input-label value="X (Twitter)" /><x-text-input name="social_x" class="w-full"
+                                    value="{{ old('social_x', $about->social_x) }}" /></div>
                         </div>
                     </div>
 
@@ -314,51 +353,51 @@
                         <div class="space-y-4">
                             <div>
                                 <x-input-label value="Nomor WhatsApp (Sapa Mas)" />
-                                <x-text-input name="whatsapp_number" class="w-full" value="{{ old('whatsapp_number', $about->whatsapp_number) }}" placeholder="628xxxx" />
+                                <x-text-input name="whatsapp_number" class="w-full"
+                                    value="{{ old('whatsapp_number', $about->whatsapp_number) }}"
+                                    placeholder="628xxxx" />
                             </div>
 
                             {{-- Peta dengan Live Preview --}}
                             <div x-data="{ mapUrl: '{{ old('google_maps_embed', $about->google_maps_embed) }}' }">
-                                    {{-- Label + Tooltip --}}
-    <div class="flex items-center gap-1 mb-1">
-        <x-input-label value="Link Peta Google Maps" />
+                                {{-- Label + Tooltip --}}
+                                <div class="flex items-center gap-1 mb-1">
+                                    <x-input-label value="Link Peta Google Maps" />
 
-<div class="relative"
-     x-data="{ open: false }"
-     @mouseenter="open = true"
-     @mouseleave="open = false">
+                                    <div class="relative" x-data="{ open: false }" @mouseenter="open = true"
+                                        @mouseleave="open = false">
 
-    <button type="button"
-            class="text-gray-400 hover:text-blue-600 text-xs font-bold border border-gray-300 rounded-full w-4 h-4 flex items-center justify-center">
-        ?
-    </button>
+                                        <button type="button"
+                                            class="text-gray-400 hover:text-blue-600 text-xs font-bold border border-gray-300 rounded-full w-4 h-4 flex items-center justify-center">
+                                            ?
+                                        </button>
 
-<div x-show="open"
-     x-transition
-     class="absolute left-6 top-0 w-72 text-xs text-gray-700 bg-white border rounded-lg shadow p-3 z-50">
-    
-    <b>Cara mendapatkan embed Google Maps:</b>
+                                        <div x-show="open" x-transition
+                                            class="absolute left-6 top-0 w-72 text-xs text-gray-700 bg-white border rounded-lg shadow p-3 z-50">
 
-    <ol class="list-decimal ml-4 mt-2 space-y-1">
-        <li>Buka <b>Google Maps</b></li>
-        <li>Cari lokasi yang ingin ditampilkan</li>
-        <li>Klik tombol <b>Share</b></li>
-        <li>Pilih tab <b>Embed a map</b></li>
-        <li>Klik <b>Copy HTML</b></li>
-        <li>Tempelkan hasilnya ke kolom ini</li>
-    </ol>
+                                            <b>Cara mendapatkan embed Google Maps:</b>
 
-<p class="mt-2 text-gray-500">
-    Hapus bagian <code>&lt;iframe src="</code> di awal, lalu tempelkan URL peta saja agar preview dapat ditampilkan.
-</p>
+                                            <ol class="list-decimal ml-4 mt-2 space-y-1">
+                                                <li>Buka <b>Google Maps</b></li>
+                                                <li>Cari lokasi yang ingin ditampilkan</li>
+                                                <li>Klik tombol <b>Share</b></li>
+                                                <li>Pilih tab <b>Embed a map</b></li>
+                                                <li>Klik <b>Copy HTML</b></li>
+                                                <li>Tempelkan hasilnya ke kolom ini</li>
+                                            </ol>
 
-</div>
-
-
-        </div>
-    </div>
-                                <x-text-input name="google_maps_embed" class="w-full" x-model="mapUrl" placeholder="http://googleusercontent.com/..." />
-                                <p class="text-[10px] text-gray-400 mt-1 mb-2">Copy URL dari menu 'Embed a map' di Google Maps.</p>
+                                            <p class="mt-2 text-gray-500">
+                                                Hapus bagian &lt;iframe
+                                                src=" di awal, lalu tempelkan URL peta saja agar preview dapat ditampilkan.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <x-text-input name="google_maps_embed"
+                                                class="w-full" x-model="mapUrl"
+                                                placeholder="http://googleusercontent.com/..." />
+                                <p class="text-[10px] text-gray-400 mt-1 mb-2">Copy URL dari menu
+                                                'Embed a map' di Google Maps.</p>
                                 <div class="w-full h-40 bg-gray-100 rounded border flex items-center justify-center overflow-hidden">
                                     <iframe x-show="mapUrl" :src="mapUrl" class="w-full h-full border-0" allowfullscreen loading="lazy"></iframe>
                                     <span x-show="!mapUrl" class="text-gray-400 text-xs">Preview Peta</span>
@@ -366,7 +405,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="border-t pt-4">
                         <h4 class="font-bold text-sm text-blue-600 uppercase mb-3">Link Terkait</h4>
                         <div id="existing-links" data-links="{{ $about->custom_links ?? '[]' }}" class="hidden"></div>
@@ -381,13 +419,25 @@
                         </div>
                         <button type="button" @click="add()" class="mt-3 text-sm text-blue-600 font-bold hover:underline">+ Tambah Link</button>
                     </div>
+                    <div class="border-t pt-4">
+                        <h4 class="font-bold text-sm text-blue-600 uppercase mb-3">Dokumen Terkait</h4>
+                        <div id="existing-documents" data-documents="{{ $about->dokumen_terkait ?? '[]' }}" class="hidden"></div>
+                        <div class="space-y-3">
+                            <template x-for="(row, index) in documents" :key="`doc-${index}`">
+                                <div class="flex gap-3">
+                                    <input type="text" name="documents_label[]" x-model="row.label" class="w-1/3 rounded-xl border-gray-200 text-sm" placeholder="Nama Dokumen">
+                                    <input type="url" name="documents_url[]" x-model="row.url" class="w-2/3 rounded-xl border-gray-200 text-sm" placeholder="URL Dokumen">
+                                    <button type="button" @click="removeDocument(index)" class="text-red-500 font-bold px-2">&times;</button>
+                                </div>
+                            </template>
+                        </div>
+                        <button type="button" @click="addDocument()" class="mt-3 text-sm text-blue-600 font-bold hover:underline">+ Tambah Dokumen</button>
+                    </div>
                 </div>
-
                 <div class="mt-6 pt-4 border-t border-gray-100 flex justify-start">
                     <x-primary-button>Simpan Footer</x-primary-button>
                 </div>
             </form>
-
         </div>
     </div>
 
@@ -400,27 +450,84 @@
                 init() {
                     const raw = (this.$refs.seed?.value || '').toString();
                     this.items = raw.split(/\r\n|\n|\r/).map(s => (s || '').trim()).filter(Boolean);
-                    if(this.items.length === 0) this.items.push('');
+                    if (this.items.length === 0) this.items.push('');
                     this.sync();
                 },
-                sync() { this.serialized = this.items.map(s => (s || '').trim()).filter(Boolean).join("\n"); },
-                add() { this.items.push(''); this.$nextTick(() => this.sync()); },
-                remove(index) { this.items.splice(index, 1); this.$nextTick(() => this.sync()); },
+                sync() {
+                    this.serialized = this.items.map(s => (s || '').trim()).filter(Boolean).join("\n");
+                },
+                add() {
+                    this.items.push('');
+                    this.$nextTick(() => this.sync());
+                },
+                remove(index) {
+                    this.items.splice(index, 1);
+                    this.$nextTick(() => this.sync());
+                },
             }
         }
 
         function dynamicLinksForm() {
             return {
                 rows: [],
+                documents: [],
                 init() {
                     const raw = document.getElementById('existing-links').getAttribute('data-links');
+                    const rawDocuments = document.getElementById('existing-documents').getAttribute('data-documents');
+
                     try {
                         const parsed = JSON.parse(raw);
-                        this.rows = (Array.isArray(parsed) && parsed.length > 0) ? parsed : [{ label: '', url: '' }];
-                    } catch (e) { this.rows = [{ label: '', url: '' }]; }
+                        this.rows = (Array.isArray(parsed) && parsed.length > 0) ? parsed : [{
+                            label: '',
+                            url: ''
+                        }];
+                    } catch (e) {
+                        this.rows = [{
+                            label: '',
+                            url: ''
+                        }];
+                    }
+
+                    try {
+                        const parsedDocuments = JSON.parse(rawDocuments);
+                        this.documents = (Array.isArray(parsedDocuments) && parsedDocuments.length > 0) ? parsedDocuments : [{
+                            label: '',
+                            url: ''
+                        }];
+                    } catch (e) {
+                        this.documents = [{
+                            label: '',
+                            url: ''
+                        }];
+                    }
                 },
-                add() { this.rows.push({ label: '', url: '' }); },
-                remove(index) { if(this.rows.length > 1) this.rows.splice(index, 1); else { this.rows[0].label=''; this.rows[0].url=''; } }
+                add() {
+                    this.rows.push({
+                        label: '',
+                        url: ''
+                    });
+                },
+                remove(index) {
+                    if (this.rows.length > 1) this.rows.splice(index, 1);
+                    else {
+                        this.rows[0].label = '';
+                        this.rows[0].url = '';
+                    }
+                },
+                addDocument() {
+                    this.documents.push({
+                        label: '',
+                        url: ''
+                    });
+                },
+                removeDocument(index) {
+                    if (this.documents.length > 1) {
+                        this.documents.splice(index, 1);
+                    } else {
+                        this.documents[0].label = '';
+                        this.documents[0].url = '';
+                    }
+                }
             }
         }
     </script>

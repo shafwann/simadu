@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('face_reset_requests')) {
+            return;
+        }
+
         Schema::create('face_reset_requests', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');

@@ -126,6 +126,8 @@ class AdminAboutController extends Controller
                     'whatsapp_number'   => ['nullable', 'string', 'max:20'],
                     'links_label'       => ['nullable', 'array'],
                     'links_url'         => ['nullable', 'array'],
+                    'documents_label'   => ['nullable', 'array'],
+                    'documents_url'     => ['nullable', 'array'],
                     // Kalau jam_operasional memang mau diubah dari footer form, biarkan:
                     'jam_operasional'   => ['nullable', 'string', 'max:255'],
                 ]);
@@ -148,7 +150,24 @@ class AdminAboutController extends Controller
                     ? json_encode($customLinks, JSON_UNESCAPED_UNICODE)
                     : null;
 
-                unset($data['links_label'], $data['links_url']);
+                $relatedDocuments = [];
+                $documentLabels = $request->input('documents_label', []);
+                $documentUrls   = $request->input('documents_url', []);
+
+                foreach ($documentLabels as $i => $label) {
+                    $label = trim((string) $label);
+                    $url   = trim((string) ($documentUrls[$i] ?? ''));
+
+                    if ($label !== '' && $url !== '') {
+                        $relatedDocuments[] = ['label' => $label, 'url' => $url];
+                    }
+                }
+
+                $data['dokumen_terkait'] = !empty($relatedDocuments)
+                    ? json_encode($relatedDocuments, JSON_UNESCAPED_UNICODE)
+                    : null;
+
+                unset($data['links_label'], $data['links_url'], $data['documents_label'], $data['documents_url']);
                 break;
 
             default:

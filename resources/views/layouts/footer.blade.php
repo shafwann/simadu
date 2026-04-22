@@ -133,7 +133,7 @@
                 </div>
 
                 {{-- KOLOM 4: JAM PELAYANAN --}}
-                <div>
+                <div class="space-y-2">
                     <h5 class="text-xs font-bold uppercase tracking-wider border-b border-white/20 pb-1 mb-2">Jam Pelayanan</h5>
                     @php
                         $jamOperasional = $globalAbout->jam_operasional ?? 'Senin - Jumat: 08:00 - 16:00';
@@ -144,6 +144,25 @@
                             <div class="border-b border-white/10 pb-0.5">{{ $jam }}</div>
                         @endforeach
                     </div>
+
+                    {{-- DOKUMEN TERKAIT --}}
+                    @if(!empty($globalAbout->dokumen_terkait))
+                    <div>
+                        <h5 class="text-xs font-bold uppercase tracking-wider border-b border-white/20 pb-1 mb-2">Dokumen Terkait</h5>
+                        <ul class="space-y-1 text-[11px] opacity-90">
+                            @php $dokumen = json_decode($globalAbout->dokumen_terkait, true); @endphp
+                            @if(is_array($dokumen))
+                                @foreach($dokumen as $doc)
+                                    <li>
+                                        <a href="{{ $doc['url'] }}" target="_blank" class="hover:text-blue-100 hover:underline">
+                                            » {{ $doc['label'] }}
+                                        </a>
+                                    </li>
+                                @endforeach
+                            @endif
+                        </ul>
+                    </div>
+                    @endif
 
                     {{-- WHATSAPP BUTTON (Dinamis dari DB jika ada, kalau tidak ada hide) --}}
                     @if(!empty($globalAbout->whatsapp_number))

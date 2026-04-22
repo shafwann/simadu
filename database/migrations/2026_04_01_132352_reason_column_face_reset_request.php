@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (! Schema::hasTable('face_reset_requests') || Schema::hasColumn('face_reset_requests', 'reason')) {
+            return;
+        }
+
         Schema::table('face_reset_requests', function (Blueprint $table) {
             $table->text('reason')->nullable()->after('status');
         });
@@ -21,6 +25,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (! Schema::hasTable('face_reset_requests') || ! Schema::hasColumn('face_reset_requests', 'reason')) {
+            return;
+        }
+
         Schema::table('face_reset_requests', function (Blueprint $table) {
             $table->dropColumn('reason');
         });

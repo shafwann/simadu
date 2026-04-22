@@ -46,7 +46,7 @@ class AboutSetting extends Model
         'logo_path',
         'running_text',
         'hero_image_path',
-    
+
 
         // bidang (json)
         'bidang_options',
@@ -61,7 +61,8 @@ class AboutSetting extends Model
         'social_x',
         'google_maps_embed',
         'custom_links',
-        'whatsapp_number', // kalau kolomnya ada di migration
+        'whatsapp_number',
+        'dokumen_terkait',
     ];
 
     protected $casts = [

@@ -11,6 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (! Schema::hasTable('face_reset_requests')) {
+            return;
+        }
+
+        if (Schema::hasColumn('face_reset_requests', 'approved_at') || Schema::hasColumn('face_reset_requests', 'approved_by')) {
+            return;
+        }
+
         Schema::table('face_reset_requests', function (Blueprint $table) {
             $table->timestamp('approved_at')->nullable()->after('status');
             $table->unsignedBigInteger('approved_by')->nullable()->after('approved_at');
@@ -24,6 +32,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (! Schema::hasTable('face_reset_requests')) {
+            return;
+        }
+
         Schema::table('face_reset_requests', function (Blueprint $table) {
             $table->dropForeignKeyIfExists(['approved_by']);
             $table->dropColumn(['approved_at', 'approved_by']);
