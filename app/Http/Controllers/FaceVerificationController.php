@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Models\Logbook;
@@ -114,6 +115,15 @@ class FaceVerificationController extends Controller
             default => null,
         };
 
+        Log::info('Face verify view opened', [
+            'user_id' => auth()->id(),
+            'session_id' => session()->getId(),
+            'session_intended_action' => $intendedAction,
+            'has_pending_location' => !empty($pendingLocation),
+            'user_agent' => (string) request()->userAgent(),
+            'referer' => request()->headers->get('referer'),
+        ]);
+
         return view('face.verify', compact('intendedAction', 'pendingLocation', 'actionRoute'));
     }
 
@@ -121,6 +131,7 @@ class FaceVerificationController extends Controller
     {
         $request->validate([
             'descriptor' => 'required|json',
+            'intended_action' => 'nullable|in:check-in,check-out',
         ]);
 
         $storedDescriptor = $this->normalizeDescriptor(auth()->user()->face_descriptor);
@@ -137,11 +148,24 @@ class FaceVerificationController extends Controller
         $distance = $this->calculateDistance($storedDescriptor, $currentDescriptor);
         $similarity = max(0, min(1, 1 - $distance));
         $match = $distance <= self::FACE_DISTANCE_THRESHOLD;
+        $sessionIntendedAction = session('face_intended_action');
 
         if ($match) {
-            $intendedAction = session('face_intended_action');
+            $intendedAction = $sessionIntendedAction ?: $request->input('intended_action');
 
             if (!$intendedAction) {
+                Log::warning('Face verify matched but action missing', [
+                    'user_id' => auth()->id(),
+                    'session_id' => session()->getId(),
+                    'session_intended_action' => $sessionIntendedAction,
+                    'request_intended_action' => $request->input('intended_action'),
+                    'similarity' => round($similarity, 4),
+                    'distance' => round($distance, 4),
+                    'user_agent' => (string) $request->userAgent(),
+                    'origin' => $request->headers->get('origin'),
+                    'referer' => $request->headers->get('referer'),
+                ]);
+
                 return response()->json([
                     'match' => false,
                     'similarity' => $similarity,
@@ -156,6 +180,19 @@ class FaceVerificationController extends Controller
                 'face_verification_token' => $verificationToken,
             ]);
 
+            Log::info('Face verify matched', [
+                'user_id' => auth()->id(),
+                'session_id' => session()->getId(),
+                'session_intended_action' => $sessionIntendedAction,
+                'request_intended_action' => $request->input('intended_action'),
+                'resolved_intended_action' => $intendedAction,
+                'similarity' => round($similarity, 4),
+                'distance' => round($distance, 4),
+                'user_agent' => (string) $request->userAgent(),
+                'origin' => $request->headers->get('origin'),
+                'referer' => $request->headers->get('referer'),
+            ]);
+
             return response()->json([
                 'match' => true,
                 'similarity' => $similarity,
@@ -163,6 +200,16 @@ class FaceVerificationController extends Controller
                 'verification_token' => $verificationToken,
             ]);
         }
+
+        Log::info('Face verify mismatch', [
+            'user_id' => auth()->id(),
+            'session_id' => session()->getId(),
+            'session_intended_action' => $sessionIntendedAction,
+            'request_intended_action' => $request->input('intended_action'),
+            'similarity' => round($similarity, 4),
+            'distance' => round($distance, 4),
+            'user_agent' => (string) $request->userAgent(),
+        ]);
 
         return response()->json(['match' => $match, 'similarity' => $similarity, 'distance' => $distance]);
     }

@@ -165,7 +165,8 @@
 
                 // Mulai auto-detection
                 startAutoDetection(video, overlayEl, setStatus, confidenceBar, confidencePercent,
-                    verifiedAttendanceForm, verifiedLocationInput, verifiedTokenInput, pendingLocation);
+                    verifiedAttendanceForm, verifiedLocationInput, verifiedTokenInput, pendingLocation,
+                    attendanceReadyBox, verifiedAttendanceSubmit, intendedAction);
             } catch (e) {
                 setStatus('Gagal menyiapkan kamera/model: ' + e.message, 'error');
                 camLoadingText.textContent = 'Gagal menyiapkan verifikasi';
@@ -174,7 +175,8 @@
         }
 
         async function startAutoDetection(video, overlayEl, setStatus, confidenceBar, confidencePercent,
-            verifiedAttendanceForm, verifiedLocationInput, verifiedTokenInput, pendingLocation) {
+            verifiedAttendanceForm, verifiedLocationInput, verifiedTokenInput, pendingLocation,
+            attendanceReadyBox, verifiedAttendanceSubmit, intendedAction) {
             const options = new faceapi.TinyFaceDetectorOptions({
                 inputSize: 224,
                 scoreThreshold: 0.5
@@ -297,7 +299,8 @@
                             console.log('✓ VERIFICATION TRIGGERED at frame', detectionFrameCount);
                             setStatus('✓ Verifikasi berhasil! Mengirim data...', 'success');
                             await submitVerification(detections, pendingLocation, verifiedAttendanceForm,
-                                verifiedLocationInput, verifiedTokenInput);
+                                verifiedLocationInput, verifiedTokenInput, attendanceReadyBox,
+                                verifiedAttendanceSubmit, intendedAction);
                             return;
                         }
                     } else {
@@ -351,24 +354,64 @@
         }
 
         async function submitVerification(detections, pendingLocation, verifiedAttendanceForm, verifiedLocationInput,
-            verifiedTokenInput) {
+            verifiedTokenInput, attendanceReadyBox, verifiedAttendanceSubmit, intendedAction, retryCount = 0) {
             const descriptor = Array.from(detections.descriptor);
+            const statusBox = document.getElementById('statusBox');
 
             try {
                 const res = await fetch('{{ route('face.verify.submit') }}', {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'Accept': 'application/json'
                     },
                     body: JSON.stringify({
-                        descriptor: JSON.stringify(descriptor)
+                        descriptor: JSON.stringify(descriptor),
+                        intended_action: intendedAction
                     })
                 });
 
                 if (!res.ok) {
-                    throw new Error('HTTP ' + res.status);
+                    let errorJson = null;
+                    let message = 'HTTP ' + res.status;
+                    try {
+                        errorJson = await res.json();
+                        if (errorJson?.message) {
+                            message = errorJson.message;
+                        }
+                    } catch (parseError) {
+                        console.warn('Failed to parse verification error response', parseError);
+                    }
+
+                    if (res.status === 409 && retryCount < 1) {
+                        console.warn('Verification got 409, retrying once with explicit action context');
+                        statusBox.className =
+                            'text-sm rounded-xl border px-3 py-2 bg-yellow-50 text-yellow-800 border-yellow-200';
+                        statusBox.textContent = 'Sesi verifikasi sedang diselaraskan. Mencoba ulang sekali...';
+                        await new Promise(resolve => setTimeout(resolve, 600));
+                        return submitVerification(
+                            detections,
+                            pendingLocation,
+                            verifiedAttendanceForm,
+                            verifiedLocationInput,
+                            verifiedTokenInput,
+                            attendanceReadyBox,
+                            verifiedAttendanceSubmit,
+                            intendedAction,
+                            retryCount + 1
+                        );
+                    }
+
+                    if (res.status === 409) {
+                        message =
+                            'Sesi verifikasi iPhone/Safari tidak sinkron. Silakan kembali ke halaman absensi lalu coba lagi.';
+                    } else if (res.status === 422) {
+                        message = errorJson?.message || 'Data verifikasi wajah tidak valid. Silakan setup ulang wajah.';
+                    }
+
+                    throw new Error(message);
                 }
 
                 const json = await res.json();
@@ -384,22 +427,27 @@
                         verifiedAttendanceSubmit.disabled = false;
                     }
 
-                    document.getElementById('statusBox').textContent =
-                        'Verifikasi berhasil. Silakan klik tombol absen.';
+                    statusBox.className =
+                        'text-sm rounded-xl border px-3 py-2 bg-green-50 text-green-700 border-green-200';
+                    statusBox.textContent = 'Verifikasi berhasil. Silakan klik tombol absen.';
                     setTimeout(() => {
-                        document.getElementById('statusBox').scrollIntoView({
+                        statusBox.scrollIntoView({
                             behavior: 'smooth',
                             block: 'center'
                         });
                     }, 200);
                 } else {
-                    document.getElementById('statusBox').textContent = 'Verifikasi gagal. Coba lagi.';
+                    statusBox.className =
+                        'text-sm rounded-xl border px-3 py-2 bg-red-50 text-red-700 border-red-200';
+                    statusBox.textContent = 'Verifikasi gagal. Wajah belum cocok. Coba lagi dengan posisi lebih lurus.';
                     setTimeout(() => location.reload(), 2000);
                 }
             } catch (e) {
                 console.error('Verification error:', e);
-                document.getElementById('statusBox').textContent = 'Error: ' + e.message;
-                setTimeout(() => location.reload(), 2000);
+                statusBox.className =
+                    'text-sm rounded-xl border px-3 py-2 bg-red-50 text-red-700 border-red-200';
+                statusBox.textContent = 'Error verifikasi: ' + e.message;
+                setTimeout(() => location.reload(), 3500);
             }
         }
     </script>
