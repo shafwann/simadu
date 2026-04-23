@@ -204,7 +204,7 @@
                                     <td class="px-6 py-4 text-sm text-gray-600">{{ $r['instansi'] ?? '-' }}</td>
                                     <td class="px-6 py-4">
                                         <span
-                                            class="px-3 py-1 rounded-lg text-xs font-bold border whitespace-nowrap bg-purple-50 text-purple-700 border-purple-100">
+                                            class="px-3 py-1 rounded-lg text-xs font-bold border bg-purple-50 text-purple-700 border-purple-100">
                                             {{ $r['bidang'] ?? '-' }}
                                         </span>
                                     </td>
