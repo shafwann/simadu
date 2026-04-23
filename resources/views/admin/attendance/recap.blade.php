@@ -7,7 +7,8 @@
             {{-- HEADER --}}
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 mb-2">
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 mb-2">
                         <span class="w-2 h-2 rounded-full bg-blue-600"></span>
                         <span class="text-xs font-bold text-blue-700 uppercase tracking-wider">Rekap Absensi</span>
                     </div>
@@ -17,12 +18,12 @@
 
                 <div class="flex gap-2 w-full md:w-auto">
                     <a href="{{ route('admin.students.index', ['status' => $studentStatus ?? 'aktif']) }}"
-                       class="w-full md:w-auto px-4 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 text-sm font-bold text-center transition">
+                        class="w-full md:w-auto px-4 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 text-sm font-bold text-center transition">
                         ← Kembali
                     </a>
 
                     <a href="{{ route('admin.attendance.recap', ['student_status' => $studentStatus ?? 'aktif']) }}"
-                       class="w-full md:w-auto px-4 py-3 rounded-2xl bg-white border border-gray-200 hover:bg-gray-50 text-sm font-bold text-center transition">
+                        class="w-full md:w-auto px-4 py-3 rounded-2xl bg-white border border-gray-200 hover:bg-gray-50 text-sm font-bold text-center transition">
                         Reset
                     </a>
                 </div>
@@ -31,23 +32,23 @@
             {{-- FILTER --}}
             <div class="bg-white border border-gray-100 rounded-2xl shadow-lg p-5">
                 <form method="GET" action="{{ route('admin.attendance.recap') }}"
-                      class="flex flex-col md:flex-row gap-3 md:items-center">
+                    class="flex flex-col md:flex-row gap-3 md:items-center">
                     @php $studentStatusVal = $studentStatus ?? 'aktif'; @endphp
                     <input type="hidden" name="student_status" value="{{ $studentStatusVal }}">
 
                     {{-- STATUS MAHASISWA --}}
                     <div class="flex rounded-2xl border border-gray-200 bg-white p-1 shadow-sm w-full md:w-auto">
                         <button type="submit" name="student_status" value="aktif"
-                                onclick="this.form.student_status.value='aktif'"
-                                class="px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap
+                            onclick="this.form.student_status.value='aktif'"
+                            class="px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap
                                 {{ $studentStatusVal === 'aktif'
                                     ? 'bg-blue-600 text-white shadow-sm'
                                     : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700' }}">
                             Aktif
                         </button>
                         <button type="submit" name="student_status" value="nonaktif"
-                                onclick="this.form.student_status.value='nonaktif'"
-                                class="px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap
+                            onclick="this.form.student_status.value='nonaktif'"
+                            class="px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap
                                 {{ $studentStatusVal === 'nonaktif'
                                     ? 'bg-red-600 text-white shadow-sm'
                                     : 'text-gray-600 hover:bg-red-50 hover:text-red-700' }}">
@@ -57,58 +58,57 @@
 
                     {{-- MODE --}}
                     <select name="mode" onchange="this.form.submit()"
-                            class="px-4 py-3 rounded-2xl border-gray-200 text-sm font-bold shadow-sm bg-white w-full md:w-44">
-                        <option value="harian"  {{ ($mode ?? 'harian')==='harian' ? 'selected' : '' }}>Harian</option>
-                        <option value="bulanan" {{ ($mode ?? '')==='bulanan' ? 'selected' : '' }}>Bulanan</option>
+                        class="px-4 py-3 rounded-2xl border-gray-200 text-sm font-bold shadow-sm bg-white w-full md:w-44">
+                        <option value="harian" {{ ($mode ?? 'harian') === 'harian' ? 'selected' : '' }}>Harian</option>
+                        <option value="bulanan" {{ ($mode ?? '') === 'bulanan' ? 'selected' : '' }}>Bulanan</option>
                     </select>
 
                     {{-- DATE INPUT (dynamic) --}}
                     @php $modeVal = $mode ?? 'harian'; @endphp
 
-                    @if($modeVal === 'harian')
-                        <input type="date" name="date" value="{{ request('date') }}"
-                               onchange="this.form.submit()"
-                               class="px-4 py-3 rounded-2xl border-gray-200 text-sm shadow-sm w-full md:w-56">
+                    @if ($modeVal === 'harian')
+                        <input type="date" name="date" value="{{ request('date') }}" onchange="this.form.submit()"
+                            class="px-4 py-3 rounded-2xl border-gray-200 text-sm shadow-sm w-full md:w-56">
                     @elseif($modeVal === 'mingguan')
                         <input type="date" name="week_start" value="{{ request('week_start') }}"
-                               onchange="this.form.submit()"
-                               class="px-4 py-3 rounded-2xl border-gray-200 text-sm shadow-sm w-full md:w-56"
-                               title="Tanggal awal minggu">
+                            onchange="this.form.submit()"
+                            class="px-4 py-3 rounded-2xl border-gray-200 text-sm shadow-sm w-full md:w-56"
+                            title="Tanggal awal minggu">
                     @else
                         <input type="month" name="month" value="{{ request('month') }}"
-                               onchange="this.form.submit()"
-                               class="px-4 py-3 rounded-2xl border-gray-200 text-sm shadow-sm w-full md:w-56">
+                            onchange="this.form.submit()"
+                            class="px-4 py-3 rounded-2xl border-gray-200 text-sm shadow-sm w-full md:w-56">
                     @endif
 
                     {{-- STATUS --}}
                     <select name="status" onchange="this.form.submit()"
-                            class="px-4 py-3 rounded-2xl border-gray-200 text-sm font-bold shadow-sm bg-white w-full md:w-52">
+                        class="px-4 py-3 rounded-2xl border-gray-200 text-sm font-bold shadow-sm bg-white w-full md:w-52">
                         @php $statusVal = $status ?? 'all'; @endphp
-                        <option value="all"   {{ $statusVal==='all' ? 'selected' : '' }}>Semua Status</option>
-                        <option value="hadir" {{ $statusVal==='hadir' ? 'selected' : '' }}>Hadir</option>
-                        <option value="telat" {{ $statusVal==='telat' ? 'selected' : '' }}>Telat</option>
-                        <option value="ijin"  {{ $statusVal==='ijin' ? 'selected' : '' }}>Ijin</option>
-                        <option value="sakit" {{ $statusVal==='sakit' ? 'selected' : '' }}>Sakit</option>
-                        <option value="alpha" {{ $statusVal==='alpha' ? 'selected' : '' }}>Alpha</option>
+                        <option value="all" {{ $statusVal === 'all' ? 'selected' : '' }}>Semua Status</option>
+                        <option value="hadir" {{ $statusVal === 'hadir' ? 'selected' : '' }}>Hadir</option>
+                        <option value="telat" {{ $statusVal === 'telat' ? 'selected' : '' }}>Telat</option>
+                        <option value="ijin" {{ $statusVal === 'ijin' ? 'selected' : '' }}>Ijin</option>
+                        <option value="sakit" {{ $statusVal === 'sakit' ? 'selected' : '' }}>Sakit</option>
+                        <option value="alpha" {{ $statusVal === 'alpha' ? 'selected' : '' }}>Alpha</option>
                     </select>
 
-                   {{-- BIDANG (Super Admin only) --}}
-@if(!empty($isSuperAdmin) && $isSuperAdmin)
-    <select name="bidang" onchange="this.form.submit()"
-            class="px-4 py-3 rounded-2xl border-gray-200 text-sm font-bold shadow-sm bg-white w-full md:w-64">
-        @php $bidangVal = $bidang ?? 'all'; @endphp
+                    {{-- BIDANG (Super Admin only) --}}
+                    @if (!empty($isSuperAdmin) && $isSuperAdmin)
+                        <select name="bidang" onchange="this.form.submit()"
+                            class="px-4 py-3 rounded-2xl border-gray-200 text-sm font-bold shadow-sm bg-white w-full md:w-64">
+                            @php $bidangVal = $bidang ?? 'all'; @endphp
 
-        <option value="all" {{ $bidangVal === 'all' ? 'selected' : '' }}>
-            Semua Bidang
-        </option>
+                            <option value="all" {{ $bidangVal === 'all' ? 'selected' : '' }}>
+                                Semua Bidang
+                            </option>
 
-        @foreach($bidangList as $b)
-            <option value="{{ $b }}" {{ $bidangVal === $b ? 'selected' : '' }}>
-                {{ $b }}
-            </option>
-        @endforeach
-    </select>
-@endif
+                            @foreach ($bidangList as $b)
+                                <option value="{{ $b }}" {{ $bidangVal === $b ? 'selected' : '' }}>
+                                    {{ $b }}
+                                </option>
+                            @endforeach
+                        </select>
+                    @endif
 
                     {{-- hint kecil --}}
                     <div class="text-xs text-gray-400 md:ml-auto">
@@ -119,7 +119,15 @@
 
             {{-- SUMMARY --}}
             @php
-                $sum = $summary ?? ['mahasiswa'=>0,'hadir'=>0,'telat'=>0,'ijin'=>0,'sakit'=>0,'alpha'=>0,'total'=>0];
+                $sum = $summary ?? [
+                    'mahasiswa' => 0,
+                    'hadir' => 0,
+                    'telat' => 0,
+                    'ijin' => 0,
+                    'sakit' => 0,
+                    'alpha' => 0,
+                    'total' => 0,
+                ];
             @endphp
 
             <div class="grid grid-cols-2 md:grid-cols-7 gap-3">
@@ -155,7 +163,8 @@
 
             {{-- TABLE --}}
             <div class="bg-white border border-gray-100 rounded-[2rem] shadow-2xl shadow-gray-100/50 overflow-hidden">
-                <div class="p-6 border-b border-gray-50 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div
+                    class="p-6 border-b border-gray-50 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div>
                         <h3 class="text-lg font-black text-gray-800">Detail Rekap</h3>
                         <p class="text-sm text-gray-400">Berisi rekap absensi sesuai filter yang dipilih.</p>
@@ -169,7 +178,8 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-gray-50/50 border-b border-gray-100 text-xs uppercase tracking-widest text-gray-400 font-bold">
+                            <tr
+                                class="bg-gray-50/50 border-b border-gray-100 text-xs uppercase tracking-widest text-gray-400 font-bold">
                                 <th class="px-6 py-4">Mahasiswa</th>
                                 <th class="px-6 py-4">NIM</th>
                                 <th class="px-6 py-4">Instansi</th>
@@ -193,69 +203,76 @@
                                     <td class="px-6 py-4 text-sm text-gray-600">{{ $r['nim'] ?? '-' }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-600">{{ $r['instansi'] ?? '-' }}</td>
                                     <td class="px-6 py-4">
-                                        <span class="px-3 py-1 rounded-lg text-xs font-bold border whitespace-nowrap bg-purple-50 text-purple-700 border-purple-100">
+                                        <span
+                                            class="px-3 py-1 rounded-lg text-xs font-bold border whitespace-nowrap bg-purple-50 text-purple-700 border-purple-100">
                                             {{ $r['bidang'] ?? '-' }}
                                         </span>
                                     </td>
 
                                     {{-- HADIR --}}
-<td class="px-6 py-4 text-center">
-    @if($r['hadir'] > 0)
-        <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-100">
-            {{ $r['hadir'] }}
-        </span>
-    @else
-        <span class="text-gray-400">0</span>
-    @endif
-</td>
+                                    <td class="px-6 py-4 text-center">
+                                        @if ($r['hadir'] > 0)
+                                            <span
+                                                class="px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-100">
+                                                {{ $r['hadir'] }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400">0</span>
+                                        @endif
+                                    </td>
 
-{{-- TELAT --}}
-<td class="px-6 py-4 text-center">
-    @if($r['telat'] > 0)
-        <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">
-            {{ $r['telat'] }}
-        </span>
-    @else
-        <span class="text-gray-400">0</span>
-    @endif
-</td>
+                                    {{-- TELAT --}}
+                                    <td class="px-6 py-4 text-center">
+                                        @if ($r['telat'] > 0)
+                                            <span
+                                                class="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">
+                                                {{ $r['telat'] }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400">0</span>
+                                        @endif
+                                    </td>
 
-{{-- IJIN --}}
-<td class="px-6 py-4 text-center">
-    @if($r['ijin'] > 0)
-        <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
-            {{ $r['ijin'] }}
-        </span>
-    @else
-        <span class="text-gray-400">0</span>
-    @endif
-</td>
+                                    {{-- IJIN --}}
+                                    <td class="px-6 py-4 text-center">
+                                        @if ($r['ijin'] > 0)
+                                            <span
+                                                class="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                                                {{ $r['ijin'] }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400">0</span>
+                                        @endif
+                                    </td>
 
-{{-- SAKIT --}}
-<td class="px-6 py-4 text-center">
-    @if($r['sakit'] > 0)
-        <span class="px-3 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-100">
-            {{ $r['sakit'] }}
-        </span>
-    @else
-        <span class="text-gray-400">0</span>
-    @endif
-</td>
+                                    {{-- SAKIT --}}
+                                    <td class="px-6 py-4 text-center">
+                                        @if ($r['sakit'] > 0)
+                                            <span
+                                                class="px-3 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-100">
+                                                {{ $r['sakit'] }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400">0</span>
+                                        @endif
+                                    </td>
 
-{{-- ALPHA --}}
-<td class="px-6 py-4 text-center">
-    @if($r['alpha'] > 0)
-        <span class="px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-100">
-            {{ $r['alpha'] }}
-        </span>
-    @else
-        <span class="text-gray-400">0</span>
-    @endif
-</td>
+                                    {{-- ALPHA --}}
+                                    <td class="px-6 py-4 text-center">
+                                        @if ($r['alpha'] > 0)
+                                            <span
+                                                class="px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-100">
+                                                {{ $r['alpha'] }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400">0</span>
+                                        @endif
+                                    </td>
 
                                     <td class="px-6 py-4 text-center">
                                         @php $p = $r['persen'] ?? 0; @endphp
-                                        <span class="px-3 py-1 rounded-full text-xs font-bold border
+                                        <span
+                                            class="px-3 py-1 rounded-full text-xs font-bold border
                                             {{ $p >= 80 ? 'bg-green-50 text-green-700 border-green-100' : ($p >= 50 ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-red-50 text-red-700 border-red-100') }}">
                                             {{ $p }}%
                                         </span>

@@ -20,7 +20,7 @@ class AdminAttendanceRecapController extends Controller
 
         // 2. Filter Input
         $mode          = $request->get('mode', 'harian');            // harian | mingguan | bulanan
-        $status        = $request->get('status', 'all');             // all | hadir | izin | sakit | alpha | telat
+        $status        = $this->normalizeFilterStatus($request->get('status', 'all')); // all | hadir | ijin | sakit | alpha | telat
         $studentStatus = $request->get('student_status', 'aktif');   // aktif | nonaktif
         $bidang        = $request->get('bidang', 'all');             // hanya dipakai super admin
 
@@ -52,35 +52,12 @@ class AdminAttendanceRecapController extends Controller
 
         $studentIds = $students->pluck('id')->all();
 
-        // 5. Query Absensi (Dengan Perbaikan Filter Status)
+        // 5. Query Absensi
         $attQ = Attendance::query()
             ->whereIn('user_id', $studentIds)
             ->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()])
             ->when($status !== 'all', function ($q) use ($status) {
-
-                // FIX: Mapping dari Filter Frontend ke Nilai Database (Enum)
-                // Frontend kirim: 'alpha', 'izin', 'hadir' (huruf kecil)
-                // Database simpan: 'Tanpa Keterangan', 'Ijin', 'Hadir' (Sesuai Enum)
-
-                $dbStatus = $status; // default
-
-                if ($status === 'alpha') {
-                    $dbStatus = 'Tanpa Keterangan';
-                }
-                elseif ($status === 'izin') {
-                    $dbStatus = 'Ijin'; // Database pakai 'J'
-                }
-                elseif ($status === 'hadir') {
-                    $dbStatus = 'Hadir';
-                }
-                elseif ($status === 'telat') {
-                    $dbStatus = 'Telat';
-                }
-                elseif ($status === 'sakit') {
-                    $dbStatus = 'Sakit';
-                }
-
-                return $q->where('status', $dbStatus);
+                return $q->whereIn('status', $this->resolveDbStatuses($status));
             });
 
         $attendances = $attQ->get(['user_id', 'tanggal', 'status']);
@@ -91,15 +68,13 @@ class AdminAttendanceRecapController extends Controller
             // Ambil data absensi milik mahasiswa ini saja
             $rows = $attendances->where('user_id', $s->id);
 
-            // FIX: Normalisasi Data untuk Perhitungan
-            // Kita samakan semua istilah agar 'Ijin' menjadi 'izin', 'Tanpa Keterangan' menjadi 'alpha'
+            // Samakan beberapa variasi status database ke kode yang dipakai view/filter.
             $rows = $rows->map(function ($r) {
-                $st = strtolower(trim($r->status)); // ubah ke huruf kecil
+                $st = strtolower(trim((string) $r->status));
 
-                // Mapping Standardisasi
-                if ($st === 'ijin') $st = 'izin';
-                if ($st === 'tanpa keterangan') $st = 'alpha';
-                if ($st === 'alpa') $st = 'alpha';
+                if (in_array($st, ['ijin', 'izin', 'i', 'cuti', 'dinas luar'], true)) $st = 'ijin';
+                if (in_array($st, ['tanpa keterangan', 'alpha', 'alpa', 'tk'], true)) $st = 'alpha';
+                if ($st === 'terlambat') $st = 'telat';
 
                 $r->normalized_status = $st; // simpan di properti sementara
                 return $r;
@@ -108,9 +83,9 @@ class AdminAttendanceRecapController extends Controller
             // Hitung berdasarkan status yang sudah dinormalisasi
             $hadir = $rows->where('normalized_status', 'hadir')->count();
             $telat = $rows->where('normalized_status', 'telat')->count();
-            $izin  = $rows->where('normalized_status', 'izin')->count(); // Pakai Z
+            $izin  = $rows->where('normalized_status', 'ijin')->count();
             $sakit = $rows->where('normalized_status', 'sakit')->count();
-            $alpha = $rows->where('normalized_status', 'alpha')->count(); // Termasuk 'Tanpa Keterangan'
+            $alpha = $rows->where('normalized_status', 'alpha')->count();
 
             // Total data masuk (bukan total hari kerja, tapi total record yg ada)
             $total   = $rows->count();
@@ -133,6 +108,10 @@ class AdminAttendanceRecapController extends Controller
             ];
         });
 
+        if ($status !== 'all') {
+            $rekap = $rekap->filter(fn ($row) => ($row['total'] ?? 0) > 0)->values();
+        }
+
         // 7. Summary Card
         $summary = [
             'mahasiswa' => $rekap->count(),
@@ -147,6 +126,29 @@ class AdminAttendanceRecapController extends Controller
         return view('admin.attendance.recap', compact(
             'rekap', 'summary', 'isSuperAdmin', 'mode', 'status', 'studentStatus', 'bidang', 'labelPeriode', 'bidangList'
         ));
+    }
+
+    private function normalizeFilterStatus(?string $status): string
+    {
+        $status = strtolower(trim((string) $status));
+
+        return match ($status) {
+            'izin' => 'ijin',
+            'hadir', 'telat', 'ijin', 'sakit', 'alpha' => $status,
+            default => 'all',
+        };
+    }
+
+    private function resolveDbStatuses(string $status): array
+    {
+        return match ($status) {
+            'hadir' => ['Hadir'],
+            'telat' => ['Telat', 'Terlambat'],
+            'ijin' => ['Ijin', 'Izin', 'I', 'Cuti', 'Dinas Luar'],
+            'sakit' => ['Sakit'],
+            'alpha' => ['Tanpa Keterangan', 'Alpha', 'Alpa'],
+            default => [],
+        };
     }
 
     private function resolveDateRange(string $mode, Request $request): array
