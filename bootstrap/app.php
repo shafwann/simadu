@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\PostTooLargeException;
 use App\Http\Middleware\RoleManager;
 use App\Http\Middleware\NoCache; // TAMBAHKAN INI
 use App\Http\Middleware\TrackVisits;
@@ -21,5 +22,15 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (PostTooLargeException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Ukuran file melebihi batas upload server.',
+                ], 413);
+            }
+
+            return back()->withInput()->withErrors([
+                'file' => 'Ukuran file melebihi batas upload server. Silakan unggah file yang lebih kecil.',
+            ]);
+        });
     })->create();

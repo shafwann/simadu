@@ -623,7 +623,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-50">
-                                    @forelse($student->logbooks as $l)
+                                    @forelse($logbooks as $l)
                                         <tr>
                                             <td class="p-4">
                                                 {{ \Carbon\Carbon::parse($l->tanggal)->format('d M Y') }}</td>
@@ -631,6 +631,8 @@
                                             <td class="p-4">
                                                 @if ($l->is_validated)
                                                     <span class="text-green-600 font-bold text-xs">Valid</span>
+                                                @elseif($l->is_rejected)
+                                                    <span class="text-red-600 font-bold text-xs">Rejected</span>
                                                 @else
                                                     <span class="text-amber-500 font-bold text-xs">Pending</span>
                                                 @endif
@@ -658,6 +660,7 @@
                                     <tr>
                                         <th class="p-4 font-bold text-gray-500">Nama File</th>
                                         <th class="p-4 font-bold text-gray-500">Tanggal Upload</th>
+                                        <th class="p-4 font-bold text-gray-500">Status</th>
                                         <th class="p-4 font-bold text-center text-gray-500">Aksi</th>
                                     </tr>
                                 </thead>
@@ -667,16 +670,38 @@
                                             <td class="p-4 font-medium">{{ $lap->nama_file }}</td>
                                             <td class="p-4 text-gray-500">
                                                 {{ \Carbon\Carbon::parse($lap->created_at)->format('d M Y') }}</td>
+                                            <td class="p-4">
+                                                @if ($lap->is_validated)
+                                                    <span class="text-green-600 font-bold text-xs">Valid</span>
+                                                @elseif($lap->is_rejected)
+                                                    <span class="text-red-600 font-bold text-xs">Rejected</span>
+                                                @else
+                                                    <span class="text-amber-500 font-bold text-xs">Pending</span>
+                                                @endif
+                                            </td>
                                             <td class="p-4 text-center flex justify-center gap-2">
                                                 <button type="button"
                                                     data-url="{{ route('admin.laporan.preview', $lap->id) }}"
-                                                    class="btnSetPreviewIframe px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-200 transition">
-                                                    Preview
+                                                    title="Preview"
+                                                    aria-label="Preview"
+                                                    class="btnSetPreviewIframe inline-flex items-center justify-center w-8 h-8 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                    </svg>
                                                 </button>
-
                                                 <a href="{{ route('admin.laporan.download', $lap->id) }}"
-                                                    class="px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded-lg hover:bg-purple-700 transition">
-                                                    Download
+                                                    title="Download"
+                                                    aria-label="Download"
+                                                    class="inline-flex items-center justify-center w-8 h-8 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M12 4v12m0 0l-4-4m4 4l4-4"></path>
+                                                    </svg>
                                                 </a>
                                                 <form action="{{ route('admin.laporan.destroy', $lap->id) }}"
                                                     method="POST"
@@ -684,8 +709,13 @@
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
-                                                        class="px-3 py-1 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 transition">
-                                                        Hapus
+                                                        title="Hapus"
+                                                        aria-label="Hapus"
+                                                        class="inline-flex items-center justify-center w-8 h-8 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M6 7h12M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-6 0h6m-8 0l1 12a1 1 0 001 1h4a1 1 0 001-1l1-12"></path>
+                                                        </svg>
                                                     </button>
                                                 </form>
                                             </td>

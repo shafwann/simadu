@@ -44,7 +44,7 @@
                 @method('PATCH')
 
                 <label class="block">
-                    <span class="text-gray-700 font-medium">Ganti File Laporan (PDF / DOC / DOCX)</span>
+                    <span class="text-gray-700 font-medium">Ganti File Laporan (PDF / DOC / DOCX, maks. {{ $maxUploadLabel }})</span>
                     <input type="file" name="file" required accept=".pdf,.doc,.docx"
                         class="mt-1 block w-full text-sm text-gray-500
                                   file:mr-4 file:py-2 file:px-4

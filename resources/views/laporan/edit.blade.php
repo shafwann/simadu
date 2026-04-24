@@ -16,7 +16,7 @@
                 @method('PUT')
 
                 <label class="block">
-                    <span class="text-gray-700 font-medium">Ganti File (PDF / DOC / DOCX)</span>
+                    <span class="text-gray-700 font-medium">Ganti File (PDF / DOC / DOCX, maks. {{ $maxUploadLabel }})</span>
                     <input type="file"
                            name="file"
                            required

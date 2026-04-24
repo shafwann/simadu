@@ -22,6 +22,12 @@ class Logbook extends Model
     'rejected_note',
     ];
 
+    protected $casts = [
+        'is_validated' => 'boolean',
+        'is_rejected' => 'boolean',
+        'rejected_at' => 'datetime',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

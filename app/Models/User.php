@@ -51,6 +51,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'face_descriptor' => 'array',
+        'last_seen_rejection_modal_at' => 'datetime',
     ];
 
     public function attendances()

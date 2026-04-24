@@ -8,6 +8,86 @@ use Illuminate\Support\Facades\Storage;
 
 class LaporanController extends Controller
 {
+    private function iniSizeToBytes(string $value): int
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return 0;
+        }
+
+        $number = (float) $value;
+        $unit = strtolower(substr($value, -1));
+
+        return match ($unit) {
+            'g' => (int) ($number * 1024 * 1024 * 1024),
+            'm' => (int) ($number * 1024 * 1024),
+            'k' => (int) ($number * 1024),
+            default => (int) $number,
+        };
+    }
+
+    private function getServerUploadLimitBytes(): int
+    {
+        $uploadMax = $this->iniSizeToBytes((string) ini_get('upload_max_filesize'));
+        $postMax = $this->iniSizeToBytes((string) ini_get('post_max_size'));
+
+        $limits = array_filter([$uploadMax, $postMax]);
+
+        return $limits === [] ? 0 : min($limits);
+    }
+
+    private function getServerUploadLimitKilobytes(): int
+    {
+        $bytes = $this->getServerUploadLimitBytes();
+
+        return $bytes > 0 ? (int) floor($bytes / 1024) : 20480;
+    }
+
+    private function getServerUploadLimitLabel(): string
+    {
+        $bytes = $this->getServerUploadLimitBytes();
+
+        if ($bytes <= 0) {
+            return '20 MB';
+        }
+
+        $megabytes = $bytes / 1024 / 1024;
+
+        if ($megabytes >= 1) {
+            $formatted = fmod($megabytes, 1.0) === 0.0
+                ? number_format($megabytes, 0)
+                : number_format($megabytes, 1);
+
+            return $formatted . ' MB';
+        }
+
+        return number_format($bytes / 1024, 0) . ' KB';
+    }
+
+    private function validateUploadedLaporan(Request $request): void
+    {
+        $uploadError = data_get($_FILES, 'file.error');
+        $maxLabel = $this->getServerUploadLimitLabel();
+
+        if ($uploadError === UPLOAD_ERR_INI_SIZE || $uploadError === UPLOAD_ERR_FORM_SIZE) {
+            back()->withInput()->withErrors([
+                'file' => "Ukuran file melebihi batas upload server ({$maxLabel}).",
+            ])->throwResponse();
+        }
+
+        $request->validate(
+            [
+                'file' => 'required|file|mimes:pdf,doc,docx|max:' . $this->getServerUploadLimitKilobytes(),
+            ],
+            [
+                'file.required' => 'Silakan pilih file laporan terlebih dahulu.',
+                'file.file'     => 'Data yang diunggah harus berupa file yang valid.',
+                'file.mimes'    => 'Format file harus PDF, DOC, atau DOCX.',
+                'file.max'      => "Ukuran file maksimal {$maxLabel}.",
+            ]
+        );
+    }
+
     // =========================
     // Helper: cari file di disk local/public
     // =========================
@@ -51,8 +131,9 @@ class LaporanController extends Controller
     {
         $laporans = auth()->user()->laporans()->latest()->get();
         $bidangOptions = \App\Models\AboutSetting::bidangOptions();
+        $maxUploadLabel = $this->getServerUploadLimitLabel();
 
-        return view('laporan.index', compact('laporans', 'bidangOptions'));
+        return view('laporan.index', compact('laporans', 'bidangOptions', 'maxUploadLabel'));
     }
 
     public function validateLaporan($id)
@@ -79,17 +160,7 @@ class LaporanController extends Controller
             return back()->with('error', 'Akun Anda tidak aktif, tidak bisa mengunggah laporan.');
         }
 
-        $request->validate(
-            [
-                'file' => 'required|file|mimes:pdf,doc,docx|max:20480',
-            ],
-            [
-                'file.required' => 'Silakan pilih file laporan terlebih dahulu.',
-                'file.file'     => 'Data yang diunggah harus berupa file.',
-                'file.mimes'    => 'Format file harus PDF, DOC, atau DOCX.',
-                'file.max'      => 'Ukuran file maksimal 20 MB.',
-            ]
-        );
+        $this->validateUploadedLaporan($request);
 
         $file = $request->file('file');
         $filename = $file->getClientOriginalName();
@@ -162,7 +233,9 @@ class LaporanController extends Controller
             return back()->withErrors('Laporan sudah divalidasi dan tidak dapat diubah.');
         }
 
-        return view('laporan.edit', compact('laporan'));
+        $maxUploadLabel = $this->getServerUploadLimitLabel();
+
+        return view('laporan.edit', compact('laporan', 'maxUploadLabel'));
     }
 
     public function update(Request $request, Laporan $laporan)
@@ -175,13 +248,7 @@ class LaporanController extends Controller
             return back()->withErrors('Laporan sudah divalidasi dan tidak dapat diubah.');
         }
 
-        $request->validate([
-            'file' => 'required|file|mimes:pdf,doc,docx|max:20480',
-        ], [
-            'file.required' => 'Silakan pilih file pengganti.',
-            'file.mimes' => 'Format harus PDF, DOC, atau DOCX.',
-            'file.max' => 'Ukuran maksimal 20 MB.',
-        ]);
+        $this->validateUploadedLaporan($request);
 
         // hapus file lama: coba cari dulu di disk local/public
         try {
@@ -261,7 +328,9 @@ class LaporanController extends Controller
             return back()->withErrors('Laporan tidak dalam status ditolak, tidak bisa diajukan kembali.');
         }
 
-        return view('laporan.ajuan', compact('laporan'));
+        $maxUploadLabel = $this->getServerUploadLimitLabel();
+
+        return view('laporan.ajuan', compact('laporan', 'maxUploadLabel'));
     }
 
     // ajuan-kembali
@@ -275,13 +344,7 @@ class LaporanController extends Controller
             return back()->withErrors('Laporan sudah divalidasi dan tidak dapat diubah.');
         }
 
-        $request->validate([
-            'file' => 'required|file|mimes:pdf,doc,docx|max:20480',
-        ], [
-            'file.required' => 'Silakan pilih file pengganti.',
-            'file.mimes' => 'Format harus PDF, DOC, atau DOCX.',
-            'file.max' => 'Ukuran maksimal 20 MB.',
-        ]);
+        $this->validateUploadedLaporan($request);
 
         try {
             $resolved = $this->resolveFile($laporan);

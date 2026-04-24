@@ -64,7 +64,76 @@ public function index(Request $request)
         return redirect()->route('pembimbing.dashboard');
     }
     if ($user->role === 'mahasiswa') {
-        return view('dashboard');
+        $rejectedLogbooks = $user->logbooks()
+            ->where('is_rejected', true)
+            ->latest('rejected_at')
+            ->latest('updated_at')
+            ->get();
+
+        $rejectedLaporans = $user->laporans()
+            ->where('is_rejected', true)
+            ->latest('rejected_at')
+            ->latest('updated_at')
+            ->get();
+
+        $latestRejectedLogbookAt = optional($rejectedLogbooks->first())->rejected_at;
+        $latestRejectedLaporanAt = optional($rejectedLaporans->first())->rejected_at;
+
+        $latestRejectionAt = collect([$latestRejectedLogbookAt, $latestRejectedLaporanAt])
+            ->filter()
+            ->sortDesc()
+            ->first();
+
+        $shouldShowRejectionModal = $latestRejectionAt
+            && (
+                !$user->last_seen_rejection_modal_at
+                || $latestRejectionAt->gt($user->last_seen_rejection_modal_at)
+            );
+
+        if ($shouldShowRejectionModal) {
+            $user->forceFill([
+                'last_seen_rejection_modal_at' => $latestRejectionAt,
+            ])->save();
+        }
+
+        $rejectionAlerts = collect()
+            ->merge($rejectedLogbooks->map(function ($logbook) {
+                return [
+                    'type' => 'logbook',
+                    'title' => 'Logbook ditolak',
+                    'headline' => $logbook->tanggal
+                        ? 'Logbook tanggal ' . \Carbon\Carbon::parse($logbook->tanggal)->isoFormat('D MMMM Y')
+                        : 'Logbook perlu diperbaiki',
+                    'note' => $logbook->rejected_note,
+                    'rejected_at' => $logbook->rejected_at,
+                    'route' => route('logbook.index'),
+                    'action' => 'Buka Logbook',
+                ];
+            }))
+            ->merge($rejectedLaporans->map(function ($laporan) {
+                return [
+                    'type' => 'laporan',
+                    'title' => 'Laporan ditolak',
+                    'headline' => $laporan->nama_file ?: 'Laporan perlu diperbaiki',
+                    'note' => $laporan->rejected_note,
+                    'rejected_at' => $laporan->rejected_at,
+                    'route' => route('laporan.index'),
+                    'action' => 'Buka Laporan',
+                ];
+            }))
+            ->sortByDesc('rejected_at')
+            ->values();
+
+        $recentRejectionAlerts = $rejectionAlerts->take(4);
+        $modalRejectionAlerts = $rejectionAlerts->take(5);
+
+        return view('dashboard', [
+            'rejectedLogbooksCount' => $rejectedLogbooks->count(),
+            'rejectedLaporansCount' => $rejectedLaporans->count(),
+            'recentRejectionAlerts' => $recentRejectionAlerts,
+            'modalRejectionAlerts' => $modalRejectionAlerts,
+            'shouldShowRejectionModal' => $shouldShowRejectionModal,
+        ]);
     }
     abort(403, 'Anda tidak memiliki akses ke halaman ini.');
 }
