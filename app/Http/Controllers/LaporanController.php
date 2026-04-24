@@ -36,17 +36,27 @@ class LaporanController extends Controller
         return $limits === [] ? 0 : min($limits);
     }
 
-    private function getServerUploadLimitKilobytes(): int
+    private function getConfiguredUploadLimitBytes(): int
     {
-        $bytes = $this->getServerUploadLimitBytes();
+        $configuredMegabytes = max((int) env('LAPORAN_UPLOAD_MAX_MB', 20), 1);
 
-        return $bytes > 0 ? (int) floor($bytes / 1024) : 20480;
+        return $configuredMegabytes * 1024 * 1024;
     }
 
-    private function getServerUploadLimitLabel(): string
+    private function getEffectiveUploadLimitBytes(): int
     {
-        $bytes = $this->getServerUploadLimitBytes();
+        $configuredLimit = $this->getConfiguredUploadLimitBytes();
+        $serverLimit = $this->getServerUploadLimitBytes();
 
+        if ($serverLimit <= 0) {
+            return $configuredLimit;
+        }
+
+        return min($configuredLimit, $serverLimit);
+    }
+
+    private function formatBytesToLabel(int $bytes): string
+    {
         if ($bytes <= 0) {
             return '20 MB';
         }
@@ -64,20 +74,30 @@ class LaporanController extends Controller
         return number_format($bytes / 1024, 0) . ' KB';
     }
 
+    private function getEffectiveUploadLimitKilobytes(): int
+    {
+        return (int) floor($this->getEffectiveUploadLimitBytes() / 1024);
+    }
+
+    private function getEffectiveUploadLimitLabel(): string
+    {
+        return $this->formatBytesToLabel($this->getEffectiveUploadLimitBytes());
+    }
+
     private function validateUploadedLaporan(Request $request): void
     {
         $uploadError = data_get($_FILES, 'file.error');
-        $maxLabel = $this->getServerUploadLimitLabel();
+        $maxLabel = $this->getEffectiveUploadLimitLabel();
 
         if ($uploadError === UPLOAD_ERR_INI_SIZE || $uploadError === UPLOAD_ERR_FORM_SIZE) {
             back()->withInput()->withErrors([
-                'file' => "Ukuran file melebihi batas upload server ({$maxLabel}).",
+                'file' => "Ukuran file melebihi batas upload ({$maxLabel}).",
             ])->throwResponse();
         }
 
         $request->validate(
             [
-                'file' => 'required|file|mimes:pdf,doc,docx|max:' . $this->getServerUploadLimitKilobytes(),
+                'file' => 'required|file|mimes:pdf,doc,docx|max:' . $this->getEffectiveUploadLimitKilobytes(),
             ],
             [
                 'file.required' => 'Silakan pilih file laporan terlebih dahulu.',
@@ -131,7 +151,7 @@ class LaporanController extends Controller
     {
         $laporans = auth()->user()->laporans()->latest()->get();
         $bidangOptions = \App\Models\AboutSetting::bidangOptions();
-        $maxUploadLabel = $this->getServerUploadLimitLabel();
+        $maxUploadLabel = $this->getEffectiveUploadLimitLabel();
 
         return view('laporan.index', compact('laporans', 'bidangOptions', 'maxUploadLabel'));
     }
@@ -233,7 +253,7 @@ class LaporanController extends Controller
             return back()->withErrors('Laporan sudah divalidasi dan tidak dapat diubah.');
         }
 
-        $maxUploadLabel = $this->getServerUploadLimitLabel();
+        $maxUploadLabel = $this->getEffectiveUploadLimitLabel();
 
         return view('laporan.edit', compact('laporan', 'maxUploadLabel'));
     }
@@ -328,7 +348,7 @@ class LaporanController extends Controller
             return back()->withErrors('Laporan tidak dalam status ditolak, tidak bisa diajukan kembali.');
         }
 
-        $maxUploadLabel = $this->getServerUploadLimitLabel();
+        $maxUploadLabel = $this->getEffectiveUploadLimitLabel();
 
         return view('laporan.ajuan', compact('laporan', 'maxUploadLabel'));
     }
