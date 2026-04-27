@@ -12,24 +12,52 @@ use Carbon\Carbon;
 
 class LogbookController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Mengambil ID user menggunakan Facade yang lebih dikenal oleh editor
         $userId = \Illuminate\Support\Facades\Auth::id();
+        $sort = $request->query('sort', 'tanggal');
+        $direction = $request->query('direction', 'desc');
 
-        $logbooks = \App\Models\Logbook::where('user_id', $userId)
-            ->orderBy('tanggal', 'desc')
-            ->orderBy('updated_at', 'desc')
-            ->get();
+        if (!in_array($sort, ['tanggal', 'status'], true)) {
+            $sort = 'tanggal';
+        }
+
+        if (!in_array($direction, ['asc', 'desc'], true)) {
+            $direction = 'desc';
+        }
+
+        $baseQuery = \App\Models\Logbook::where('user_id', $userId);
+
+        $logbooksQuery = (clone $baseQuery);
+
+        if ($sort === 'status') {
+            $logbooksQuery->orderByRaw(
+                "CASE
+                    WHEN is_rejected = 1 THEN 2
+                    WHEN is_validated = 1 THEN 3
+                    ELSE 1
+                END {$direction}"
+            );
+            $logbooksQuery
+                ->orderBy('tanggal', 'desc')
+                ->orderBy('updated_at', 'desc');
+        } else {
+            $logbooksQuery
+                ->orderBy('tanggal', $direction)
+                ->orderBy('updated_at', 'desc');
+        }
+
+        $logbooks = $logbooksQuery->paginate(10)->withQueryString();
 
         // Ambil tahun unik dari logbook user
-        $tahunList = $logbooks->pluck('tanggal')
+        $tahunList = (clone $baseQuery)->pluck('tanggal')
             ->map(fn($d) => Carbon::parse($d)->year)
             ->unique()
             ->sortDesc()
             ->values(); // supaya 2025,2026 urut
 
-        return view('logbook.index', compact('logbooks', 'tahunList'));
+        return view('logbook.index', compact('logbooks', 'tahunList', 'sort', 'direction'));
     }
 
     public function store(Request $request)
@@ -44,6 +72,11 @@ class LogbookController extends Controller
         $request->validate([
             'tanggal' => 'required|date',
             'kegiatan' => 'required|string|min:5',
+        ], [
+            'tanggal.required' => 'Tanggal logbook wajib diisi.',
+            'tanggal.date' => 'Format tanggal logbook tidak valid.',
+            'kegiatan.required' => 'Deskripsi kegiatan wajib diisi.',
+            'kegiatan.min' => 'Deskripsi kegiatan minimal 5 karakter.',
         ]);
 
         try {

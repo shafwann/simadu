@@ -34,14 +34,16 @@
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                                 <div class="md:col-span-1">
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal</label>
-                                    <input type="date" name="tanggal" value="{{ date('Y-m-d') }}"
+                                    <input type="date" name="tanggal" value="{{ old('tanggal', date('Y-m-d')) }}"
                                         class="w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition">
+                                    <x-input-error :messages="$errors->get('tanggal')" class="mt-2" />
                                 </div>
                                 <div class="md:col-span-3">
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Deskripsi
                                         Kegiatan</label>
                                     <textarea name="kegiatan" rows="2" placeholder="Jelaskan apa yang kamu kerjakan..."
-                                        class="w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition"></textarea>
+                                        class="w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition">{{ old('kegiatan') }}</textarea>
+                                    <x-input-error :messages="$errors->get('kegiatan')" class="mt-2" />
                                 </div>
                             </div>
                             <div class="mt-6 flex justify-end">
@@ -74,19 +76,40 @@
 
                 {{-- Tabel logbook --}}
                 <div class="p-4 md:p-8">
+                    @php
+                        $tanggalDirection = $sort === 'tanggal' && $direction === 'asc' ? 'desc' : 'asc';
+                        $statusDirection = $sort === 'status' && $direction === 'asc' ? 'desc' : 'asc';
+                        $tanggalSortUrl = route('logbook.index', array_merge(request()->except('page'), ['sort' => 'tanggal', 'direction' => $tanggalDirection]));
+                        $statusSortUrl = route('logbook.index', array_merge(request()->except('page'), ['sort' => 'status', 'direction' => $statusDirection]));
+                    @endphp
+
                     <div class="overflow-x-auto rounded-2xl border border-gray-100">
                         <table class="w-full text-left border-collapse">
                             <thead class="sticky top-0 bg-gray-50 z-10">
                                 <tr class="bg-gray-50/50">
                                     <th
                                         class="px-6 md:px-8 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b">
-                                        Tanggal</th>
+                                        <a href="{{ $tanggalSortUrl }}"
+                                            class="inline-flex items-center gap-2 hover:text-gray-700 transition">
+                                            <span>Tanggal</span>
+                                            @if ($sort === 'tanggal')
+                                                <span class="text-[10px] text-indigo-600">{{ strtoupper($direction) }}</span>
+                                            @endif
+                                        </a>
+                                    </th>
                                     <th
                                         class="px-6 md:px-8 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b">
                                         Aktivitas</th>
                                     <th
                                         class="px-6 md:px-8 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b">
-                                        Status</th>
+                                        <a href="{{ $statusSortUrl }}"
+                                            class="inline-flex items-center gap-2 hover:text-gray-700 transition">
+                                            <span>Status</span>
+                                            @if ($sort === 'status')
+                                                <span class="text-[10px] text-indigo-600">{{ strtoupper($direction) }}</span>
+                                            @endif
+                                        </a>
+                                    </th>
                                     <th
                                         class="px-6 md:px-8 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b">
                                         Aksi</th>
@@ -115,12 +138,12 @@
                                             @if ($log->is_rejected)
                                                 <span
                                                     class="px-3 py-1 inline-flex text-xs font-bold rounded-full bg-red-100 text-red-700">
-                                                    Ditolak
+                                                    Rejected
                                                 </span>
                                             @elseif($log->is_validated)
                                                 <span
                                                     class="px-3 py-1 inline-flex text-xs font-bold rounded-full bg-green-100 text-green-700">
-                                                    Tervalidasi
+                                                    Validated
                                                 </span>
                                             @else
                                                 <span
@@ -249,6 +272,23 @@
                             </tbody>
                         </table>
                     </div>
+
+                    @if ($logbooks->hasPages())
+                        <div class="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                            <p class="text-sm text-gray-500">
+                                @php
+                                    $sortLabel = $sort === 'status'
+                                        ? 'status ' . strtoupper($direction)
+                                        : 'tanggal ' . strtoupper($direction);
+                                @endphp
+                                Menampilkan {{ $logbooks->firstItem() }}-{{ $logbooks->lastItem() }} dari
+                                {{ $logbooks->total() }} logbook, urutan {{ $sortLabel }}.
+                            </p>
+                            <div>
+                                {{ $logbooks->links() }}
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
 
