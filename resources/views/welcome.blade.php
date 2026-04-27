@@ -350,9 +350,9 @@
                     </ul>
                 </div>
                 {{-- KOLOM 4: STATISTIK KUNJUNGAN --}}
-                <div class="space-y-3">
+                <div class="space-y-3 w-full">
                     {{-- JUDUL (sejajar dengan Tautan & Kontak) --}}
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-center justify-between gap-3 w-full">
                         <h4 class="font-bold text-white text-sm">
                             Statistik Kunjungan
                         </h4>
@@ -373,7 +373,7 @@
                     {{-- BOX STAT --}}
                     <div
                         class="bg-white text-gray-900 rounded-lg px-3 py-2 text-[11px]
-                                    shadow-md w-[170px] border border-gray-200">
+                                    shadow-md w-full border border-gray-200">
                         <div class="space-y-1">
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Vis. today</span>
