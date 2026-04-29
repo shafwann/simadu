@@ -45,77 +45,82 @@
                                     <td class="p-4 font-mono text-gray-700">{{ $a->check_out ?? '-' }}</td>
                                     <td class="p-4">
                                         @php
-                                            $st = strtolower(trim($a->status ?? ''));
-                                            $ket = strtolower(trim($a->keterangan ?? ''));
+                                            $stRaw = $a->status ?? '-';
+                                            $ketRaw = $a->keterangan ?? null;
+                                            $st = strtoupper(trim((string) $stRaw));
+                                            $ket = strtoupper(trim((string) $ketRaw));
 
-                                            // ===== KODE UTAMA =====
                                             $code = '-';
-                                            if ($st === 'telat') {
-                                                $code = 'T';
-                                            } elseif ($st === 'hadir') {
-                                                $code = 'H';
-                                            } elseif (in_array($st, ['ijin', 'izin', 'i'])) {
-                                                $code = 'I';
-                                            } elseif (in_array($st, ['sakit', 's'])) {
-                                                $code = 'S';
-                                            } elseif ($st === 'dinas luar') {
-                                                $code = 'DL';
-                                            } elseif ($st === 'cuti') {
-                                                $code = 'CT';
-                                            } elseif (in_array($st, ['tanpa keterangan', 'alpha', 'tk'])) {
+                                            if ($st === '' || $st === '-') {
+                                                $code = '-';
+                                            } elseif (in_array($st, ['ALPHA', 'TANPA KETERANGAN', 'TK'])) {
                                                 $code = 'TK';
+                                            } elseif ($st === 'HADIR') {
+                                                $code = 'H';
+                                            } elseif ($st === 'TELAT') {
+                                                $code = 'T';
+                                            } elseif (in_array($st, ['I', 'IZIN', 'IJIN'])) {
+                                                $code = 'I';
+                                            } elseif (in_array($st, ['S', 'SAKIT'])) {
+                                                $code = 'S';
+                                            } elseif (in_array($st, ['DL', 'DINAS LUAR'])) {
+                                                $code = 'DL';
+                                            } elseif (in_array($st, ['CT', 'CUTI'])) {
+                                                $code = 'CT';
                                             }
 
-                                            // ===== PC =====
-                                            $isPC = $ket === 'pulang cepat';
+                                            $isPC = $ket === 'PULANG CEPAT';
+                                            $isTAP = !empty($a->check_in) && empty($a->check_out);
 
-                                            // ===== TAP =====
-                                            $isTAP = false;
-                                            if (!empty($a->check_in) && empty($a->check_out)) {
-                                                $date = \Carbon\Carbon::parse($a->tanggal, 'Asia/Jakarta');
-                                                $dow = $date->dayOfWeekIso; // 1..7
-
-                                                // weekday only
-                                                if ($dow <= 5) {
-                                                    $endStr = $checkoutEndMap[$dow] ?? null;
-
-                                                    if (!empty($endStr)) {
-                                                        // batas waktu checkout hari itu
-                                                        $end = \Carbon\Carbon::parse(
-                                                            $date->format('Y-m-d') . ' ' . $endStr,
-                                                            'Asia/Jakarta',
-                                                        );
-
-                                                        // TAP jika sekarang sudah lewat batas checkout
-                                                        $isTAP = now('Asia/Jakarta')->gt($end);
-                                                    }
-                                                }
+                                            $extras = [];
+                                            if ($isPC) {
+                                                $extras[] = 'PC';
                                             }
+                                            if ($isTAP) {
+                                                $extras[] = 'TAP';
+                                            }
+
+                                            $statusFinal = $code;
+                                            if (!empty($extras)) {
+                                                $statusFinal = $code . ',' . implode(',', $extras);
+                                            }
+
+                                            $parts = array_filter(array_map('trim', explode(',', $statusFinal)));
                                         @endphp
 
-                                        <div class="flex items-center gap-2">
-                                            {{-- badge utama --}}
-                                            <span
-                                                class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">
-                                                {{ $code }}
-                                            </span>
-
-                                            {{-- Pulang Cepat --}}
-                                            @if ($isPC)
+                                        @foreach ($parts as $p)
+                                            @if ($p === 'H')
                                                 <span
-                                                    class="px-2 py-1 bg-orange-100 text-orange-700 rounded-md text-xs font-bold">
-                                                    PC
-                                                </span>
-                                            @endif
-
-                                            {{-- Tidak Absen Pulang --}}
-                                            @if ($isTAP)
+                                                    class="px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-bold">H</span>
+                                            @elseif($p === 'T')
                                                 <span
-                                                    class="px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs font-bold">
-                                                    TAP
-                                                </span>
+                                                    class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md text-xs font-bold">T</span>
+                                            @elseif($p === 'I')
+                                                <span
+                                                    class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-bold">I</span>
+                                            @elseif($p === 'S')
+                                                <span
+                                                    class="px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-xs font-bold">S</span>
+                                            @elseif($p === 'DL')
+                                                <span
+                                                    class="px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs font-bold">DL</span>
+                                            @elseif($p === 'CT')
+                                                <span
+                                                    class="px-2 py-1 bg-pink-100 text-pink-700 rounded-md text-xs font-bold">CT</span>
+                                            @elseif($p === 'TK')
+                                                <span
+                                                    class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">TK</span>
+                                            @elseif($p === 'PC')
+                                                <span
+                                                    class="px-2 py-1 bg-orange-100 text-orange-700 rounded-md text-xs font-bold">PC</span>
+                                            @elseif($p === 'TAP')
+                                                <span
+                                                    class="px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs font-bold">TAP</span>
+                                            @else
+                                                <span
+                                                    class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">{{ $p }}</span>
                                             @endif
-                                        </div>
+                                        @endforeach
                                     </td>
 
                                     <td class="p-4 text-xs">
