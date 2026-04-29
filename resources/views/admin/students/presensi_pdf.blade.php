@@ -1,9 +1,12 @@
 <!doctype html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <style>
-        @page { margin: 14px 18px; }
+        @page {
+            margin: 14px 18px;
+        }
 
         body {
             font-family: arialcustom, Arial, sans-serif;
@@ -11,30 +14,104 @@
             color: #111;
         }
 
-        .title { text-align: center; margin-top: 40px; }
-        .title .h1, .title .h2, .title .h3 { font-size: 19px; margin: 0; line-height: 1.15; }
-        .title .h2 { margin-top: 3px; }
-        .title .h3 { margin-top: 3px; }
-        .title .h4 { font-size: 18px; margin: 3px 0 10px; }
+        .title {
+            text-align: center;
+            margin-top: 40px;
+        }
 
-        .info { width: 100%; margin-top: 8px; font-size: 16px; }
-        .info td { padding: 2px 2px; vertical-align: top; }
-        .label { width: 155px; }
-        .colon { width: 12px; }
-        .bulanRow td { padding-top: 6px; }
-        .bulanValue { font-weight: 700; }
+        .title .h1,
+        .title .h2,
+        .title .h3 {
+            font-size: 19px;
+            margin: 0;
+            line-height: 1.15;
+        }
 
-        .grid { width: 100%; margin-top: 16px; }
-        .col { width: 49%; vertical-align: top; }
-        .spacer { width: 2%; }
+        .title .h2 {
+            margin-top: 3px;
+        }
 
-        table.foot { width: 100%; margin-top: 14px; }
-        table.foot td { vertical-align: top; }
-        .note { width: 52%; font-size: 14px; }
-        .note .head { margin-bottom: 4px; font-size: 14px; }
-        .sign { width: 48%; font-size: 14px; }
-        .sign .gap { height: 46px; }
-        .sign .name { font-size: 14px; }
+        .title .h3 {
+            margin-top: 3px;
+        }
+
+        .title .h4 {
+            font-size: 18px;
+            margin: 3px 0 10px;
+        }
+
+        .info {
+            width: 100%;
+            margin-top: 8px;
+            font-size: 16px;
+        }
+
+        .info td {
+            padding: 2px 2px;
+            vertical-align: top;
+        }
+
+        .label {
+            width: 155px;
+        }
+
+        .colon {
+            width: 12px;
+        }
+
+        .bulanRow td {
+            padding-top: 6px;
+        }
+
+        .bulanValue {
+            font-weight: 700;
+        }
+
+        .grid {
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        .col {
+            width: 49%;
+            vertical-align: top;
+        }
+
+        .spacer {
+            width: 2%;
+        }
+
+        table.foot {
+            width: 100%;
+            margin-top: 14px;
+        }
+
+        table.foot td {
+            vertical-align: top;
+        }
+
+        .note {
+            width: 52%;
+            font-size: 14px;
+        }
+
+        .note .head {
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .sign {
+            width: 48%;
+            font-size: 14px;
+        }
+
+        .sign .gap {
+            height: 46px;
+        }
+
+        .sign .name {
+            font-size: 14px;
+        }
     </style>
 </head>
 
@@ -97,8 +174,6 @@
                 <div class="head"><b>Keterangan :</b></div>
                 <div>H = Hadir</div>
                 <div>T = Terlambat</div>
-                <div>PC = Pulang Cepat</div>
-                <div>TAP = Tidak Absen Pulang</div>
                 <div>I = Ijin</div>
                 <div>S = Sakit</div>
                 <div>DL = Dinas Luar</div>
@@ -121,4 +196,5 @@
     </table>
 
 </body>
+
 </html>

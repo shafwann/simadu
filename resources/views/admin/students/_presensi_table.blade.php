@@ -207,22 +207,13 @@
                                 $label = $main === '' ? '-' : $main;
                                 break;
                         }
-
-                        $showPC = in_array('PC', $extras, true);
-                        $showTAP = in_array('TAP', $extras, true);
                     @endphp
 
                     <span class="badge {{ $badge }}">{{ $label }}</span>
-                    @if ($showPC)
-                        <span class="badge badge-pc">PC</span>
-                    @endif
-                    @if ($showTAP)
-                        <span class="badge badge-tap">TAP</span>
-                    @endif
                 </td>
 
                 <td class="col-lokasi">
-                    @if(!empty($r['location_url']))
+                    @if (!empty($r['location_url']))
                         <a class="lokasi-link" href="{{ $r['location_url'] }}">
                             <span class="lokasi-text">{{ $r['location_text'] }}</span>
                         </a>
