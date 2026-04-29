@@ -219,47 +219,6 @@ Route::middleware(['auth', 'no-cache', 'role:mahasiswa'])->group(function () {
     Route::post('/face-setup', [FaceVerificationController::class, 'storeSetup'])->name('face.setup.store');
     Route::get('/face-verification', [FaceVerificationController::class, 'verifyView'])->name('face.verify');
     Route::post('/face-verify', [FaceVerificationController::class, 'verify'])->name('face.verify.submit');
-
-    // Export
-    Route::get('/export-presensi', function () {
-        $data = \App\Models\Attendance::where('user_id', Auth::id())->with('user')->get();
-        return response()->stream(function () use ($data) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, ['Nama', 'Tanggal', 'Masuk', 'Status', 'Lokasi']);
-            foreach ($data as $row) {
-                fputcsv($file, [
-                    $row->user->name,
-                    Carbon::parse($row->tanggal)->format('d/m/Y'),
-                    $row->check_in,
-                    $row->status,
-                    $row->location ?? '-'
-                ]);
-            }
-            fclose($file);
-        }, 200, [
-            "Content-type" => "text/csv",
-            "Content-Disposition" => "attachment; filename=presensi-pribadi.csv"
-        ]);
-    })->name('attendance.export');
-
-    Route::get('/export-logbook', function () {
-        $data = \App\Models\Logbook::where('user_id', Auth::id())->get();
-        return response()->stream(function () use ($data) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, ['Tanggal', 'Kegiatan', 'Status Validasi']);
-            foreach ($data as $row) {
-                fputcsv($file, [
-                    Carbon::parse($row->tanggal)->format('d/m/Y'),
-                    $row->kegiatan,
-                    $row->is_validated ? 'Valid' : 'Pending'
-                ]);
-            }
-            fclose($file);
-        }, 200, [
-            "Content-type" => "text/csv",
-            "Content-Disposition" => "attachment; filename=logbook-pribadi.csv"
-        ]);
-    })->name('logbook.export');
 });
 
 // ==========================================
@@ -351,39 +310,7 @@ Route::middleware(['auth', 'no-cache', 'role:admin'])
         Route::put('/about', [AdminAboutController::class, 'update'])->name('about.update');
 
         // Export Mahasiswa (CSV)
-        Route::get('/export-mahasiswa', function () {
-            $mahasiswa = User::where('role', 'mahasiswa')->orderBy('name', 'asc')->get();
-            $filename = "DATA_MAGANG_" . (Auth::user()->kategori_instansi ?? 'ALL') . "_" . date('Y') . ".csv";
-
-            return response()->stream(function () use ($mahasiswa) {
-                $file = fopen('php://output', 'w');
-                fputs($file, "\xEF\xBB\xBF");
-                fputs($file, "sep=;\n");
-                fputcsv($file, ['DATA MAGANG ' . (Auth::user()->kategori_instansi ?? '') . ' ' . date('Y')], ';');
-                fputcsv($file, [], ';');
-                fputcsv($file, ['NO', 'NAMA', 'NIM', 'JURUSAN', 'UNIVERSITAS', 'KETERANGAN', 'BIDANG', 'AKTIF'], ';');
-
-                foreach ($mahasiswa as $index => $u) {
-                    fputcsv($file, [
-                        $index + 1,
-                        strtoupper($u->name),
-                        "'" . $u->nim,
-                        strtoupper($u->prodi),
-                        strtoupper($u->instansi),
-                        ($u->tanggal_masuk && $u->tanggal_selesai
-                            ? Carbon::parse($u->tanggal_masuk)->format('d/m/Y') . ' - ' . Carbon::parse($u->tanggal_selesai)->format('d/m/Y')
-                            : '-'
-                        ),
-                        strtoupper($u->bidang ?? ''),
-                        ucfirst($u->status),
-                    ], ';');
-                }
-                fclose($file);
-            }, 200, [
-                "Content-type" => "text/csv",
-                "Content-Disposition" => "attachment; filename=" . $filename
-            ]);
-        })->name('export.mahasiswa');
+        Route::get('/export-mahasiswa', [AdminStudentController::class, 'exportMahasiswaCsv'])->name('export.mahasiswa');
     });
 
 // ==========================================

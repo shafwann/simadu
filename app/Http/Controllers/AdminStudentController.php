@@ -142,7 +142,7 @@ class AdminStudentController extends Controller
 
         $logbooks = $student->logbooks()
             ->orderBy('tanggal', 'desc')
-            ->paginate(5, ['*'], 'logbook_page');
+            ->get();
 
         return view('admin.students.show', compact('student', 'attendances', 'logbooks'));
     }
@@ -400,5 +400,40 @@ class AdminStudentController extends Controller
         ]);
 
         return back()->with('success', 'Permintaan reset wajah ditolak.');
+    }
+
+    public function exportMahasiswaCsv()
+    {
+        $mahasiswa = User::where('role', 'mahasiswa')->orderBy('name', 'asc')->get();
+        $filename = "DATA_MAGANG_" . (Auth::user()->kategori_instansi ?? 'ALL') . "_" . date('Y') . ".csv";
+
+        return response()->stream(function () use ($mahasiswa) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF");
+            fputs($file, "sep=;\n");
+            fputcsv($file, ['DATA MAGANG ' . (Auth::user()->kategori_instansi ?? '') . ' ' . date('Y')], ';');
+            fputcsv($file, [], ';');
+            fputcsv($file, ['NO', 'NAMA', 'NIM', 'JURUSAN', 'UNIVERSITAS', 'KETERANGAN', 'BIDANG', 'AKTIF'], ';');
+
+            foreach ($mahasiswa as $index => $u) {
+                fputcsv($file, [
+                    $index + 1,
+                    strtoupper($u->name),
+                    "'" . $u->nim,
+                    strtoupper($u->prodi),
+                    strtoupper($u->instansi),
+                    ($u->tanggal_masuk && $u->tanggal_selesai
+                        ? Carbon::parse($u->tanggal_masuk)->format('d/m/Y') . ' - ' . Carbon::parse($u->tanggal_selesai)->format('d/m/Y')
+                        : '-'
+                    ),
+                    strtoupper($u->bidang ?? ''),
+                    ucfirst($u->status),
+                ], ';');
+            }
+            fclose($file);
+        }, 200, [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=" . $filename
+        ]);
     }
 }
