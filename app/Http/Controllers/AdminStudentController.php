@@ -25,6 +25,9 @@ class AdminStudentController extends Controller
         // Ambil input dari URL
         $search = $request->input('search');
         $status = $request->input('status', 'aktif');
+        if (!in_array($status, ['aktif', 'nonaktif'], true)) {
+            $status = 'aktif';
+        }
 
         $students = User::where('role', 'mahasiswa')
             //  FILTER INSTANSI SISTEM

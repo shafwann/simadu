@@ -23,17 +23,18 @@
                     {{-- FORM SEARCH & FILTER (Digabung dalam 1 Form) --}}
                     <form action="{{ route('admin.students.index') }}" method="GET"
                         class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                        <input id="statusInput" type="hidden" name="status" value="{{ $status ?? 'aktif' }}">
 
                         {{-- 1. FILTER STATUS --}}
                         <div class="flex rounded-2xl border border-gray-200 bg-white p-1 shadow-sm">
-                            <button type="submit" name="status" value="aktif"
+                            <button type="submit" data-status="aktif"
                                 class="px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap
                                 {{ ($status ?? 'aktif') === 'aktif'
                                     ? 'bg-blue-600 text-white shadow-sm'
                                     : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700' }}">
                                 Aktif
                             </button>
-                            <button type="submit" name="status" value="nonaktif"
+                            <button type="submit" data-status="nonaktif"
                                 class="px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap
                                 {{ ($status ?? 'aktif') === 'nonaktif'
                                     ? 'bg-red-600 text-white shadow-sm'
@@ -311,7 +312,17 @@
             if (!searchInput) return;
 
             const form = searchInput.closest("form");
+            const statusInput = document.getElementById("statusInput");
+            const statusButtons = form.querySelectorAll("[data-status]");
             let typingTimer;
+
+            statusButtons.forEach((button) => {
+                button.addEventListener("click", function() {
+                    if (statusInput) {
+                        statusInput.value = this.dataset.status;
+                    }
+                });
+            });
 
             // Setelah reload, fokus balik ke input & kursor di akhir
             searchInput.focus();
