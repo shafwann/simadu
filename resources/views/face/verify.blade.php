@@ -59,6 +59,11 @@
                 Mempersiapkan kamera...
             </div>
 
+            <button type="button" id="cameraRetryBtn"
+                class="hidden w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-700">
+                Mulai Kamera
+            </button>
+
             <!-- Confidence Bar -->
             <div class="space-y-2">
                 <div class="flex justify-between items-center text-xs">
@@ -96,15 +101,48 @@
         </div>
     </div>
 
-    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script defer src="{{ asset('vendor/face-api.min.js') }}"
+        onerror="window.faceApiLoadFailed = true"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const cameraRetryBtn = document.getElementById('cameraRetryBtn');
+            const statusBox = document.getElementById('statusBox');
+            let started = false;
+
+            function startOnce() {
+                if (started) return;
+                started = true;
+                cameraRetryBtn.classList.add('hidden');
+                initFaceVerify().finally(() => {
+                    if (!cameraRetryBtn.classList.contains('hidden')) {
+                        started = false;
+                    }
+                });
+            }
+
+            cameraRetryBtn.addEventListener('click', startOnce);
+
             const waitForFaceApi = setInterval(() => {
+                if (window.faceApiLoadFailed) {
+                    clearInterval(waitForFaceApi);
+                    statusBox.className = 'text-sm rounded-xl border px-3 py-2 bg-red-50 text-red-700 border-red-200';
+                    statusBox.textContent = 'Gagal memuat face-api.js lokal. Pastikan file public/vendor/face-api.min.js ikut terdeploy.';
+                    return;
+                }
+
                 if (typeof faceapi !== 'undefined') {
                     clearInterval(waitForFaceApi);
-                    initFaceVerify();
+                    startOnce();
                 }
             }, 100);
+
+            setTimeout(() => {
+                if (typeof faceapi === 'undefined' && !window.faceApiLoadFailed) {
+                    clearInterval(waitForFaceApi);
+                    statusBox.className = 'text-sm rounded-xl border px-3 py-2 bg-red-50 text-red-700 border-red-200';
+                    statusBox.textContent = 'face-api.js belum termuat. Pastikan file public/vendor/face-api.min.js bisa diakses.';
+                }
+            }, 15000);
         });
 
         async function initFaceVerify() {
@@ -120,9 +158,11 @@
             const verifiedTokenInput = document.getElementById('verifiedTokenInput');
             const attendanceReadyBox = document.getElementById('attendanceReadyBox');
             const verifiedAttendanceSubmit = document.getElementById('verifiedAttendanceSubmit');
+            const cameraRetryBtn = document.getElementById('cameraRetryBtn');
             const actionRoute = @json($actionRoute);
             const pendingLocation = @json($pendingLocation);
             const intendedAction = @json($intendedAction);
+            const modelBaseUri = @json(asset('models'));
 
             const setStatus = (text, tone = 'neutral') => {
                 const toneClass = {
@@ -137,25 +177,31 @@
             };
 
             try {
+                if (!window.isSecureContext) {
+                    throw new Error('Safari iOS hanya mengizinkan kamera pada HTTPS. Buka situs deploy dengan https://.');
+                }
+
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Browser tidak mendukung akses kamera. Gunakan Safari iOS terbaru dan izinkan kamera untuk situs ini.');
+                }
+
                 setStatus('Memuat model AI...', 'info');
                 await Promise.all([
-                    faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
-                    faceapi.nets.faceLandmark68TinyNet.loadFromUri('/models'),
-                    faceapi.nets.faceRecognitionNet.loadFromUri('/models')
+                    faceapi.nets.tinyFaceDetector.loadFromUri(modelBaseUri),
+                    faceapi.nets.faceLandmark68TinyNet.loadFromUri(modelBaseUri),
+                    faceapi.nets.faceRecognitionNet.loadFromUri(modelBaseUri)
                 ]);
 
                 camLoadingText.textContent = 'Mengakses kamera...';
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        width: 640,
-                        height: 480,
-                        facingMode: 'user'
-                    },
-                    audio: false
-                });
+                const stream = await openUserCamera();
 
+                video.setAttribute('playsinline', '');
+                video.setAttribute('webkit-playsinline', '');
+                video.muted = true;
+                video.autoplay = true;
                 video.srcObject = stream;
                 await new Promise(resolve => video.onloadedmetadata = resolve);
+                await video.play();
 
                 overlayEl.width = video.videoWidth;
                 overlayEl.height = video.videoHeight;
@@ -170,7 +216,28 @@
             } catch (e) {
                 setStatus('Gagal menyiapkan kamera/model: ' + e.message, 'error');
                 camLoadingText.textContent = 'Gagal menyiapkan verifikasi';
+                cameraRetryBtn.classList.remove('hidden');
                 return;
+            }
+        }
+
+        async function openUserCamera() {
+            const preferredConstraints = {
+                video: {
+                    width: { ideal: 640 },
+                    height: { ideal: 480 },
+                    facingMode: { ideal: 'user' }
+                },
+                audio: false
+            };
+
+            try {
+                return await navigator.mediaDevices.getUserMedia(preferredConstraints);
+            } catch (error) {
+                if (error && (error.name === 'OverconstrainedError' || error.name === 'ConstraintNotSatisfiedError')) {
+                    return navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                }
+                throw error;
             }
         }
 
@@ -352,6 +419,14 @@
             ctx.lineTo(x + w, y + h - len);
             ctx.stroke();
         }
+
+        window.addEventListener('pagehide', () => {
+            const video = document.getElementById('webcam');
+            const stream = video?.srcObject;
+            if (stream && typeof stream.getTracks === 'function') {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
 
         async function submitVerification(detections, pendingLocation, verifiedAttendanceForm, verifiedLocationInput,
             verifiedTokenInput, attendanceReadyBox, verifiedAttendanceSubmit, intendedAction, retryCount = 0) {

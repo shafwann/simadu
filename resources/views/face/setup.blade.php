@@ -137,6 +137,11 @@
                     <span id="statusText">Mempersiapkan kamera...</span>
                 </div>
 
+                <button type="button" id="cameraRetryBtn"
+                    class="hidden w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition">
+                    Mulai Kamera
+                </button>
+
                 {{-- Capture Button --}}
                 <button type="button" id="captureBtn" disabled
                     class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition disabled:opacity-40 disabled:cursor-not-allowed">
@@ -198,15 +203,52 @@
         </div>
     </div>
 
-    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script defer src="{{ asset('vendor/face-api.min.js') }}"
+        onerror="window.faceApiLoadFailed = true"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const cameraRetryBtn = document.getElementById('cameraRetryBtn');
+            const statusText = document.getElementById('statusText');
+            const statusDot = document.getElementById('statusDot');
+            let started = false;
+
+            function showLoadError(message) {
+                statusDot.className = 'w-2 h-2 rounded-full flex-shrink-0 dot-blink bg-red-500';
+                statusText.textContent = message;
+            }
+
+            function startOnce() {
+                if (started) return;
+                started = true;
+                cameraRetryBtn.classList.add('hidden');
+                initFaceSetup().finally(() => {
+                    if (!cameraRetryBtn.classList.contains('hidden')) {
+                        started = false;
+                    }
+                });
+            }
+
+            cameraRetryBtn.addEventListener('click', startOnce);
+
             const waitForFaceApi = setInterval(() => {
+                if (window.faceApiLoadFailed) {
+                    clearInterval(waitForFaceApi);
+                    showLoadError('Gagal memuat face-api.js lokal. Pastikan file public/vendor/face-api.min.js ikut terdeploy.');
+                    return;
+                }
+
                 if (typeof faceapi !== 'undefined') {
                     clearInterval(waitForFaceApi);
-                    initFaceSetup();
+                    startOnce();
                 }
             }, 100);
+
+            setTimeout(() => {
+                if (typeof faceapi === 'undefined' && !window.faceApiLoadFailed) {
+                    clearInterval(waitForFaceApi);
+                    showLoadError('face-api.js belum termuat. Pastikan file public/vendor/face-api.min.js bisa diakses.');
+                }
+            }, 15000);
         });
 
         async function initFaceSetup() {
@@ -220,11 +262,13 @@
             const statusText = document.getElementById('statusText');
             const camLoading = document.getElementById('camLoading');
             const camLoadingText = document.getElementById('camLoadingText');
+            const cameraRetryBtn = document.getElementById('cameraRetryBtn');
             const faceGuide = document.getElementById('faceGuide');
             const descriptorInfo = document.getElementById('descriptorInfo');
             const descriptorLen = document.getElementById('descriptorLen');
             const descriptorInput = document.getElementById('face_descriptor');
             const imageBase64Input = document.getElementById('face_image_base64');
+            const modelBaseUri = @json(asset('models'));
 
             function setStatus(type, msg) {
                 const colors = {
@@ -239,16 +283,25 @@
 
             // ─── 1. Load Models ───────────────────────────────────────
             try {
+                if (!window.isSecureContext) {
+                    throw new Error('Safari iOS hanya mengizinkan kamera pada HTTPS. Buka situs deploy dengan https://.');
+                }
+
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Browser tidak mendukung akses kamera. Gunakan Safari iOS terbaru dan izinkan kamera untuk situs ini.');
+                }
+
                 camLoadingText.textContent = 'Memuat model AI...';
                 setStatus('loading', 'Memuat model AI...');
                 await Promise.all([
-                    faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
-                    faceapi.nets.faceLandmark68TinyNet.loadFromUri('/models'),
-                    faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
+                    faceapi.nets.tinyFaceDetector.loadFromUri(modelBaseUri),
+                    faceapi.nets.faceLandmark68TinyNet.loadFromUri(modelBaseUri),
+                    faceapi.nets.faceRecognitionNet.loadFromUri(modelBaseUri),
                 ]);
             } catch (e) {
-                setStatus('error', 'Gagal memuat model. Cek folder /public/models/');
+                setStatus('error', 'Gagal memuat model/kamera: ' + e.message);
                 camLoadingText.textContent = 'Gagal memuat model AI';
+                cameraRetryBtn.classList.remove('hidden');
                 return;
             }
 
@@ -256,16 +309,14 @@
             try {
                 camLoadingText.textContent = 'Mengakses kamera...';
                 setStatus('loading', 'Mengakses kamera...');
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        width: 640,
-                        height: 480,
-                        facingMode: 'user'
-                    },
-                    audio: false
-                });
+                const stream = await openUserCamera();
+                video.setAttribute('playsinline', '');
+                video.setAttribute('webkit-playsinline', '');
+                video.muted = true;
+                video.autoplay = true;
                 video.srcObject = stream;
                 await new Promise(resolve => video.onloadedmetadata = resolve);
+                await video.play();
 
                 overlayEl.width = video.videoWidth;
                 overlayEl.height = video.videoHeight;
@@ -281,6 +332,7 @@
             } catch (e) {
                 setStatus('error', 'Kamera tidak dapat diakses: ' + e.message);
                 camLoadingText.textContent = e.message;
+                cameraRetryBtn.classList.remove('hidden');
             }
 
             // ─── 4. Capture ───────────────────────────────────────────
@@ -357,6 +409,26 @@
         }
 
         // ─── Deteksi wajah realtime untuk panduan visual ──────────────
+        async function openUserCamera() {
+            const preferredConstraints = {
+                video: {
+                    width: { ideal: 640 },
+                    height: { ideal: 480 },
+                    facingMode: { ideal: 'user' }
+                },
+                audio: false
+            };
+
+            try {
+                return await navigator.mediaDevices.getUserMedia(preferredConstraints);
+            } catch (error) {
+                if (error && (error.name === 'OverconstrainedError' || error.name === 'ConstraintNotSatisfiedError')) {
+                    return navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                }
+                throw error;
+            }
+        }
+
         async function startLiveDetection(video, overlayEl, faceGuide, setStatus) {
             const options = new faceapi.TinyFaceDetectorOptions({
                 inputSize: 224,
@@ -404,5 +476,12 @@
             ctx.lineTo(x + w, y + h - len);
             ctx.stroke();
         }
+        window.addEventListener('pagehide', () => {
+            const video = document.getElementById('webcam');
+            const stream = video?.srcObject;
+            if (stream && typeof stream.getTracks === 'function') {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
     </script>
 </x-app-layout>

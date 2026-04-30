@@ -270,8 +270,13 @@
         const form = document.getElementById('attendance-form');
         const infoDiv = document.getElementById('location-info');
 
+        if (!window.isSecureContext) {
+            showError("Presensi lokasi di Safari iOS hanya berjalan melalui HTTPS. Pastikan membuka alamat deploy dengan https://.");
+            return;
+        }
+
         if (!navigator.geolocation) {
-            showError("Browser tidak mendukung lokasi.");
+            showError("Browser tidak mendukung lokasi. Pastikan Location Services aktif dan izin lokasi untuk Safari diizinkan.");
             return;
         }
 
@@ -323,7 +328,7 @@
             if (err && typeof err.code !== "undefined") {
                 switch (err.code) {
                     case err.PERMISSION_DENIED:
-                        msg = "Izin lokasi ditolak. Silakan Allow lokasi untuk situs ini.";
+                        msg = "Izin lokasi ditolak. Di iPhone: Settings > Safari > Location, lalu izinkan lokasi untuk situs ini.";
                         break;
                     case err.POSITION_UNAVAILABLE:
                         msg =
@@ -408,11 +413,11 @@
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
         const R = 6371e3;
-        const φ1 = lat1 * Math.PI / 180;
-        const φ2 = lat2 * Math.PI / 180;
-        const Δφ = (lat2 - lat1) * Math.PI / 180;
-        const Δλ = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+        const phi1 = lat1 * Math.PI / 180;
+        const phi2 = lat2 * Math.PI / 180;
+        const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+        const deltaLambda = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(deltaPhi / 2) ** 2 + Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) ** 2;
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
     }
