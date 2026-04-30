@@ -253,9 +253,14 @@
 
 <script>
     // --- KONFIGURASI LOKASI KANTOR ---
-    const officeLat = -7.594917597849972;
-    const officeLng = 110.94065517764916;
-    const maxRadius = 1500; // meter
+    const officeConfig = @json($officeConfig ?? [
+        'latitude' => -7.594917597849972,
+        'longitude' => 110.94065517764916,
+        'radius' => 1500,
+    ]);
+    const officeLat = Number(officeConfig.latitude);
+    const officeLng = Number(officeConfig.longitude);
+    const maxRadius = Number(officeConfig.radius); // meter
 
     // Timeout yang lebih realistis (GPS indoor sering lama)
     const TIMEOUT_HIGH = 60000; // 60s

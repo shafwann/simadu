@@ -97,12 +97,20 @@ class AttendanceController extends Controller
             $checkoutExpired = $now->gt($checkoutEnd);
         }
 
+        [$officeLat, $officeLng, $maxRadius] = $this->getOfficeConfig();
+        $officeConfig = [
+            'latitude' => $officeLat,
+            'longitude' => $officeLng,
+            'radius' => $maxRadius,
+        ];
+
         return view('attendance.index', compact(
             'attendance',
             'schedule',
             'checkinTooEarly',
             'checkoutExpired',
-            'scheduleError'
+            'scheduleError',
+            'officeConfig'
         ));
     }
 
