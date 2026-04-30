@@ -1,4 +1,136 @@
 <x-app-layout>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIINfQ1Q8pRcyiS6vBjsnKC6mZkP4hVT+Y="
+        crossorigin="">
+    <style>
+        #office-radius-map {
+            height: 320px;
+            width: 100%;
+            z-index: 0;
+        }
+
+        #office-radius-map.leaflet-container {
+            overflow: hidden;
+            position: relative;
+            background: #f3f4f6;
+            outline: 0;
+        }
+
+        #office-radius-map .leaflet-pane,
+        #office-radius-map .leaflet-map-pane,
+        #office-radius-map .leaflet-tile,
+        #office-radius-map .leaflet-marker-icon,
+        #office-radius-map .leaflet-marker-shadow,
+        #office-radius-map .leaflet-tile-container,
+        #office-radius-map .leaflet-pane > svg,
+        #office-radius-map .leaflet-pane > canvas,
+        #office-radius-map .leaflet-zoom-box,
+        #office-radius-map .leaflet-image-layer,
+        #office-radius-map .leaflet-layer {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        #office-radius-map .leaflet-pane > svg,
+        #office-radius-map .leaflet-pane > canvas {
+            max-width: none !important;
+            max-height: none !important;
+        }
+
+        #office-radius-map .leaflet-tile {
+            max-width: none !important;
+            max-height: none !important;
+            width: 256px !important;
+            height: 256px !important;
+        }
+
+        #office-radius-map .leaflet-control-container .leaflet-top,
+        #office-radius-map .leaflet-control-container .leaflet-bottom {
+            position: absolute;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        #office-radius-map .leaflet-top {
+            top: 0;
+        }
+
+        #office-radius-map .leaflet-bottom {
+            bottom: 0;
+        }
+
+        #office-radius-map .leaflet-left {
+            left: 0;
+        }
+
+        #office-radius-map .leaflet-right {
+            right: 0;
+        }
+
+        #office-radius-map .leaflet-control {
+            pointer-events: auto;
+            margin: 10px;
+        }
+
+        #office-radius-map .leaflet-control-zoom {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+        }
+
+        #office-radius-map .leaflet-control-zoom a {
+            display: block;
+            width: 26px;
+            height: 26px;
+            line-height: 26px;
+            text-align: center;
+            background: white;
+            border-bottom: 1px solid #d1d5db;
+            color: #111827;
+            text-decoration: none;
+        }
+
+        #office-radius-map .leaflet-control-zoom a:last-child {
+            border-bottom: 0;
+        }
+
+        #office-radius-map .leaflet-control-attribution {
+            max-width: calc(100% - 20px);
+            background: rgb(255 255 255 / 0.88);
+            border-radius: 6px;
+            color: #374151;
+            font-size: 10px;
+            line-height: 1.4;
+            padding: 2px 6px;
+        }
+
+        #office-radius-map .leaflet-tile-pane {
+            z-index: 200;
+        }
+
+        #office-radius-map .leaflet-overlay-pane {
+            z-index: 400;
+        }
+
+        #office-radius-map .leaflet-shadow-pane {
+            z-index: 500;
+        }
+
+        #office-radius-map .leaflet-marker-pane {
+            z-index: 600;
+        }
+
+        #office-radius-map .leaflet-tooltip-pane {
+            z-index: 650;
+        }
+
+        #office-radius-map .leaflet-popup-pane {
+            z-index: 700;
+        }
+    </style>
+
     <x-slot name="header">
         <div class="flex flex-col">
             <h2 class="font-black text-xl text-gray-800 leading-tight">
@@ -199,22 +331,28 @@
                 <div class="space-y-4">
                     <div>
                         <x-input-label value="Nama Lokasi (Label Absen)" />
-                        <x-text-input name="office_name" class="mt-1 block w-full uppercase"
+                        <x-text-input id="office_name_input" name="office_name" class="mt-1 block w-full uppercase"
                             value="{{ old('office_name', $about->office_name) }}" />
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <x-input-label value="Koordinat GPS (Latitude, Longitude)" />
-                            <x-text-input name="office_gps" class="mt-1 block w-full"
+                            <x-text-input id="office_gps_input" name="office_gps" class="mt-1 block w-full"
                                 placeholder="-7.5949963811058385, 110.94069955794491"
                                 value="{{ old('office_gps', $about->office_latitude . ', ' . $about->office_longitude) }}" />
                         </div>
                         <div>
                             <x-input-label value="Radius (Meter)" />
-                            <x-text-input name="radius_meter" type="number" class="mt-1 block w-full"
+                            <x-text-input id="radius_meter_input" name="radius_meter" type="number" class="mt-1 block w-full"
                                 value="{{ old('radius_meter', $about->radius_meter) }}" required />
                         </div>
                     </div>
+                    <div class="rounded-2xl border border-gray-200 overflow-hidden bg-gray-50">
+                        <div id="office-radius-map"></div>
+                    </div>
+                    <p id="office-radius-map-help" class="text-xs text-gray-500">
+                        Preview radius absensi akan mengikuti koordinat GPS dan radius meter di atas.
+                    </p>
                 </div>
 
                 <div class="mt-6 pt-4 border-t border-gray-100 flex justify-start">
@@ -442,7 +580,120 @@
     </div>
 
     {{-- SCRIPTS --}}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const mapElement = document.getElementById('office-radius-map');
+            const gpsInput = document.getElementById('office_gps_input');
+            const radiusInput = document.getElementById('radius_meter_input');
+            const nameInput = document.getElementById('office_name_input');
+            const helpText = document.getElementById('office-radius-map-help');
+
+            if (!mapElement || !window.L) return;
+
+            const fallbackCenter = [-7.594917597849972, 110.94065517764916];
+            const map = L.map(mapElement, {
+                scrollWheelZoom: false,
+            }).setView(fallbackCenter, 16);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors',
+            }).addTo(map);
+
+            let marker = null;
+            let circle = null;
+
+            function parseGps(value) {
+                const parts = (value || '').split(',').map((item) => Number(item.trim()));
+                if (parts.length < 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) {
+                    return null;
+                }
+
+                const lat = parts[0];
+                const lng = parts[1];
+                if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+                    return null;
+                }
+
+                return [lat, lng];
+            }
+
+            function updateOfficeMap() {
+                const position = parseGps(gpsInput?.value);
+                const radius = Math.max(10, Number(radiusInput?.value) || 50);
+                const locationName = (nameInput?.value || 'Lokasi Kantor').trim() || 'Lokasi Kantor';
+
+                if (!position) {
+                    if (marker) {
+                        map.removeLayer(marker);
+                        marker = null;
+                    }
+                    if (circle) {
+                        map.removeLayer(circle);
+                        circle = null;
+                    }
+                    map.setView(fallbackCenter, 15);
+                    if (helpText) {
+                        helpText.textContent = 'Masukkan koordinat dengan format: latitude, longitude.';
+                    }
+                    return;
+                }
+
+                if (!marker) {
+                    marker = L.circleMarker(position, {
+                        radius: 7,
+                        color: '#1d4ed8',
+                        weight: 3,
+                        fillColor: '#ffffff',
+                        fillOpacity: 1,
+                    }).addTo(map);
+                } else {
+                    marker.setLatLng(position);
+                }
+
+                marker.bindPopup(locationName);
+
+                if (!circle) {
+                    circle = L.circle(position, {
+                        radius,
+                        color: '#dc2626',
+                        weight: 3,
+                        fillColor: '#f97316',
+                        fillOpacity: 0.24,
+                    }).addTo(map);
+                } else {
+                    circle.setLatLng(position);
+                    circle.setRadius(radius);
+                }
+
+                circle.bringToFront();
+                marker.bringToFront();
+
+                map.fitBounds(circle.getBounds(), {
+                    padding: [24, 24],
+                    maxZoom: 19,
+                });
+
+                if (helpText) {
+                    helpText.textContent = `Preview area absensi: ${locationName}, radius ${radius} meter.`;
+                }
+            }
+
+            ['input', 'change'].forEach((eventName) => {
+                gpsInput?.addEventListener(eventName, updateOfficeMap);
+                radiusInput?.addEventListener(eventName, updateOfficeMap);
+                nameInput?.addEventListener(eventName, updateOfficeMap);
+            });
+
+            setTimeout(function () {
+                map.invalidateSize();
+                updateOfficeMap();
+            }, 100);
+        });
+
         function bidangDivisiForm() {
             return {
                 items: [],
