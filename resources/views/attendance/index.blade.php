@@ -253,11 +253,7 @@
 
 <script>
     // --- KONFIGURASI LOKASI KANTOR ---
-    const officeConfig = @json($officeConfig ?? [
-        'latitude' => -7.594917597849972,
-        'longitude' => 110.94065517764916,
-        'radius' => 1500,
-    ]);
+    const officeConfig = @json($officeConfig ?? ['latitude' => -7.594917597849972, 'longitude' => 110.94065517764916, 'radius' => 1500]);
     const officeLat = Number(officeConfig.latitude);
     const officeLng = Number(officeConfig.longitude);
     const maxRadius = Number(officeConfig.radius); // meter
