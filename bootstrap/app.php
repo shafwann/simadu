@@ -11,6 +11,7 @@ use App\Http\Middleware\TrackVisits;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__ . '/../routes/web.php',
+        api: __DIR__ . '/../routes/api.php',
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
@@ -19,6 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleManager::class,
             'no-cache' => NoCache::class, // TAMBAHKAN INI
             'track.visits' => TrackVisits::class,
+        ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'api/auth/login',
+            'api/auth/logout',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

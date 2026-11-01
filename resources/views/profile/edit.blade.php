@@ -368,7 +368,7 @@
                 return;
             }
 
-            fetch(`/search-dosen?q=${this.value}`)
+            fetch(`{{ route('api.dosen.search') }}?q=${this.value}`)
                 .then(res => res.json())
                 .then(data => {
 

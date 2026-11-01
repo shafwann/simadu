@@ -1,0 +1,2448 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Sistem Magang Karanganyar API",
+        "description": "Dokumentasi API aplikasi presensi magang. Untuk menguji endpoint yang membutuhkan login, jalankan POST /api/auth/login dari grup Auth terlebih dahulu. Setelah login berhasil, browser menyimpan session Laravel dan endpoint lain bisa langsung diuji.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/",
+            "description": "Current host"
+        }
+    ],
+    "tags": [
+        {
+            "name": "System",
+            "description": "Endpoint pengecekan API"
+        },
+        {
+            "name": "Auth",
+            "description": "Login session Laravel untuk menguji API dari Swagger"
+        },
+        {
+            "name": "Face Verification",
+            "description": "Endpoint verifikasi wajah sebelum presensi"
+        },
+        {
+            "name": "Dosen",
+            "description": "Endpoint pencarian dosen pembimbing"
+        },
+        {
+            "name": "Logbook",
+            "description": "Endpoint CRUD logbook mahasiswa"
+        },
+        {
+            "name": "Laporan",
+            "description": "Endpoint CRUD laporan mahasiswa"
+        },
+        {
+            "name": "Attendance",
+            "description": "Endpoint presensi mahasiswa"
+        },
+        {
+            "name": "Admin Students",
+            "description": "Endpoint pengelolaan mahasiswa oleh admin"
+        },
+        {
+            "name": "Admin Dosen",
+            "description": "Endpoint pengelolaan dosen pembimbing oleh admin"
+        },
+        {
+            "name": "Pembimbing",
+            "description": "Endpoint mahasiswa bimbingan untuk dosen pembimbing"
+        }
+    ],
+    "paths": {
+        "/api": {
+            "get": {
+                "tags": [
+                    "System"
+                ],
+                "summary": "Cek API aktif",
+                "description": "Mengembalikan daftar endpoint API yang tersedia.",
+                "operationId": "apiIndex",
+                "responses": {
+                    "200": {
+                        "description": "API aktif",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiIndexResponse"
+                                },
+                                "example": {
+                                    "name": "Laravel",
+                                    "message": "API aplikasi aktif.",
+                                    "documentation": "http://127.0.0.1:8000/api/documentation",
+                                    "openapi": "http://127.0.0.1:8000/docs/openapi.json",
+                                    "endpoints": [
+                                        {
+                                            "method": "POST",
+                                            "path": "/api/face-verify",
+                                            "name": "api.face.verify"
+                                        },
+                                        {
+                                            "method": "GET",
+                                            "path": "/api/dosen/search",
+                                            "name": "api.dosen.search"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/face-verify": {
+            "post": {
+                "tags": [
+                    "Face Verification"
+                ],
+                "summary": "Verifikasi wajah mahasiswa",
+                "description": "Membandingkan descriptor wajah dari face-api.js dengan descriptor wajah yang tersimpan pada user login. Request harus dikirim oleh mahasiswa yang sudah login dan menyertakan CSRF token.",
+                "operationId": "verifyFace",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FaceVerifyRequest"
+                            },
+                            "example": {
+                                "descriptor": "[0.12,-0.04,0.08,0.01]",
+                                "intended_action": "check-in"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Verifikasi diproses",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "$ref": "#/components/schemas/FaceVerifyMatchedResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/FaceVerifyMismatchResponse"
+                                        }
+                                    ]
+                                },
+                                "examples": {
+                                    "matched": {
+                                        "summary": "Wajah cocok",
+                                        "value": {
+                                            "match": true,
+                                            "similarity": 0.82,
+                                            "distance": 0.18,
+                                            "verification_token": "token-random"
+                                        }
+                                    },
+                                    "mismatch": {
+                                        "summary": "Wajah tidak cocok",
+                                        "value": {
+                                            "match": false,
+                                            "similarity": 0.42,
+                                            "distance": 0.58
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "409": {
+                        "description": "Aksi absensi tidak ditemukan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FaceVerifyErrorResponse"
+                                },
+                                "example": {
+                                    "match": false,
+                                    "similarity": 0.8,
+                                    "distance": 0.2,
+                                    "message": "Aksi absensi tidak ditemukan"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Descriptor tidak valid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FaceVerifyErrorResponse"
+                                },
+                                "examples": {
+                                    "invalidDescriptor": {
+                                        "summary": "Format descriptor salah",
+                                        "value": {
+                                            "match": false,
+                                            "similarity": 0,
+                                            "message": "Descriptor tidak valid"
+                                        }
+                                    },
+                                    "invalidLength": {
+                                        "summary": "Descriptor bukan 128 dimensi",
+                                        "value": {
+                                            "match": false,
+                                            "similarity": 0,
+                                            "message": "Descriptor harus 128-dimensional"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/dosen/search": {
+            "get": {
+                "tags": [
+                    "Dosen"
+                ],
+                "summary": "Cari dosen pembimbing",
+                "description": "Mengambil daftar dosen pembimbing aktif untuk autocomplete. Hasil dibatasi sesuai instansi dan fakultas mahasiswa yang sedang login.",
+                "operationId": "searchDosen",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Kata kunci nama dosen.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Budi"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar dosen pembimbing",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Dosen"
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "id": 7,
+                                        "name": "Nama Dosen",
+                                        "email": "dosen@example.com",
+                                        "nidn": "1234567890"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                }
+            }
+        },
+        "/api/logbooks": {
+            "get": {
+                "tags": [
+                    "Logbook"
+                ],
+                "summary": "List logbook mahasiswa",
+                "description": "Mengambil data logbook milik mahasiswa yang sedang login.",
+                "operationId": "listLogbooks",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "validated",
+                                "rejected"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2026
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 12,
+                            "example": 5
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "tanggal",
+                                "status",
+                                "created_at",
+                                "updated_at"
+                            ],
+                            "default": "tanggal"
+                        }
+                    },
+                    {
+                        "name": "direction",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ],
+                            "default": "desc"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar logbook",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedLogbooks"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Logbook"
+                ],
+                "summary": "Tambah logbook",
+                "description": "Membuat logbook baru untuk mahasiswa yang sedang login.",
+                "operationId": "createLogbook",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LogbookRequest"
+                            },
+                            "example": {
+                                "tanggal": "2026-05-04",
+                                "kegiatan": "Mengerjakan implementasi face-api.js untuk presensi."
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Logbook dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LogbookMutationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                }
+            }
+        },
+        "/api/logbooks/{logbook}": {
+            "get": {
+                "tags": [
+                    "Logbook"
+                ],
+                "summary": "Detail logbook",
+                "operationId": "showLogbook",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/LogbookId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail logbook",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Logbook"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Logbook"
+                ],
+                "summary": "Update logbook",
+                "operationId": "updateLogbook",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/LogbookId"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LogbookRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Logbook diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LogbookMutationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Logbook"
+                ],
+                "summary": "Hapus logbook",
+                "operationId": "deleteLogbook",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/LogbookId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Logbook dihapus",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
+        "/api/laporans": {
+            "get": {
+                "tags": [
+                    "Laporan"
+                ],
+                "summary": "List laporan mahasiswa",
+                "description": "Mengambil laporan milik mahasiswa yang sedang login.",
+                "operationId": "listLaporans",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "validated",
+                                "rejected"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar laporan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedLaporans"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Laporan"
+                ],
+                "summary": "Upload laporan",
+                "operationId": "createLaporan",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LaporanUploadRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Laporan diunggah",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LaporanMutationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                }
+            }
+        },
+        "/api/laporans/{laporan}": {
+            "get": {
+                "tags": [
+                    "Laporan"
+                ],
+                "summary": "Detail laporan",
+                "operationId": "showLaporan",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/LaporanId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail laporan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Laporan"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Laporan"
+                ],
+                "summary": "Update file laporan",
+                "description": "Mengganti file laporan. Dipakai POST multipart karena PHP tidak selalu membaca multipart PUT dengan baik.",
+                "operationId": "updateLaporan",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/LaporanId"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LaporanUploadRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Laporan diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LaporanMutationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Laporan"
+                ],
+                "summary": "Hapus laporan",
+                "operationId": "deleteLaporan",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/LaporanId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Laporan dihapus",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                }
+            }
+        },
+        "/api/laporans/{laporan}/download": {
+            "get": {
+                "tags": [
+                    "Laporan"
+                ],
+                "summary": "Download file laporan",
+                "operationId": "downloadLaporan",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/LaporanId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File laporan",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
+        "/api/laporans/{laporan}/preview": {
+            "get": {
+                "tags": [
+                    "Laporan"
+                ],
+                "summary": "Preview file laporan",
+                "operationId": "previewLaporan",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/LaporanId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File laporan inline",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            },
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
+        "/api/attendance/today": {
+            "get": {
+                "tags": [
+                    "Attendance"
+                ],
+                "summary": "Status presensi hari ini",
+                "responses": {
+                    "200": {
+                        "description": "Status hari ini",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Attendance"
+                                        },
+                                        "schedule": {
+                                            "type": "object"
+                                        },
+                                        "office": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                }
+            }
+        },
+        "/api/attendance/history": {
+            "get": {
+                "tags": [
+                    "Attendance"
+                ],
+                "summary": "Riwayat presensi",
+                "parameters": [
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2026
+                        },
+                        "description": ""
+                    },
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 12
+                        },
+                        "description": ""
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Riwayat presensi",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                }
+            }
+        },
+        "/api/attendance/check-in": {
+            "post": {
+                "tags": [
+                    "Attendance"
+                ],
+                "summary": "Check-in presensi",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AttendanceCheckRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Check-in berhasil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "409": {
+                        "description": "Belum verifikasi wajah",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                }
+            }
+        },
+        "/api/attendance/check-out": {
+            "post": {
+                "tags": [
+                    "Attendance"
+                ],
+                "summary": "Check-out presensi",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AttendanceCheckRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Check-out berhasil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "409": {
+                        "description": "Belum verifikasi wajah",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                }
+            }
+        },
+        "/api/admin/students": {
+            "get": {
+                "tags": [
+                    "Admin Students"
+                ],
+                "summary": "List mahasiswa",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "aktif",
+                                "nonaktif"
+                            ]
+                        },
+                        "description": ""
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar mahasiswa",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Admin Students"
+                ],
+                "summary": "Tambah mahasiswa",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StudentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Mahasiswa dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                }
+            }
+        },
+        "/api/admin/students/{student}": {
+            "get": {
+                "tags": [
+                    "Admin Students"
+                ],
+                "summary": "Detail mahasiswa",
+                "parameters": [
+                    {
+                        "name": "student",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "ID mahasiswa"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail mahasiswa",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Admin Students"
+                ],
+                "summary": "Update mahasiswa",
+                "parameters": [
+                    {
+                        "name": "student",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "ID mahasiswa"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StudentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mahasiswa diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Admin Students"
+                ],
+                "summary": "Hapus mahasiswa",
+                "parameters": [
+                    {
+                        "name": "student",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "ID mahasiswa"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mahasiswa dihapus",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
+        "/api/admin/students/{student}/status": {
+            "patch": {
+                "tags": [
+                    "Admin Students"
+                ],
+                "summary": "Update status mahasiswa",
+                "parameters": [
+                    {
+                        "name": "student",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "ID mahasiswa"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "aktif",
+                                            "nonaktif"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Status diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                }
+            }
+        },
+        "/api/admin/students/{student}/face-reset": {
+            "post": {
+                "tags": [
+                    "Admin Students"
+                ],
+                "summary": "Reset data wajah mahasiswa",
+                "parameters": [
+                    {
+                        "name": "student",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "ID mahasiswa"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Wajah direset",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
+        "/api/admin/dosen": {
+            "get": {
+                "tags": [
+                    "Admin Dosen"
+                ],
+                "summary": "List dosen pembimbing",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar dosen",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Admin Dosen"
+                ],
+                "summary": "Tambah dosen pembimbing",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DosenRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Dosen dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                }
+            }
+        },
+        "/api/admin/dosen/{dosen}": {
+            "get": {
+                "tags": [
+                    "Admin Dosen"
+                ],
+                "summary": "Detail dosen pembimbing",
+                "parameters": [
+                    {
+                        "name": "dosen",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "ID dosen"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail dosen",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Admin Dosen"
+                ],
+                "summary": "Update dosen pembimbing",
+                "parameters": [
+                    {
+                        "name": "dosen",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "ID dosen"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DosenRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Dosen diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Admin Dosen"
+                ],
+                "summary": "Hapus dosen pembimbing",
+                "parameters": [
+                    {
+                        "name": "dosen",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "ID dosen"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dosen dihapus",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
+        "/api/pembimbing/students": {
+            "get": {
+                "tags": [
+                    "Pembimbing"
+                ],
+                "summary": "List mahasiswa bimbingan",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mahasiswa bimbingan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                }
+            }
+        },
+        "/api/pembimbing/students/{student}": {
+            "get": {
+                "tags": [
+                    "Pembimbing"
+                ],
+                "summary": "Detail mahasiswa bimbingan",
+                "parameters": [
+                    {
+                        "name": "student",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "ID mahasiswa"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail mahasiswa bimbingan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
+        "/api/auth/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login menggunakan session Laravel",
+                "description": "Login dengan email dan password. Jika berhasil, browser menyimpan session Laravel secara otomatis. Setelah itu endpoint lain bisa langsung diuji.",
+                "operationId": "authLogin",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login berhasil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/UserSummary"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    }
+                }
+            }
+        },
+        "/api/auth/me": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "User login saat ini",
+                "operationId": "authMe",
+                "responses": {
+                    "200": {
+                        "description": "User login",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/UserSummary"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    }
+                }
+            }
+        },
+        "/api/auth/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout session Laravel",
+                "operationId": "authLogout",
+                "responses": {
+                    "200": {
+                        "description": "Logout berhasil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    }
+                },
+                "description": "Logout dari session Laravel yang sedang aktif di browser."
+            }
+        }
+    },
+    "components": {
+        "parameters": {
+            "LogbookId": {
+                "name": "logbook",
+                "in": "path",
+                "required": true,
+                "schema": {
+                    "type": "integer"
+                },
+                "description": "ID logbook."
+            },
+            "LaporanId": {
+                "name": "laporan",
+                "in": "path",
+                "required": true,
+                "schema": {
+                    "type": "integer"
+                },
+                "description": "ID laporan."
+            }
+        },
+        "schemas": {
+            "ApiIndexResponse": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "Laravel"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "API aplikasi aktif."
+                    },
+                    "documentation": {
+                        "type": "string",
+                        "format": "uri",
+                        "example": "http://127.0.0.1:8000/api/documentation"
+                    },
+                    "openapi": {
+                        "type": "string",
+                        "format": "uri",
+                        "example": "http://127.0.0.1:8000/docs/openapi.json"
+                    },
+                    "endpoints": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "method": {
+                                    "type": "string",
+                                    "example": "POST"
+                                },
+                                "path": {
+                                    "type": "string",
+                                    "example": "/api/face-verify"
+                                },
+                                "name": {
+                                    "type": "string",
+                                    "example": "api.face.verify"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "FaceVerifyRequest": {
+                "type": "object",
+                "required": [
+                    "descriptor"
+                ],
+                "properties": {
+                    "descriptor": {
+                        "type": "string",
+                        "description": "JSON string berisi array descriptor wajah 128 dimensi dari face-api.js.",
+                        "example": "[0.12,-0.04,0.08,0.01]"
+                    },
+                    "intended_action": {
+                        "type": "string",
+                        "nullable": true,
+                        "enum": [
+                            "check-in",
+                            "check-out"
+                        ],
+                        "example": "check-in"
+                    }
+                }
+            },
+            "FaceVerifyMatchedResponse": {
+                "type": "object",
+                "properties": {
+                    "match": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "similarity": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.82
+                    },
+                    "distance": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.18
+                    },
+                    "verification_token": {
+                        "type": "string",
+                        "example": "token-random"
+                    }
+                }
+            },
+            "FaceVerifyMismatchResponse": {
+                "type": "object",
+                "properties": {
+                    "match": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "similarity": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.42
+                    },
+                    "distance": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.58
+                    }
+                }
+            },
+            "FaceVerifyErrorResponse": {
+                "type": "object",
+                "properties": {
+                    "match": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "similarity": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0
+                    },
+                    "distance": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.2
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Descriptor harus 128-dimensional"
+                    }
+                }
+            },
+            "Dosen": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 7
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Nama Dosen"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "dosen@example.com"
+                    },
+                    "nidn": {
+                        "type": "string",
+                        "example": "1234567890"
+                    }
+                }
+            },
+            "Logbook": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "tanggal": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-05-04"
+                    },
+                    "kegiatan": {
+                        "type": "string",
+                        "example": "Mengerjakan implementasi face-api.js untuk presensi."
+                    },
+                    "catatan_pembimbing": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": null
+                    },
+                    "is_validated": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "is_rejected": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "rejected_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "example": null
+                    },
+                    "rejected_note": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": null
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "LogbookRequest": {
+                "type": "object",
+                "required": [
+                    "tanggal",
+                    "kegiatan"
+                ],
+                "properties": {
+                    "tanggal": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-05-04"
+                    },
+                    "kegiatan": {
+                        "type": "string",
+                        "minLength": 5,
+                        "example": "Mengerjakan implementasi face-api.js untuk presensi."
+                    }
+                }
+            },
+            "LogbookMutationResponse": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Logbook berhasil disimpan."
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/Logbook"
+                    }
+                }
+            },
+            "PaginatedLogbooks": {
+                "type": "object",
+                "properties": {
+                    "current_page": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Logbook"
+                        }
+                    },
+                    "per_page": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "total": {
+                        "type": "integer",
+                        "example": 25
+                    }
+                }
+            },
+            "Laporan": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "nama_file": {
+                        "type": "string",
+                        "example": "laporan-magang.pdf"
+                    },
+                    "file_path": {
+                        "type": "string",
+                        "example": "laporan/laporan-magang.pdf"
+                    },
+                    "is_validated": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "is_rejected": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "rejected_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "example": null
+                    },
+                    "rejected_note": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": null
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "download_url": {
+                        "type": "string",
+                        "format": "uri",
+                        "example": "http://127.0.0.1:8000/api/laporans/1/download"
+                    },
+                    "preview_url": {
+                        "type": "string",
+                        "format": "uri",
+                        "example": "http://127.0.0.1:8000/api/laporans/1/preview"
+                    }
+                }
+            },
+            "LaporanUploadRequest": {
+                "type": "object",
+                "required": [
+                    "file"
+                ],
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "format": "binary",
+                        "description": "File laporan dengan format pdf, doc, atau docx."
+                    }
+                }
+            },
+            "LaporanMutationResponse": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Laporan berhasil diunggah dan menunggu validasi admin."
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/Laporan"
+                    }
+                }
+            },
+            "PaginatedLaporans": {
+                "type": "object",
+                "properties": {
+                    "current_page": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Laporan"
+                        }
+                    },
+                    "per_page": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "total": {
+                        "type": "integer",
+                        "example": 12
+                    }
+                }
+            },
+            "MessageResponse": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Data berhasil dihapus."
+                    }
+                }
+            },
+            "ErrorResponse": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Unauthenticated."
+                    }
+                }
+            },
+            "UserSummary": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Nama Mahasiswa"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "role": {
+                        "type": "string",
+                        "example": "mahasiswa"
+                    },
+                    "nim": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "nidn": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "prodi": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "instansi": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "fakultas": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "bidang": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "aktif"
+                    },
+                    "kategori_instansi": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "tanggal_masuk": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "tanggal_selesai": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    }
+                }
+            },
+            "Attendance": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "user_id": {
+                        "type": "integer"
+                    },
+                    "tanggal": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "check_in": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "check_out": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "Hadir"
+                    },
+                    "keterangan": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "location": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "location_name": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "StudentRequest": {
+                "type": "object",
+                "required": [
+                    "name",
+                    "email",
+                    "password",
+                    "password_confirmation",
+                    "nim",
+                    "prodi",
+                    "instansi",
+                    "kegiatan",
+                    "tanggal_masuk",
+                    "tanggal_selesai",
+                    "bidang",
+                    "jabatan_pembimbing",
+                    "nama_pembimbing",
+                    "nip_pembimbing"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password"
+                    },
+                    "password_confirmation": {
+                        "type": "string",
+                        "format": "password"
+                    },
+                    "nim": {
+                        "type": "string"
+                    },
+                    "prodi": {
+                        "type": "string"
+                    },
+                    "instansi": {
+                        "type": "string"
+                    },
+                    "kegiatan": {
+                        "type": "string"
+                    },
+                    "fakultas": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "tanggal_masuk": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "tanggal_selesai": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "bidang": {
+                        "type": "string"
+                    },
+                    "jabatan_pembimbing": {
+                        "type": "string"
+                    },
+                    "nama_pembimbing": {
+                        "type": "string"
+                    },
+                    "nip_pembimbing": {
+                        "type": "string"
+                    }
+                }
+            },
+            "DosenRequest": {
+                "type": "object",
+                "required": [
+                    "name",
+                    "email",
+                    "password",
+                    "password_confirmation",
+                    "instansi"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password"
+                    },
+                    "password_confirmation": {
+                        "type": "string",
+                        "format": "password"
+                    },
+                    "nidn": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "instansi": {
+                        "type": "string"
+                    },
+                    "mahasiswa_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            },
+            "AttendanceCheckRequest": {
+                "type": "object",
+                "required": [
+                    "location",
+                    "face_verification_token"
+                ],
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "example": "-7.5949,110.9406"
+                    },
+                    "face_verification_token": {
+                        "type": "string"
+                    }
+                }
+            },
+            "LoginRequest": {
+                "type": "object",
+                "required": [
+                    "email",
+                    "password"
+                ],
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "example@example.com",
+                        "description": "Gunakan email lengkap yang tersimpan di tabel users."
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "password"
+                    },
+                    "remember": {
+                        "type": "boolean",
+                        "example": false
+                    }
+                }
+            }
+        },
+        "responses": {
+            "Unauthenticated": {
+                "description": "User belum login",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorResponse"
+                        },
+                        "example": {
+                            "message": "Unauthenticated."
+                        }
+                    }
+                }
+            },
+            "Forbidden": {
+                "description": "Role user tidak diizinkan",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorResponse"
+                        },
+                        "example": {
+                            "message": "Forbidden."
+                        }
+                    }
+                }
+            },
+            "ValidationError": {
+                "description": "Data request tidak valid",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorResponse"
+                        },
+                        "example": {
+                            "message": "The given data was invalid.",
+                            "errors": {
+                                "tanggal": [
+                                    "The tanggal field is required."
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            "NotFound": {
+                "description": "Data tidak ditemukan",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorResponse"
+                        },
+                        "example": {
+                            "message": "Not Found."
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -434,7 +434,7 @@
             const statusBox = document.getElementById('statusBox');
 
             try {
-                const res = await fetch('{{ route('face.verify.submit') }}', {
+                const res = await fetch('{{ route('api.face.verify') }}', {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: {
