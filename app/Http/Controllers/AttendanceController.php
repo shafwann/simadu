@@ -93,8 +93,9 @@ class AttendanceController extends Controller
             $checkinStart = Carbon::createFromTimeString($schedule['checkin_mulai'], 'Asia/Jakarta');
             $checkoutEnd  = Carbon::createFromTimeString($schedule['checkout_selesai'], 'Asia/Jakarta');
 
-            $checkinTooEarly = $now->lt($checkinStart);
-            $checkoutExpired = $now->gt($checkoutEnd);
+            $sundayTesting = $now->isSunday() && config('attendance.allow_sunday_testing');
+            $checkinTooEarly = !$sundayTesting && $now->lt($checkinStart);
+            $checkoutExpired = !$sundayTesting && $now->gt($checkoutEnd);
         }
 
         [$officeLat, $officeLng, $maxRadius] = $this->getOfficeConfig();
@@ -321,10 +322,13 @@ class AttendanceController extends Controller
 
         $now = Carbon::now('Asia/Jakarta');
         $dow = $now->dayOfWeekIso;
+        $sundayTesting = $dow === 7 && config('attendance.allow_sunday_testing');
 
-        if ($dow >= 6) {
+        if ($dow >= 6 && !$sundayTesting) {
             return ['error' => 'Absensi tidak tersedia di hari Sabtu/Minggu.'];
         }
+
+        if ($sundayTesting) $dow = 5;
 
         $map = [
             1 => [
@@ -430,7 +434,7 @@ class AttendanceController extends Controller
         $checkinStart = Carbon::createFromTimeString($schedule['checkin_mulai'], 'Asia/Jakarta');
         $checkinEnd   = Carbon::createFromTimeString($schedule['checkin_selesai'], 'Asia/Jakarta');
 
-        if ($now->lt($checkinStart)) {
+        if ($now->lt($checkinStart) && !($now->isSunday() && config('attendance.allow_sunday_testing'))) {
             return $this->attendanceResponse($request, 'error', "Absensi masuk belum dibuka. Mulai pukul {$checkinStart->format('H:i')} WIB.");
         }
 
@@ -504,7 +508,7 @@ class AttendanceController extends Controller
         $checkoutStart = Carbon::createFromTimeString($schedule['checkout_mulai'], 'Asia/Jakarta');
         $checkoutEnd   = Carbon::createFromTimeString($schedule['checkout_selesai'], 'Asia/Jakarta');
 
-        if ($now->gt($checkoutEnd)) {
+        if ($now->gt($checkoutEnd) && !($now->isSunday() && config('attendance.allow_sunday_testing'))) {
             return $this->attendanceResponse($request, 'error', "Absensi pulang sudah ditutup (maks {$checkoutEnd->format('H:i')} WIB).");
         }
 

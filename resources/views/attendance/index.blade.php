@@ -16,6 +16,13 @@
                 </div>
 
                 <div class="p-8">
+                    @if (now('Asia/Jakarta')->isSunday() && config('attendance.allow_sunday_testing'))
+                        <div class="mb-6 p-3 bg-amber-50 text-amber-800 rounded-xl border border-amber-200 text-sm text-center">
+                            Mode testing Minggu aktif. Jadwal Jumat digunakan dan batas jam presensi dilewati.
+                            Matikan <code>ATTENDANCE_ALLOW_SUNDAY_TESTING</code> di <code>.env</code> setelah pengujian.
+                        </div>
+                    @endif
+
                     {{-- Flash Message --}}
                     @if (session('success'))
                         <div

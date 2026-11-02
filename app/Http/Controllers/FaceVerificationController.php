@@ -7,12 +7,80 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Symfony\Component\Process\Process;
 use App\Models\Logbook;
 use Carbon\Carbon;
 
 class FaceVerificationController extends Controller
 {
     private const FACE_DISTANCE_THRESHOLD = 0.45;
+    private const LIVENESS_TTL_SECONDS = 30;
+
+    private function newLivenessChallenge(): array
+    {
+        $actions = collect(['left', 'right', 'mouth'])->shuffle()->take(2)->values()->all();
+        $challenge = [
+            'nonce' => Str::random(48),
+            'actions' => $actions,
+            'issued_at' => now()->timestamp,
+            'expires_at' => now()->addSeconds(self::LIVENESS_TTL_SECONDS)->timestamp,
+        ];
+        session(['face_liveness_challenge' => $challenge]);
+
+        return $challenge;
+    }
+
+    private function runPresentationAttackDetection(array $frames): array
+    {
+        $python = (string) config('pad.python');
+        $repository = (string) config('pad.repository');
+        $script = base_path('scripts/silent_face_pad_infer.py');
+
+        if ($repository === '' || !is_dir($repository) || !is_file($script)) {
+            throw new \RuntimeException('Konfigurasi PAD belum lengkap. Periksa PAD_REPOSITORY dan file model Silent-Face.');
+        }
+
+        $process = new Process([$python, $script]);
+        $process->setInput(json_encode([
+            'repository' => $repository,
+            'frames' => $frames,
+            'real_threshold' => config('pad.real_threshold'),
+            'required_real_frames' => config('pad.required_real_frames'),
+        ], JSON_THROW_ON_ERROR));
+        // Seed Python from PHP's system RNG for web-server environments where Python cannot read OS entropy.
+        $pythonDirectory = dirname($python);
+        $condaRoot = dirname(dirname($pythonDirectory));
+        $processPath = implode(PATH_SEPARATOR, array_filter([
+            $pythonDirectory,
+            $pythonDirectory . DIRECTORY_SEPARATOR . 'Library' . DIRECTORY_SEPARATOR . 'bin',
+            $pythonDirectory . DIRECTORY_SEPARATOR . 'Scripts',
+            $condaRoot . DIRECTORY_SEPARATOR . 'Library' . DIRECTORY_SEPARATOR . 'bin',
+            (getenv('SystemRoot') ?: 'C:\\Windows') . DIRECTORY_SEPARATOR . 'System32',
+            getenv('PATH') ?: '',
+        ]));
+        $process->setEnv([
+            'PATH' => $processPath,
+            'SystemRoot' => getenv('SystemRoot') ?: 'C:\\Windows',
+            'WINDIR' => getenv('WINDIR') ?: (getenv('SystemRoot') ?: 'C:\\Windows'),
+            'TEMP' => getenv('TEMP') ?: sys_get_temp_dir(),
+            'TMP' => getenv('TMP') ?: sys_get_temp_dir(),
+            'PYTHONHASHSEED' => (string) random_int(1, 4294967295),
+            'PYTHONNOUSERSITE' => '1',
+        ]);
+        $process->setTimeout(30);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            throw new \RuntimeException(trim($process->getErrorOutput()) ?: 'Proses model PAD gagal dijalankan.');
+        }
+
+        $result = json_decode($process->getOutput(), true, 512, JSON_THROW_ON_ERROR);
+        if (!isset($result['passed'], $result['frames']) || !is_bool($result['passed'])) {
+            throw new \RuntimeException('Format hasil model PAD tidak valid.');
+        }
+
+        return $result;
+    }
 
     private function normalizeDescriptor(mixed $descriptor): ?array
     {
@@ -124,15 +192,65 @@ class FaceVerificationController extends Controller
             'referer' => request()->headers->get('referer'),
         ]);
 
-        return view('face.verify', compact('intendedAction', 'pendingLocation', 'actionRoute'));
+        $livenessChallenge = $this->newLivenessChallenge();
+
+        return view('face.verify', compact('intendedAction', 'pendingLocation', 'actionRoute', 'livenessChallenge'));
     }
 
     public function verify(Request $request)
     {
         $request->validate([
             'descriptor' => 'required|json',
+            'challenge_nonce' => 'required|string',
+            'telemetry' => 'required|array|min:4|max:400',
+            'telemetry.*.t' => 'required|integer|min:0',
+            'telemetry.*.yaw' => 'required|numeric|between:-2,2',
+            'telemetry.*.mouth' => 'required|numeric|between:0,2',
+            'pad_frames' => 'required|array|size:3',
+            'pad_frames.*' => ['required', 'string', 'max:400000', 'regex:/\Adata:image\/jpeg;base64,[A-Za-z0-9+\/=]+\z/'],
             'intended_action' => 'nullable|in:check-in,check-out',
         ]);
+
+        $challenge = session('face_liveness_challenge');
+        if (!$challenge || !hash_equals($challenge['nonce'], $request->input('challenge_nonce'))
+            || now()->timestamp > $challenge['expires_at']) {
+            return response()->json(['match' => false, 'message' => 'Tantangan liveness kedaluwarsa. Muat ulang halaman dan coba lagi.'], 409);
+        }
+
+        $telemetry = $request->input('telemetry');
+        $duration = end($telemetry)['t'] - $telemetry[0]['t'];
+        if ($duration < 1500 || $duration > self::LIVENESS_TTL_SECONDS * 1000) {
+            return response()->json(['match' => false, 'message' => 'Durasi tantangan tidak valid. Silakan coba lagi.'], 422);
+        }
+
+        $lastTime = -1;
+        foreach ($telemetry as $sample) {
+            if ($sample['t'] <= $lastTime) {
+                return response()->json(['match' => false, 'message' => 'Urutan telemetri tidak valid.'], 422);
+            }
+            $lastTime = $sample['t'];
+        }
+
+        $cursor = 0;
+        foreach ($challenge['actions'] as $action) {
+            $found = false;
+            for (; $cursor < count($telemetry); $cursor++) {
+                $sample = $telemetry[$cursor];
+                $passed = match ($action) {
+                    'left' => $sample['yaw'] <= -0.08,
+                    'right' => $sample['yaw'] >= 0.08,
+                    'mouth' => $sample['mouth'] >= 0.24,
+                };
+                if ($passed) {
+                    $found = true;
+                    $cursor++;
+                    break;
+                }
+            }
+            if (!$found) {
+                return response()->json(['match' => false, 'message' => 'Tantangan belum terdeteksi sesuai urutan. Muat ulang halaman untuk tantangan baru.'], 422);
+            }
+        }
 
         $storedDescriptor = $this->normalizeDescriptor(auth()->user()->face_descriptor);
         $currentDescriptor = $this->normalizeDescriptor($request->descriptor);
@@ -143,6 +261,36 @@ class FaceVerificationController extends Controller
 
         if (count($storedDescriptor) !== 128 || count($currentDescriptor) !== 128) {
             return response()->json(['match' => false, 'similarity' => 0, 'message' => 'Descriptor harus 128-dimensional'], 422);
+        }
+
+        try {
+            $padResult = $this->runPresentationAttackDetection($request->input('pad_frames'));
+        } catch (\Throwable $e) {
+            Log::error('Face PAD inference failed', [
+                'user_id' => auth()->id(),
+                'session_id' => session()->getId(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'match' => false,
+                'message' => 'Pemeriksaan anti-spoofing gagal dijalankan. Periksa konfigurasi PAD di server.',
+            ], 503);
+        }
+
+        if (!$padResult['passed']) {
+            Log::warning('Face PAD rejected presentation', [
+                'user_id' => auth()->id(),
+                'session_id' => session()->getId(),
+                'real_frames' => $padResult['real_frames'] ?? null,
+                'frame_results' => $padResult['frames'],
+            ]);
+
+            return response()->json([
+                'match' => false,
+                'pad' => $padResult,
+                'message' => 'PAD mendeteksi kemungkinan foto atau video replay. Gunakan wajah langsung di depan kamera dan coba lagi.',
+            ], 422);
         }
 
         $distance = $this->calculateDistance($storedDescriptor, $currentDescriptor);
@@ -175,6 +323,7 @@ class FaceVerificationController extends Controller
             }
 
             $verificationToken = Str::random(40);
+            session()->forget('face_liveness_challenge');
             session([
                 'face_verified_action' => $intendedAction,
                 'face_verification_token' => $verificationToken,
@@ -197,6 +346,7 @@ class FaceVerificationController extends Controller
                 'match' => true,
                 'similarity' => $similarity,
                 'distance' => $distance,
+                'pad' => $padResult,
                 'verification_token' => $verificationToken,
             ]);
         }
